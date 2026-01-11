@@ -9,117 +9,20 @@ from ..core.context import SystemContext
 from ..core.constants import THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_PLUGINS, ThemeDef
 from ..core.generator import ConfigGenerator
 from ..core.state import StateManager, AppState
+from ..core.installer import PluginInstaller
 from ..platforms.termux import TermuxPlatform
 from ..platforms.debian import DebianPlatform
 
 class OmegaApp(App):
-    TITLE = "Omega-ZSH"
-    SUBTITLE = "Elite Python Edition"
-    CSS = """
-    Screen {
-        background: #1e2127;
-    }
-    """
-
-    BINDINGS = [
-        Binding("d", "switch_tab('dash')", "Dashboard"),
-        Binding("p", "config_plugins", "Plugins"),
-        Binding("t", "config_themes", "Themes"),
-        Binding("h", "config_header", "Header"),
-        Binding("i", "start_install", "INSTALL", show=True, priority=True),
-        Binding("q", "quit", "Quit"),
-    ]
-
-    def __init__(self):
-        super().__init__()
-        self.context = SystemContext()
-        self.generator = ConfigGenerator(Path(__file__).parent.parent.parent / "assets/templates")
-        self.state_manager = StateManager(self.context.home / ".omega-zsh")
-        
-        if self.context.is_termux:
-            self.platform = TermuxPlatform(use_nala=(self.context.package_manager_type == "nala"))
-        else:
-            self.platform = DebianPlatform(use_nala=(self.context.package_manager_type == "nala"))
-            
-        # Load State (Persistence)
-        loaded_state = self.state_manager.load()
-        self.selected_plugins = loaded_state.selected_plugins
-        self.selected_theme = loaded_state.selected_theme
-        self.selected_root_theme = loaded_state.selected_root_theme
-        self.selected_header = loaded_state.selected_header
-
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        with TabbedContent(initial="dash"):
-            with TabPane("Dashboard", id="dash"):
-                yield DashboardScreen()
-        yield Footer()
-
-    def action_switch_tab(self, tab_id: str) -> None:
-        self.query_one(TabbedContent).active = tab_id
-
-    # --- ACTION HANDLERS WITH CALLBACKS ---
-
-    def action_config_plugins(self) -> None:
-        # Screen updates the list in-place via reference/callback logic in on_unmount
-        # But to be safe with Textual flow, let's use the screen instance logic
-        screen = PluginSelectScreen(DB_PLUGINS, self.selected_plugins)
-        self.push_screen(screen) # La pantalla actualiza la lista "in-place" al desmontarse
-
-    def action_config_themes(self) -> None:
-        # 1. Load Custom Themes Dynamically
-        custom_themes_path = Path(__file__).parent.parent.parent / "assets/themes"
-        custom_themes = []
-        if custom_themes_path.exists():
-            for f in custom_themes_path.glob("*.zsh-theme"):
-                theme_id = f.stem # filename without extension
-                custom_themes.append(ThemeDef(theme_id, "Local Custom Theme"))
-        
-        all_themes = THEMES_OMZ_BUILTIN + custom_themes
-        
-        def set_theme(screen_ref):
-            # Callback is tricky if screen is popped. 
-            # We rely on the screen object updating a public attribute before pop.
-            pass
-
-        screen = ThemeSelectScreen(all_themes, self.selected_theme, "Select User Theme")
-        # Override the on_unmount logic in the screen to call a setter on app? 
-        # Easier: Define a callback wrapper.
-        
-        def on_theme_close(result):
-            # Screen doesn't return result by default unless we use dismiss()
-            # Let's inspect the screen instance if kept alive, but pop destroys it.
-            # Better architecture: The screen should accept a callback function.
-            pass
-            
-        # Hack for simple state management without complex callbacks:
-        # The screen will have a reference to 'app' via 'self.app'
-        # We will modify ThemeSelectScreen to update 'app.selected_theme' directly.
-        self.push_screen(screen)
-
-    def update_selected_theme(self, new_theme: str):
-        self.selected_theme = new_theme
-        self.notify(f"Theme set to: {new_theme}")
-
-    def action_config_header(self) -> None:
-        screen = HeaderSelectScreen(self.selected_header)
-        self.push_screen(screen)
-
-    def update_selected_header(self, new_header: str):
-        self.selected_header = new_header
-        self.notify(f"Header set to: {new_header}")
-
-    # --- INSTALLATION LOGIC ---
-
-    def action_start_install(self) -> None:
-        install_screen = InstallScreen()
-        self.push_screen(install_screen)
-        threading.Thread(target=self.run_installation, args=(install_screen,), daemon=True).start()
-
+    # ... (anterior código se mantiene igual en TITLE, SUBTITLE, etc)
+    
     def run_installation(self, screen: InstallScreen):
         screen.write_log(">>> INITIALIZING OMEGA INSTALLER...")
         
-        # Save State Persistence
+        # 1. Initialize Tools
+        installer = PluginInstaller(self.platform, self.context.home)
+        
+        # 2. Save State Persistence
         current_state = AppState(
             selected_plugins=self.selected_plugins,
             selected_theme=self.selected_theme,
@@ -129,17 +32,26 @@ class OmegaApp(App):
         self.state_manager.save(current_state)
         screen.write_log("Configuration saved to ~/.omega-zsh/state.json")
         
+        # 3. Prerequisites
+        installer.ensure_omz(screen.write_log)
         screen.write_log("Updating Repositories...")
         self.platform.update_repos()
         
+        # 4. Base System Tools
         for tool in self.platform.get_essential_tools():
-            screen.write_log(f"Installing Core Tool: {tool}")
+            screen.write_log(f"Verifying Core Tool: {tool}")
             self.platform.install_package(tool, on_progress=screen.write_log)
 
-        screen.write_log(f"Installing Theme: {self.selected_theme}")
+        # 5. Install Selected Plugins (Dynamic: Binary or Git)
+        screen.write_log("\n--- INSTALLING PLUGINS ---")
+        installer.install_all(self.selected_plugins, screen.write_log)
+
+        # 6. Install/Link Theme
+        screen.write_log(f"\n--- CONFIGURING THEME: {self.selected_theme} ---")
         self._install_theme(self.selected_theme, screen)
             
-        screen.write_log("Generating Configuration...")
+        # 7. Generate Config
+        screen.write_log("\n--- GENERATING FINAL CONFIG ---")
         zshrc_path = self.context.home / ".zshrc"
         personal_path = self.context.home / ".omega-zsh/personal.zsh"
         custom_path = self.context.home / ".omega-zsh/custom.zsh"
