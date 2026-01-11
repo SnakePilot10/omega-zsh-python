@@ -6,7 +6,7 @@ import threading
 
 from .screens import DashboardScreen, PluginSelectScreen, ThemeSelectScreen, HeaderSelectScreen, InstallScreen
 from ..core.context import SystemContext
-from ..core.constants import THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_PLUGINS, ThemeDef
+from ..core.constants import THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_PLUGINS, BIN_PLUGINS, ThemeDef
 from ..core.generator import ConfigGenerator
 from ..core.state import StateManager, AppState
 from ..core.installer import PluginInstaller
@@ -55,6 +55,11 @@ class OmegaApp(App):
         zshrc_path = self.context.home / ".zshrc"
         personal_path = self.context.home / ".omega-zsh/personal.zsh"
         custom_path = self.context.home / ".omega-zsh/custom.zsh"
+        
+        # FILTRADO CRÍTICO:
+        # 'active_tools': Todo lo seleccionado (para instalar binarios y bloques if/endif)
+        # 'plugins': Solo plugins reales de Zsh (para el array plugins=(...))
+        omz_plugins_list = [p for p in self.selected_plugins if p not in BIN_PLUGINS]
 
         gen_context = {
             "version": "14.0",
@@ -62,8 +67,8 @@ class OmegaApp(App):
             "omz_dir": str(self.context.home / ".oh-my-zsh"),
             "user_theme": self.selected_theme,
             "root_theme": self.selected_root_theme,
-            "plugins": self.selected_plugins,
-            "active_tools": self.selected_plugins,
+            "plugins": omz_plugins_list, # <--- Lista filtrada
+            "active_tools": self.selected_plugins, # <--- Lista completa
             "personal_zsh": str(personal_path),
             "custom_zsh": str(custom_path),
             "header_cmd": self.selected_header_cmd()
