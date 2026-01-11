@@ -8,6 +8,7 @@ from .screens import DashboardScreen, PluginSelectScreen, ThemeSelectScreen, Hea
 from ..core.context import SystemContext
 from ..core.constants import THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_PLUGINS, ThemeDef
 from ..core.generator import ConfigGenerator
+from ..core.state import StateManager, AppState
 from ..platforms.termux import TermuxPlatform
 from ..platforms.debian import DebianPlatform
 
@@ -33,17 +34,19 @@ class OmegaApp(App):
         super().__init__()
         self.context = SystemContext()
         self.generator = ConfigGenerator(Path(__file__).parent.parent.parent / "assets/templates")
+        self.state_manager = StateManager(self.context.home / ".omega-zsh")
         
         if self.context.is_termux:
             self.platform = TermuxPlatform(use_nala=(self.context.package_manager_type == "nala"))
         else:
             self.platform = DebianPlatform(use_nala=(self.context.package_manager_type == "nala"))
             
-        # State
-        self.selected_plugins = []
-        self.selected_theme = "robbyrussell"
-        self.selected_header = "fastfetch"
-        self.selected_root_theme = "root_p10k_red"
+        # Load State (Persistence)
+        loaded_state = self.state_manager.load()
+        self.selected_plugins = loaded_state.selected_plugins
+        self.selected_theme = loaded_state.selected_theme
+        self.selected_root_theme = loaded_state.selected_root_theme
+        self.selected_header = loaded_state.selected_header
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -115,6 +118,16 @@ class OmegaApp(App):
 
     def run_installation(self, screen: InstallScreen):
         screen.write_log(">>> INITIALIZING OMEGA INSTALLER...")
+        
+        # Save State Persistence
+        current_state = AppState(
+            selected_plugins=self.selected_plugins,
+            selected_theme=self.selected_theme,
+            selected_root_theme=self.selected_root_theme,
+            selected_header=self.selected_header
+        )
+        self.state_manager.save(current_state)
+        screen.write_log("Configuration saved to ~/.omega-zsh/state.json")
         
         screen.write_log("Updating Repositories...")
         self.platform.update_repos()
