@@ -115,15 +115,14 @@ class ThemeSelectScreen(Screen):
                     yield RadioButton(f"{theme.id}", id=theme.id.replace("_", "-"), value=(theme.id == self.current_theme))
         yield Footer()
     
-    def on_radio_set_changed(self, event: RadioSet.Changed) -> None: 
-        # El ID del radio button puede tener '-' en lugar de '_' si lo cambiamos,
-        # pero aquí usamos el label o recuperamos el ID original si es posible.
-        # Mejor estrategia: iterar themes y matchear.
-        # Simplificación: Asumimos que el ID del componente matchea el theme id o usamos el index.
-        # Textual RadioButton.value es un booleano. 
-        # event.pressed.id es el ID del widget.
-        pass
-
+        def on_radio_set_changed(self, event) -> None:
+            # El ID del radio button puede tener '-' en lugar de '_' si lo cambiamos, 
+            # pero aquí usamos el label o recuperamos el ID original si es posible.
+            # Mejor estrategia: iterar themes y matchear.
+            # Simplificación: Asumimos que el ID del componente matchea el theme id o usamos el index.
+            # Textual RadioButton.value es un booleano. 
+            # event.pressed.id es el ID del widget.
+            pass
     def on_unmount(self) -> None:
         # Recuperar el seleccionado
         radios = self.query_one("#theme-radios", RadioSet)
