@@ -1,0 +1,89 @@
+# OMEGA-ZSH {{ version }} (Python/Jinja2 Generated)
+export ZSH="{{ omz_dir }}"
+export TERM=xterm-256color
+
+{% if is_termux %}
+export GYP_DEFINES="android_ndk_path=''"
+export FZF_BASE=$PREFIX/bin/fzf
+{% endif %}
+
+# Theme selection
+if [ "$(id -u)" -eq 0 ]; then
+    ZSH_THEME="{{ root_theme }}"
+else
+    ZSH_THEME="{{ user_theme }}"
+fi
+
+# Plugins selection
+plugins=({% for plugin in plugins %}{{ plugin }} {% endfor %})
+
+source $ZSH/oh-my-zsh.sh
+
+{% if default_user %}
+export DEFAULT_USER="{{ default_user }}"
+{% endif %}
+
+# --- Modern Tools Configuration ---
+{% if 'zoxide' in active_tools %}
+eval "$(zoxide init zsh)"
+{% endif %}
+
+{% if 'eza' in active_tools %}
+alias ls="eza --icons --group-directories-first"
+alias ll="eza -lh --icons --group-directories-first"
+alias la="eza -lah --icons --group-directories-first"
+{% endif %}
+
+{% if 'bat' in active_tools %}
+alias cat="bat"
+{% endif %}
+
+{% if 'micro' in active_tools %}
+export EDITOR='micro'
+export VISUAL='micro'
+alias nano='micro'
+{% endif %}
+
+{% if 'yazi' in active_tools %}
+function yy() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+{% endif %}
+
+# --- Root/Sudo Logic ---
+{% if is_termux %}
+if [ -x "$(command -v su)" ]; then
+    alias sudo='su -c "unset LD_PRELOAD; export PATH=$PREFIX/bin:$PATH; export HOME=$HOME; exec zsh"'
+elif command -v tsu > /dev/null 2>&1; then
+    alias sudo='tsu'
+fi
+
+# Nala Wrapper
+pkg() {
+    if command -v nala >/dev/null 2>&1; then
+        case "$1" in
+            install|update|upgrade) nala "$@";;
+            *) command pkg "$@";; 
+        esac
+    else
+        command pkg "$@";;
+    fi
+}
+{% endif %}
+
+# --- Header ---
+{% if header_cmd %}
+{{ header_cmd }}
+{% endif %}
+
+# --- User Customizations ---
+# Cargamos primero el archivo estructurado personal
+[[ -f "{{ personal_zsh }}" ]] && source "{{ personal_zsh }}"
+
+# Luego cualquier ajuste manual extra
+[[ -f "{{ custom_zsh }}" ]] && source "{{ custom_zsh }}"

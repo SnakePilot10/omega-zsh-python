@@ -1,0 +1,45 @@
+# --- OMEGA-ZSH PERSONAL CONFIGURATION ---
+# Este archivo está diseñado para ser persistente y seguro.
+# Puedes agregar tus keys, alias y rutas aquí.
+
+# 1. SEGURIDAD DE RUTA (PATH)
+# Agrega directorios al PATH solo si existen para evitar errores de comandos.
+{% for path in extra_paths %}
+if [ -d "{{ path }}" ]; then
+    export PATH="{{ path }}:$PATH"
+fi
+{% endfor %}
+
+# 2. VARIABLES DE ENTORNO Y KEYS
+# Útil para API_KEYS, variables de desarrollo, etc.
+{% for key, value in env_vars.items() %}
+export {{ key }}="{{ value }}"
+{% endfor %}
+
+# 3. ALIAS PERSONALES
+# Atajos rápidos para tus comandos frecuentes.
+alias zr='source ~/.zshrc'
+alias zc='micro ~/.zshrc'
+{% for name, cmd in aliases.items() %}
+alias {{ name }}='{{ cmd }}'
+{% endfor %}
+
+# 4. BINARIOS PROPIOS
+# Si tienes scripts en carpetas locales, asegúrate de darles prioridad.
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# 5. FUNCIONES DE USUARIO
+# Agrega aquí lógica de shell más compleja.
+function up() {
+    local d=""
+    limit=$1
+    for ((i=1 ; i <= limit ; i++))
+    do
+        d=$d"../"
+    done
+    cd $d
+}
+
+# --- FIN DE CONFIGURACIÓN PERSONAL ---
