@@ -1,6 +1,6 @@
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Header, Footer, Static, SelectionList, RadioButton, Label, Log, Button
+from textual.widgets import Header, Footer, Static, SelectionList, RadioSet, RadioButton, Label, Log, Button
 from textual.containers import Vertical, Horizontal, Grid
 from textual.widgets.selection_list import Selection
 from rich.table import Table
@@ -69,7 +69,8 @@ class DashboardScreen(Static):
 
 class PluginSelectScreen(Screen):
     """Pantalla para seleccionar plugins."""
-    BINDINGS = [("escape", "app.pop_screen", "Volver")]
+    # CAMBIO: Usamos una acción personalizada para guardar antes de salir
+    BINDINGS = [("escape", "save_and_exit", "Volver")]
 
     def __init__(self, all_plugins, selected_ids):
         super().__init__()
@@ -83,28 +84,33 @@ class PluginSelectScreen(Screen):
         selections = []
         for p in self.all_plugins:
             is_on = p.id in self.selected_ids
-            # FORMATO: [ID] - Descripción
-            label = f"[{p.id}] - {p.desc}"
+            # Formato claro: [ID] Descripción
+            label = f"[{p.id}] {p.desc}"
             selections.append(Selection(label, p.id, initial_state=is_on))
             
         yield SelectionList[str](*selections, id="plugin-list")
         yield Footer()
 
-    def on_unmount(self) -> None:
-        selection_list = self.query_one("#plugin-list", SelectionList)
-        self.selected_ids.clear()
-        self.selected_ids.extend(selection_list.selected)
+    def action_save_and_exit(self) -> None:
+        """Guardar selección y cerrar pantalla."""
+        try:
+            selection_list = self.query_one("#plugin-list", SelectionList)
+            self.selected_ids.clear()
+            self.selected_ids.extend(selection_list.selected)
+        except Exception:
+            pass # Si falla, al menos cerramos
+        self.app.pop_screen()
 
 class ThemeSelectScreen(Screen):
     """Pantalla para seleccionar el tema de usuario."""
-    BINDINGS = [("escape", "app.pop_screen", "Volver")]
+    BINDINGS = [("escape", "save_and_exit", "Volver")]
 
     def __init__(self, themes, current_theme, title="Seleccionar Tema"):
         super().__init__()
         self.themes = themes
         self.current_theme = current_theme
         self.screen_title = title
-        self.selected_theme_id = current_theme # Local state
+        self.selected_theme_id = current_theme
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -115,28 +121,23 @@ class ThemeSelectScreen(Screen):
                     yield RadioButton(f"{theme.id}", id=theme.id.replace("_", "-"), value=(theme.id == self.current_theme))
         yield Footer()
     
-        def on_radio_set_changed(self, event) -> None:
-            # El ID del radio button puede tener '-' en lugar de '_' si lo cambiamos, 
-            # pero aquí usamos el label o recuperamos el ID original si es posible.
-            # Mejor estrategia: iterar themes y matchear.
-            # Simplificación: Asumimos que el ID del componente matchea el theme id o usamos el index.
-            # Textual RadioButton.value es un booleano. 
-            # event.pressed.id es el ID del widget.
-            pass
-    def on_unmount(self) -> None:
-        # Recuperar el seleccionado
-        radios = self.query_one("#theme-radios", RadioSet)
-        if radios.pressed_button:
-             # El ID del widget es "THEME_ID"
-             # En compose: RadioButton(label, id=theme.id ...)
-             if radios.pressed_button.id:
-                 self.selected_theme_id = str(radios.pressed_button.id).replace("-", "_") # Restaurar guiones bajos si es necesario
+    def action_save_and_exit(self) -> None:
+        # Recuperar el seleccionado antes de destruir widgets
+        try:
+            radios = self.query_one("#theme-radios", RadioSet)
+            if radios.pressed_button:
+                 # El ID del widget puede haber cambiado, pero intentamos recuperar el valor
+                 # Una estrategia segura es usar el label si coincide con el ID
+                 clean_id = str(radios.pressed_button.label)
                  if hasattr(self.app, "update_selected_theme"):
-                     self.app.update_selected_theme(self.selected_theme_id)
+                     self.app.update_selected_theme(clean_id)
+        except Exception:
+            pass
+        self.app.pop_screen()
 
 class HeaderSelectScreen(Screen):
     """Pantalla para seleccionar el Header (Logo)."""
-    BINDINGS = [("escape", "app.pop_screen", "Volver")]
+    BINDINGS = [("escape", "save_and_exit", "Volver")]
 
     def __init__(self, current_header):
         super().__init__()
@@ -149,16 +150,20 @@ class HeaderSelectScreen(Screen):
         with RadioSet(id="header-radios"):
             for h in DB_HEADERS:
                 label = f"{h.id} ({h.desc})"
+                # ID seguro para el widget
                 yield RadioButton(label, id=f"h-{h.id}", value=(h.id == self.current_header))
         yield Footer()
 
-    def on_unmount(self) -> None:
-        radios = self.query_one("#header-radios", RadioSet)
-        if radios.pressed_button:
-            if radios.pressed_button.id:
-                self.selected_header_id = radios.pressed_button.id.replace("h-", "")
+    def action_save_and_exit(self) -> None:
+        try:
+            radios = self.query_one("#header-radios", RadioSet)
+            if radios.pressed_button and radios.pressed_button.id:
+                header_id = radios.pressed_button.id.replace("h-", "")
                 if hasattr(self.app, "update_selected_header"):
-                    self.app.update_selected_header(self.selected_header_id)
+                    self.app.update_selected_header(header_id)
+        except Exception:
+            pass
+        self.app.pop_screen()
 
 class InstallScreen(Screen):
     """Pantalla que muestra el progreso de la instalación."""

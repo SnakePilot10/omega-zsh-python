@@ -42,11 +42,12 @@ class ConfigGenerator:
 
             template = self.env.get_template("personal.zsh.j2")
             # Valores por defecto si no vienen en el contexto
+            import getpass
             default_ctx = {
                 "extra_paths": [],
                 "env_vars": {},
                 "aliases": {},
-                "user": os.getlogin() if hasattr(os, "getlogin") else "user"
+                "user": getpass.getuser()
             }
             default_ctx.update(context)
             content = template.render(default_ctx)

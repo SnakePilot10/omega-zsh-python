@@ -43,30 +43,35 @@ class StateManager:
             return state
 
         try:
-            content = self.zshrc_path.read_text()
+            # Leer con tolerancia a errores de caracteres
+            with open(self.zshrc_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
             
-            # Detectar Tema
-            theme_match = re.search(r'ZSH_THEME="([^"]+)"', content)
-            if theme_match:
-                theme = theme_match.group(1)
-                if "root" in theme:
-                    state.selected_root_theme = theme
+            # Detectar Tema (Buscamos la asignación del usuario, que suele estar en el 'else' o al final)
+            # Estrategia: Buscar todas las asignaciones y tomar la última que no sea root, o usar lógica específica
+            themes_found = re.findall(r'ZSH_THEME="([^"]+)"', content)
+            for t in themes_found:
+                if "root" in t:
+                    state.selected_root_theme = t
                 else:
-                    state.selected_theme = theme
+                    state.selected_theme = t
 
-            # Detectar Plugins (Básico)
-            plugins_match = re.search(r'plugins=\(([^)]+)\)', content, re.DOTALL)
+            # Detectar Plugins (Mejorado para multiline)
+            # Buscamos desde 'plugins=(' hasta el primer ')'
+            plugins_match = re.search(r'plugins=\((.*?)\)', content, re.DOTALL)
             if plugins_match:
-                plugins_str = plugins_match.group(1)
-                # Limpiar saltos de línea y espacios
-                state.selected_plugins = plugins_str.split()
+                raw_plugins = plugins_match.group(1)
+                # Limpiar: Quitar saltos de linea, comentarios #..., y dividir por espacios
+                cleaned = re.sub(r'#.*', '', raw_plugins) # Quitar comentarios
+                state.selected_plugins = cleaned.split()
 
             # Detectar Header (Heurística)
             if "fastfetch" in content: state.selected_header = "fastfetch"
-            elif "figlet" in content: state.selected_header = "figlet_slant" # Aproximado
+            elif "figlet" in content: state.selected_header = "figlet_slant"
             elif "cowsay" in content: state.selected_header = "cow"
             
-        except Exception:
-            pass # Si falla el parsing, devolvemos default
+        except Exception as e:
+            import logging
+            logging.warning(f"No se pudo importar configuración de .zshrc: {e}")
             
         return state

@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.log
+*.pyc
+debug_import.py
+raw_output.log
+omega_crash.log
