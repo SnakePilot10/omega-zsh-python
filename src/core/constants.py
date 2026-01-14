@@ -112,13 +112,7 @@ THEMES_ROOT: List[ThemeDef] = [
 
 DB_HEADERS: List[HeaderDef] = [
     HeaderDef("fastfetch", "Info del Sistema (Moderno)"),
-    HeaderDef("figlet_slant", "Figlet: Slant (Dinámico)"),
-    HeaderDef("figlet_standard", "Figlet: Standard (Clásico)"),
-    HeaderDef("figlet_big", "Figlet: Big (Grande)"),
-    HeaderDef("figlet_banner", "Figlet: Banner (Gigante)"),
-    HeaderDef("figlet_digital", "Figlet: Digital (Retro)"),
-    HeaderDef("figlet_shadow", "Figlet: Shadow (Con Sombra)"),
-    HeaderDef("figlet_small", "Figlet: Small (Pequeño)"),
+    HeaderDef("figlet_custom", "Figlet: Banner Personalizado ✨"),
     HeaderDef("cow", "Vaca Sabia (Fortune)"),
     HeaderDef("none", "Ninguno (Limpio)"),
 ]

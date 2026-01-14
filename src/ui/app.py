@@ -11,6 +11,7 @@ from ..core.constants import THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_PLUGINS, BIN_PL
 from ..core.generator import ConfigGenerator
 from ..core.state import StateManager, AppState
 from ..core.installer import PluginInstaller
+from ..core.figlet import FigletManager
 from ..platforms.termux import TermuxPlatform
 from ..platforms.debian import DebianPlatform
 
@@ -55,6 +56,8 @@ class OmegaApp(App):
             self.selected_theme = loaded_state.selected_theme
             self.selected_root_theme = loaded_state.selected_root_theme
             self.selected_header = loaded_state.selected_header
+            self.header_text = loaded_state.header_text
+            self.header_font = loaded_state.header_font
             logging.info(f"Estado cargado: {len(self.selected_plugins)} plugins seleccionados.")
         except Exception as e:
             logging.error(f"Fallo al cargar estado: {e}")
@@ -62,6 +65,8 @@ class OmegaApp(App):
             self.selected_theme = "robbyrussell"
             self.selected_header = "fastfetch"
             self.selected_root_theme = "root_p10k_red"
+            self.header_text = "Omega"
+            self.header_font = "slant"
 
     def compose(self) -> ComposeResult:
         logging.info("Renderizando interfaz principal (compose)")
@@ -104,6 +109,21 @@ class OmegaApp(App):
         self.selected_header = new_header
         self.notify(f"Header seleccionado: {new_header}")
 
+    def update_header_config(self, header_choice: str, header_text: str, header_font: str):
+        """Actualiza la configuración del header basado en la elección del usuario."""
+        self.selected_header = header_choice
+        self.header_text = header_text
+        self.header_font = header_font
+        self.notify(f"Configuración de Header actualizada.")
+
+    def action_config_header(self) -> None:
+        screen = HeaderSelectScreen(self.selected_header)
+        self.push_screen(screen)
+
+    def update_selected_header(self, new_header: str):
+        self.selected_header = new_header
+        self.notify(f"Tema seleccionado: {new_header}")
+
     # --- PROCESO DE INSTALACIÓN ---
 
     def action_start_install(self) -> None:
@@ -121,7 +141,9 @@ class OmegaApp(App):
                 selected_plugins=self.selected_plugins,
                 selected_theme=self.selected_theme,
                 selected_root_theme=self.selected_root_theme,
-                selected_header=self.selected_header
+                selected_header=self.selected_header,
+                header_text=self.header_text,
+                header_font=self.header_font
             )
             self.state_manager.save(current_state)
             screen.write_log("Configuración guardada en ~/.omega-zsh/state.json")
@@ -211,11 +233,11 @@ class OmegaApp(App):
     def selected_header_cmd(self) -> str:
         h = self.selected_header
         if h == "fastfetch": return "fastfetch"
-        if h == "cow": return 'echo "Moo" | cowsay | lolcat'
+        if h == "cow": return 'fortune | cowsay | lolcat'
         if h == "none": return ""
-        if h.startswith("figlet_"):
-            font = h.replace("figlet_", "")
-            return f'figlet -f {font} "Termux" | lolcat'
+        if h == "figlet_custom":
+            # Usar el generador seguro que escapa los caracteres
+            return FigletManager().generate_safe_command(self.header_text, self.header_font)
         return "fastfetch"
 
     def on_button_pressed(self, event):

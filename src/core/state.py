@@ -10,6 +10,8 @@ class AppState:
     selected_theme: str = "robbyrussell"
     selected_root_theme: str = "root_p10k_red"
     selected_header: str = "fastfetch"
+    header_text: str = "Omega"
+    header_font: str = "slant"
 
 class StateManager:
     def __init__(self, config_dir: Path):
