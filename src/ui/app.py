@@ -97,32 +97,46 @@ class OmegaApp(App):
         screen = ThemeSelectScreen(all_themes, self.selected_theme, "Select User Theme")
         self.push_screen(screen)
 
+    def update_selected_plugins(self, new_plugins: list[str]):
+        """Actualiza la lista de plugins seleccionados y guarda el estado."""
+        self.selected_plugins = new_plugins
+        self._auto_save_state()
+        # Opcional: Notificación menos intrusiva o barra de estado
+
     def update_selected_theme(self, new_theme: str):
         self.selected_theme = new_theme
+        self._auto_save_state()
         self.notify(f"Tema seleccionado: {new_theme}")
 
     def action_config_header(self) -> None:
+        """Lanza la pantalla de configuración del header."""
         screen = HeaderSelectScreen(self.selected_header)
         self.push_screen(screen)
 
-    def update_selected_header(self, new_header: str):
-        self.selected_header = new_header
-        self.notify(f"Header seleccionado: {new_header}")
-
     def update_header_config(self, header_choice: str, header_text: str, header_font: str):
-        """Actualiza la configuración del header basado en la elección del usuario."""
+        """
+        Actualiza la configuración global del header de forma reactiva.
+        """
         self.selected_header = header_choice
         self.header_text = header_text
         self.header_font = header_font
-        self.notify(f"Configuración de Header actualizada.")
+        self._auto_save_state()
+        # No notificamos en cada tecla pulsada para no saturar
 
-    def action_config_header(self) -> None:
-        screen = HeaderSelectScreen(self.selected_header)
-        self.push_screen(screen)
-
-    def update_selected_header(self, new_header: str):
-        self.selected_header = new_header
-        self.notify(f"Tema seleccionado: {new_header}")
+    def _auto_save_state(self):
+        """Guarda el estado actual en disco (Auto-save)."""
+        try:
+            current_state = AppState(
+                selected_plugins=self.selected_plugins,
+                selected_theme=self.selected_theme,
+                selected_root_theme=self.selected_root_theme,
+                selected_header=self.selected_header,
+                header_text=self.header_text,
+                header_font=self.header_font
+            )
+            self.state_manager.save(current_state)
+        except Exception as e:
+            logging.warning(f"Fallo al guardar auto-save: {e}")
 
     # --- PROCESO DE INSTALACIÓN ---
 

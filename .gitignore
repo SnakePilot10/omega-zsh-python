@@ -5,3 +5,5 @@ __pycache__/
 debug_import.py
 raw_output.log
 omega_crash.log
+.gemini/
+gha-creds-*.json
