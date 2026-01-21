@@ -38,7 +38,7 @@ EXTERNAL_URLS: Dict[str, str] = {
 # --- BINARY TOOLS (SYSTEM PACKAGES) ---
 BIN_PLUGINS: List[str] = [
     "zoxide", "eza", "bat", "yazi", "fd", "ripgrep", "duf", "ncdu", "procs", 
-    "jq", "httpie", "neofetch", "tldr", "lazygit", "glow", "chafa", "micro", 
+    "jq", "httpie", "neofetch", "tldr", "lazygit", "glow", "chafa", "nano", 
     "lolcat", "fastfetch", "figlet", "fortune", "cowsay", "nala",
 ]
 
@@ -76,7 +76,7 @@ DB_PLUGINS: List[PluginDef] = [
     PluginDef("jq", "Procesador de JSON en terminal", "DEV"),
     PluginDef("neofetch", "Info del sistema clásica", "SYS"),
     PluginDef("lolcat", "Arcoiris para cualquier output", "FUN"),
-    PluginDef("micro", "Editor de texto amigable (vs nano)", "EDIT"),
+    PluginDef("nano", "Editor de texto (Estándar en Android)", "EDIT"),
     PluginDef("extract", "Descomprime cualquier archivo", "UTIL"),
     PluginDef("web-search", "Googlear desde terminal", "WEB"),
     PluginDef("copypath", "Copiar ruta actual al clipboard", "CLIP"),

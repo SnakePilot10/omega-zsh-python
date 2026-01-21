@@ -1,3 +1,4 @@
 textual>=0.47.0
 jinja2>=3.1.0
 typing-extensions; python_version < "3.10"
+pytest>=7.0.0

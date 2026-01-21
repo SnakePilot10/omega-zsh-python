@@ -41,7 +41,7 @@ Omega-ZSH utiliza un sistema de **3 Capas** para mantener tu configuración limp
     *   Ideal para exportar rutas (`PATH`) de forma segura y definir variables de entorno estáticas.
 
 3.  **`~/.omega-zsh/custom.zsh` (Capa Manual):**
-    *   **¡Este es tu territorio!** Edítalo libremente con `nano` o `micro`.
+    *   **¡Este es tu territorio!** Edítalo libremente con `nano`.
     *   Agrega aquí tus funciones complejas, alias locos o scripts de inicio.
     *   Omega-ZSH garantiza que este archivo se cargue al final de todo.
 

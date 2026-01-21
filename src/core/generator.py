@@ -69,7 +69,7 @@ class ConfigGenerator:
         content = """# --- OMEGA-ZSH USER CUSTOMIZATIONS ---
 # Agrega aquí tus alias, funciones y variables personales.
 alias zr='source ~/.zshrc'
-alias zc='micro ~/.zshrc'
+alias zc='nano ~/.zshrc'
 
 # Ejemplo de función auto-venv
 function auto_venv() {

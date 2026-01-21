@@ -101,7 +101,6 @@ class OmegaApp(App):
         """Actualiza la lista de plugins seleccionados y guarda el estado."""
         self.selected_plugins = new_plugins
         self._auto_save_state()
-        # Opcional: Notificación menos intrusiva o barra de estado
 
     def update_selected_theme(self, new_theme: str):
         self.selected_theme = new_theme
@@ -114,14 +113,12 @@ class OmegaApp(App):
         self.push_screen(screen)
 
     def update_header_config(self, header_choice: str, header_text: str, header_font: str):
-        """
-        Actualiza la configuración global del header de forma reactiva.
-        """
+        """Actualiza la configuración del header basado en la elección del usuario."""
         self.selected_header = header_choice
         self.header_text = header_text
         self.header_font = header_font
         self._auto_save_state()
-        # No notificamos en cada tecla pulsada para no saturar
+        self.notify(f"Configuración de Header actualizada.")
 
     def _auto_save_state(self):
         """Guarda el estado actual en disco (Auto-save)."""

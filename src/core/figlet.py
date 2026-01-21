@@ -3,41 +3,73 @@ import subprocess
 import os
 import glob
 import logging
+import shlex
+from pathlib import Path
+from typing import Dict, List
 
 class FigletManager:
-    """Gestor de fuentes Figlet adaptado de Figlet_Fonts/figlet_tui.py"""
+    """Gestor de fuentes Figlet con soporte para fuentes del sistema y locales."""
     
     def __init__(self):
         self.figlet_path = shutil.which("figlet")
         
-        # Detectar directorio de fuentes
+        # 1. Fuentes del Sistema
         prefix = os.environ.get("PREFIX", "/usr")
-        self.fonts_dir = os.path.join(prefix, "share", "figlet")
+        self.system_fonts_dir = Path(prefix) / "share" / "figlet"
+        
+        # 2. Fuentes Locales (Project Root / assets / fonts)
+        # src/core/figlet.py -> src/core -> src -> root
+        self.project_root = Path(__file__).resolve().parent.parent.parent
+        self.local_fonts_dir = self.project_root / "assets" / "fonts"
+        
+        # Cache de fuentes: { "nombre_fuente": "ruta_absoluta" }
+        self._font_cache: Dict[str, str] = {}
+        self._refresh_cache()
     
     def is_available(self) -> bool:
         return self.figlet_path is not None
 
-    def get_fonts(self) -> list[str]:
-        """Devuelve una lista ordenada de nombres de fuentes disponibles."""
-        if not os.path.exists(self.fonts_dir):
-            logging.warning(f"Directorio de fuentes figlet no encontrado: {self.fonts_dir}")
-            return ["standard"]
+    def _refresh_cache(self):
+        """Escanea directorios y reconstruye el cache de fuentes."""
+        self._font_cache.clear()
         
-        patron = os.path.join(self.fonts_dir, "*.flf")
-        archivos = glob.glob(patron)
-        nombres = [os.path.splitext(os.path.basename(f))[0] for f in archivos]
-        return sorted(nombres, key=str.lower) if nombres else ["standard"]
+        # Helper para escanear directorios
+        def scan_dir(directory: Path):
+            if not directory.exists():
+                return
+            for font_file in directory.glob("*.flf"):
+                font_name = font_file.stem
+                # Las fuentes locales tienen prioridad (sobreescriben) si hay colisión
+                # o viceversa dependiendo del orden. Aquí: Local > Sistema
+                self._font_cache[font_name] = str(font_file.absolute())
+
+        # Escanear sistema primero
+        scan_dir(self.system_fonts_dir)
+        # Escanear locales después (sobrescriben)
+        scan_dir(self.local_fonts_dir)
+
+    def get_fonts(self) -> List[str]:
+        """Devuelve una lista ordenada de nombres de fuentes disponibles."""
+        if not self._font_cache:
+            self._refresh_cache()
+        
+        fonts = list(self._font_cache.keys())
+        return sorted(fonts, key=str.lower) if fonts else ["standard"]
+
+    def _resolve_font_path(self, font_name: str) -> str:
+        """Devuelve la ruta completa si es local/sistema, o el nombre si es fallback."""
+        return self._font_cache.get(font_name, "standard")
 
     def render(self, text: str, font: str, width: int = 80, center: bool = True) -> str:
         """Renderiza el texto usando figlet."""
         if not text or not self.is_available():
             return text
         
-        # Validar fuente
-        safe_font = font if font in self.get_fonts() else "standard"
+        # Obtener ruta segura
+        font_path = self._resolve_font_path(font)
         
         try:
-            cmd = [self.figlet_path, "-f", safe_font, "-w", str(width)]
+            cmd = [self.figlet_path, "-f", font_path, "-w", str(width)]
             if center:
                 cmd.append("-c")
             cmd.append(text)
@@ -50,18 +82,18 @@ class FigletManager:
             )
             return result.stdout
         except Exception as e:
-            logging.error(f"Error renderizando figlet: {e}")
+            logging.error(f"Error renderizando figlet con fuente '{font}': {e}")
             return f"Error renderizando: {text}"
 
     def generate_safe_command(self, text: str, font: str) -> str:
         """Genera un comando de shell seguro para .zshrc."""
-        import shlex
         
-        # 1. Validar fuente (Allowlist)
-        available_fonts = self.get_fonts()
-        safe_font = font if font in available_fonts else "standard"
+        # 1. Resolver ruta absoluta de la fuente
+        # Esto es crítico para que funcione desde cualquier directorio en zsh
+        font_path = self._resolve_font_path(font)
         
-        # 2. Sanitizar texto usando shlex.quote para escapar caracteres peligrosos
+        # 2. Sanitizar texto
         safe_text = shlex.quote(text)
+        safe_font = shlex.quote(font_path)
         
-        return f'figlet -f "{safe_font}" -c {safe_text} | lolcat'
+        return f'figlet -f {safe_font} -c {safe_text} | lolcat'

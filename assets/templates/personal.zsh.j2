@@ -19,7 +19,7 @@ export {{ key }}="{{ value }}"
 # 3. ALIAS PERSONALES
 # Atajos rápidos para tus comandos frecuentes.
 alias zr='source ~/.zshrc'
-alias zc='micro ~/.zshrc'
+alias zc='nano ~/.zshrc'
 {% for name, cmd in aliases.items() %}
 alias {{ name }}='{{ cmd }}'
 {% endfor %}

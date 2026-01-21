@@ -31,4 +31,4 @@ class DebianPlatform(BasePlatform):
         return self._run_command(cmd, on_progress)
 
     def get_essential_tools(self) -> List[str]:
-        return ["zsh", "git", "curl", "wget", "build-essential", "fzf", "bat", "eza"]
+        return ["zsh", "git", "curl", "wget", "build-essential", "fzf", "bat", "eza", "fastfetch", "figlet", "fortune-mod", "cowsay", "lolcat"]

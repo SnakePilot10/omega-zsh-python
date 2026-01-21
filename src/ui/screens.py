@@ -1,6 +1,7 @@
 from textual.app import ComposeResult
+from textual import on
 from textual.screen import Screen
-from textual.widgets import Header, Footer, Static, SelectionList, RadioSet, RadioButton, Label, Log, Button
+from textual.widgets import Header, Footer, Static, SelectionList, RadioSet, RadioButton, Label, Log, Button, Input, ListView, ListItem
 from textual.containers import Vertical, Horizontal, Grid
 from textual.widgets.selection_list import Selection
 from rich.table import Table
@@ -94,12 +95,10 @@ class PluginSelectScreen(Screen):
         """Actualiza la lista de plugins en tiempo real."""
         self.selected_ids.clear()
         self.selected_ids.extend(event.selection_list.selected)
-        # Notificar a la app principal para persistencia/estado
         if hasattr(self.app, "update_selected_plugins"):
             self.app.update_selected_plugins(self.selected_ids)
 
-    def action_save_and_exit(self) -> None:
-        # Deprecated: Solo cierra la pantalla
+    def action_pop_screen(self) -> None:
         self.app.pop_screen()
 
 class ThemeSelectScreen(Screen):
@@ -121,23 +120,19 @@ class ThemeSelectScreen(Screen):
                 for theme in self.themes:
                     yield RadioButton(f"{theme.id}", id=theme.id.replace("_", "-"), value=(theme.id == self.current_theme))
         yield Footer()
-    
-    @on(RadioSet.Changed)
-    def on_theme_change(self, event: RadioSet.Changed) -> None:
-        """Actualiza el tema seleccionado en tiempo real."""
-        # Recuperar ID del tema desde el label del botón (más seguro que reconstruir desde ID)
-        new_theme = str(event.pressed.label)
-        self.current_theme = new_theme
-        
-        if hasattr(self.app, "update_selected_theme"):
-            self.app.update_selected_theme(new_theme)
 
-    def action_save_and_exit(self) -> None:
+    @on(RadioSet.Changed, "#theme-radios")
+    def on_theme_changed(self, event: RadioSet.Changed) -> None:
+        """Actualizar estado inmediatamente al cambiar selección."""
+        if event.pressed:
+            clean_id = event.pressed.id.replace("-", "_") if event.pressed.id else str(event.pressed.label)
+            if hasattr(self.app, "update_selected_theme"):
+                self.app.update_selected_theme(clean_id)
+    
+    def action_pop_screen(self) -> None:
         self.app.pop_screen()
 
 from ..core.figlet import FigletManager
-from textual.widgets import Header, Footer, Static, SelectionList, RadioSet, RadioButton, Label, Log, Button, Input, ListView, ListItem
-from textual import on
 
 class HeaderSelectScreen(Screen):
     """Pantalla avanzada para seleccionar y personalizar el Header."""
@@ -168,7 +163,7 @@ class HeaderSelectScreen(Screen):
     }
     #figlet-fonts-list {
         height: 1fr;
-        border: sunken $primary-muted;
+        border: heavy $primary-muted;
         margin-top: 1;
     }
     """
@@ -182,7 +177,6 @@ class HeaderSelectScreen(Screen):
         self.figlet = FigletManager()
         self._debounce_timer = None
         
-        # Cargar valores actuales desde la app
         self.header_text = getattr(self.app, "header_text", "Omega")
         self.header_font = getattr(self.app, "header_font", "slant")
 
@@ -201,19 +195,15 @@ class HeaderSelectScreen(Screen):
                     for h in DB_HEADERS:
                         yield RadioButton(h.desc, id=f"h-{h.id}", value=(h.id == self.current_header))
                 
-                # Configurador Figlet (Solo visible si figlet_custom está activo)
+                # Configurador Figlet
                 with Vertical(id="figlet-config"):
                     yield Label("\n[bold cyan]Figlet Settings:[/]")
                     yield Input(placeholder="Banner Text", value=self.header_text, id="figlet-text-input")
                     yield Label("[dim]Select Font:[/]")
                     with ListView(id="figlet-fonts-list"):
-                        for font in self.figlet.get_fonts():
-                            # Guardamos el nombre real en el ID interno usando data binding o simplemente mapeo
-                            # Hack rápido: Usamos un ID sanitizado
-                            safe_id = self._sanitize_id(font)
-                            item = ListItem(Label(font), id=f"font-{safe_id}")
-                            item._font_name = font # Monkey-patch para guardar el nombre real
-                            yield item
+                        for idx, font in enumerate(self.figlet.get_fonts()):
+                            # Usamos name para guardar el nombre real de la fuente
+                            yield ListItem(Label(font), id=f"font-idx-{idx}", name=font)
 
             # Panel Derecho: Vista Previa
             with Vertical(id="header-preview-container"):
@@ -224,12 +214,11 @@ class HeaderSelectScreen(Screen):
 
     def on_mount(self) -> None:
         self.update_ui_visibility()
-        # Seleccionar la fuente actual en la lista
         try:
             list_view = self.query_one("#figlet-fonts-list", ListView)
-            target_safe_id = f"font-{self._sanitize_id(self.header_font)}"
+            # Seleccionar por name en lugar de ID
             for idx, item in enumerate(list_view.children):
-                if item.id == target_safe_id:
+                if item.name == self.header_font:
                     list_view.index = idx
                     break
         except Exception:
@@ -237,7 +226,6 @@ class HeaderSelectScreen(Screen):
         self.update_preview()
 
     def update_ui_visibility(self) -> None:
-        """Muestra u oculta los controles de Figlet según la selección."""
         try:
             is_figlet = self.query_one("#h-figlet_custom", RadioButton).value
             self.query_one("#figlet-config").display = is_figlet
@@ -253,7 +241,7 @@ class HeaderSelectScreen(Screen):
                 self.header_font
             )
 
-    @on(RadioSet.Changed)
+    @on(RadioSet.Changed, "#header-radios")
     def on_header_changed(self, event: RadioSet.Changed) -> None:
         self.current_header = event.pressed.id.replace("h-", "")
         self.update_ui_visibility()
@@ -263,27 +251,21 @@ class HeaderSelectScreen(Screen):
     @on(Input.Changed, "#figlet-text-input")
     def on_text_changed(self, event: Input.Changed) -> None:
         self.header_text = event.value
-        # Debounce: Cancelar timer anterior si existe
         if self._debounce_timer:
             self._debounce_timer.stop()
-        # Crear nuevo timer de 300ms
         self._debounce_timer = self.set_timer(0.3, self._finalize_text_change)
 
     def _finalize_text_change(self):
-        """Método llamado tras el debounce para actualizar preview y estado."""
         self.update_preview()
         self._sync_state()
 
     @on(ListView.Selected, "#figlet-fonts-list")
     def on_font_selected(self, event: ListView.Selected) -> None:
-        # Recuperar nombre real desde el monkey-patch o usar ID sanitizado
-        if hasattr(event.item, "_font_name"):
-            self.header_font = event.item._font_name
-        else:
-            self.header_font = event.item.id.replace("font-", "")
-            
-        self.update_preview()
-        self._sync_state()
+        # Recuperación robusta usando el atributo 'name'
+        if event.item.name:
+            self.header_font = event.item.name
+            self.update_preview()
+            self._sync_state()
 
     def update_preview(self) -> None:
         preview_area = self.query_one("#header-preview-area")
@@ -293,16 +275,14 @@ class HeaderSelectScreen(Screen):
         elif self.current_header == "fastfetch":
             preview_area.update(Text("System Info Panel\n(Simulated Fastfetch)", style="bold blue"))
         elif self.current_header == "cow":
-            preview_area.update(Text(" < Moo >\n ------\n        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||"))
+            preview_area.update(Text(" < Moo >\n ------\n        \\   ^__^\n         \\  (oo)\______\n            (__)\       )\/\\
+                ||----w |\n                ||     ||"))
         elif self.current_header == "figlet_custom":
-            # Usar ancho real para la preview si es posible
             width = preview_area.size.width or 60
             art = self.figlet.render(self.header_text, self.header_font, width=width - 4)
-            # IMPORTANTE: Renderizar como Text puro para evitar que Rich interprete [ ] como markup
             preview_area.update(Text(art))
 
-    def action_save_and_exit(self) -> None:
-        # Deprecated: Solo cerrar
+    def action_pop_screen(self) -> None:
         self.app.pop_screen()
 
 

@@ -38,11 +38,10 @@ alias la="eza -lah --icons --group-directories-first"
 alias cat="bat"
 {% endif %}
 
-{% if 'micro' in active_tools %}
-export EDITOR='micro'
-export VISUAL='micro'
-alias nano='micro'
-{% endif %}
+# --- DEFAULT EDITOR ---
+export EDITOR='nano'
+export VISUAL='nano'
+
 
 {% if 'yazi' in active_tools %}
 function yy() {
