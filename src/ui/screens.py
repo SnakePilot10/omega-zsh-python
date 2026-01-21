@@ -275,8 +275,16 @@ class HeaderSelectScreen(Screen):
         elif self.current_header == "fastfetch":
             preview_area.update(Text("System Info Panel\n(Simulated Fastfetch)", style="bold blue"))
         elif self.current_header == "cow":
-            preview_area.update(Text(" < Moo >\n ------\n        \\   ^__^\n         \\  (oo)\______\n            (__)\       )\/\\
-                ||----w |\n                ||     ||"))
+            cow_art = r"""
+ < Moo >
+ ------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+            """
+            preview_area.update(Text(cow_art))
         elif self.current_header == "figlet_custom":
             width = preview_area.size.width or 60
             art = self.figlet.render(self.header_text, self.header_font, width=width - 4)

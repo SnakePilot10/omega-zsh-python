@@ -18,11 +18,19 @@ export {{ key }}="{{ value }}"
 
 # 3. ALIAS PERSONALES
 # Atajos rápidos para tus comandos frecuentes.
-alias zr='source ~/.zshrc'
-alias zc='nano ~/.zshrc'
+alias zr='source ~/.zshrc'                   # Desc: Recargar configuración
+alias zc='nano ~/.zshrc'                    # Desc: Editar Core (.zshrc)
+alias zp='nano ~/.omega-zsh/personal.zsh'   # Desc: Editar Infraestructura
+alias zx='nano ~/.omega-zsh/custom.zsh'     # Desc: Editar Workflow/Custom
 {% for name, cmd in aliases.items() %}
-alias {{ name }}='{{ cmd }}'
+alias {{ name }}='{{ cmd }}' # Desc: Alias generado dinámicamente
 {% endfor %}
+
+# --- 4. DASHBOARD INTELIGENTE (NATIVO) ---
+# Ejecutado por oz_tool.py (Python)
+oz --banner
+
+
 
 # 4. BINARIOS PROPIOS
 # Si tienes scripts en carpetas locales, asegúrate de darles prioridad.
