@@ -1,0 +1,3 @@
+[console_scripts]
+omega = omega_zsh.__main__:main
+oz = omega_zsh.cli.oz_tool:main

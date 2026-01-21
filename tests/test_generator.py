@@ -1,7 +1,7 @@
 import pytest
 import shutil
 from pathlib import Path
-from src.core.generator import ConfigGenerator
+from omega_zsh.core.generator import ConfigGenerator
 
 @pytest.fixture
 def temp_home(tmp_path):

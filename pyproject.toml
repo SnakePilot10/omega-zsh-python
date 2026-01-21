@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omega-zsh"
+version = "2.0.0"
+description = "The Ultimate Shell Manager for Linux & Android (Termux)"
+readme = "README.md"
+authors = [{ name = "SnakePilot10" }]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "rich>=14.2.0",
+    "textual>=6.12.0",
+    "jinja2>=3.1.0",
+    "psutil>=7.2.1"
+]
+
+[project.scripts]
+omega = "omega_zsh.__main__:main"
+oz = "omega_zsh.cli.oz_tool:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["omega_zsh*"]
+
+[tool.setuptools.package-data]
+omega_zsh = ["../assets/**/*", "assets/**/*"]

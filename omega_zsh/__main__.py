@@ -37,7 +37,7 @@ def main():
     try:
         # Importación diferida dentro del try/except para capturar errores de dependencia
         logging.info("Cargando módulos de UI...")
-        from src.ui.app import OmegaApp
+        from omega_zsh.ui.app import OmegaApp
         
         logging.info("Inicializando aplicación...")
         app = OmegaApp()

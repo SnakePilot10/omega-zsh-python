@@ -40,7 +40,7 @@ class OmegaApp(App):
         super().__init__()
         logging.info("Inicializando OmegaApp...")
         self.context = SystemContext()
-        self.generator = ConfigGenerator(Path(__file__).parent.parent.parent / "assets/templates")
+        self.generator = ConfigGenerator(Path(__file__).parent.parent / "assets/templates")
         self.state_manager = StateManager(self.context.home / ".omega-zsh")
         
         # Seleccionar plataforma
@@ -87,7 +87,7 @@ class OmegaApp(App):
 
     def action_config_themes(self) -> None:
         # Cargar temas dinámicamente de assets
-        custom_themes_path = Path(__file__).parent.parent.parent / "assets/themes"
+        custom_themes_path = Path(__file__).parent.parent / "assets/themes"
         custom_themes = []
         if custom_themes_path.exists():
             for f in custom_themes_path.glob("*.zsh-theme"):
@@ -224,7 +224,7 @@ class OmegaApp(App):
         if theme_name in builtin_ids:
             return
 
-        assets_dir = Path(__file__).parent.parent.parent / "assets/themes"
+        assets_dir = Path(__file__).parent.parent / "assets/themes"
         omz_custom_themes = self.context.home / ".oh-my-zsh/custom/themes"
         
         theme_file = f"{theme_name}.zsh-theme"

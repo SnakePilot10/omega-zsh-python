@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from src.core.figlet import FigletManager
+from omega_zsh.core.figlet import FigletManager
 
 @pytest.fixture
 def figlet_manager():
