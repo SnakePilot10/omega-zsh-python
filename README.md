@@ -43,18 +43,27 @@ Esta herramienta se integra automáticamente en tu sistema y ofrece:
     ```
     Este comando analiza tu código fuente y te muestra una lista detallada de todos los plugins instalados, junto con sus alias y funciones exportadas.
 
-## 🛠️ Guía de Personalización
+## 🏠 Privacidad y Archivos Locales
 
-Omega-ZSH utiliza un sistema de **3 Capas** para mantener tu configuración limpia:
+Omega-ZSH sigue una filosofía estricta de separación entre el **Motor** (este repositorio) y tu **Configuración Personal** (tus archivos locales).
 
-1.  **`~/.zshrc` (Núcleo):** Generado automáticamente. **NO LO EDITES**.
-2.  **`~/.omega-zsh/personal.zsh` (Infraestructura):** Configurado por la App. Define variables y alias seguros.
-3.  **`~/.omega-zsh/custom.zsh` (Usuario):** ¡Tu territorio! Agrega funciones y scripts aquí.
+Cuando utilizas los comandos de edición (`zp`, `zx`), estás modificando archivos que residen únicamente en tu dispositivo.
 
-**Documentación de Alias:**
-Para que tus alias aparezcan en el Dashboard de `oz`, agrégales un comentario especial:
+| Alias | Archivo Editado | Ubicación | Propósito |
+| :--- | :--- | :--- | :--- |
+| `zc` | `.zshrc` | `~/.zshrc` | **Núcleo.** Generado automáticamente. No editar manualmente. |
+| `zp` | `personal.zsh` | `~/.omega-zsh/` | **Infraestructura.** Variables de entorno, API KEYS, rutas (PATH). |
+| `zx` | `custom.zsh` | `~/.omega-zsh/` | **Creatividad.** Tus funciones, banners y scripts personales. |
+
+**Nota sobre Capturas de Pantalla:**
+Si ves elementos como banners de "Hello Kitty" o animaciones ASCII personalizadas en las demostraciones, estos son ejemplos de lo que puedes lograr editando tu archivo local `custom.zsh`. **Estos scripts personales NO se incluyen en el repositorio** para mantener tu entorno limpio y ligero.
+
+### Documentación de Alias
+Para que tus alias personales aparezcan en el Dashboard de `oz`, simplemente agrégales un comentario al final en tu archivo `custom.zsh`:
+
 ```bash
-alias mi_comando='comando complejo' # Desc: Hace cosas increíbles
+# En tu archivo ~/.omega-zsh/custom.zsh
+alias hack='cmatrix' # Desc: Modo Hacker
 ```
 
 ## 🖥️ Uso de la Interfaz TUI

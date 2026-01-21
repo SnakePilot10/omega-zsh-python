@@ -7,3 +7,12 @@ raw_output.log
 omega_crash.log
 .gemini/
 gha-creds-*.json
+.DS_Store
+
+# User Configuration Files (Local exclusions)
+# These files should never be committed as they contain user-specific data
+personal.zsh
+custom.zsh
+.zshrc
+.zshrc.bak.*
+*.swp
