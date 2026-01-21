@@ -31,11 +31,16 @@ def get_system_stats():
     mem_percent = mem.percent
     disk_percent = disk.percent
     
+    try:
+        uptime = datetime.fromtimestamp(psutil.boot_time()).strftime("%H:%M")
+    except:
+        uptime = "N/A"
+    
     return {
         "os": "Android/Termux" if "Android" in platform.system() or os.path.exists("/system/build.prop") else platform.system(),
         "mem_usage": f"{mem_percent}%",
         "disk_usage": f"{disk_percent}%",
-        "uptime": datetime.fromtimestamp(psutil.boot_time()).strftime("%H:%M")
+        "uptime": uptime
     }
 
 def get_active_plugins():
