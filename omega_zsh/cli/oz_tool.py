@@ -160,6 +160,36 @@ def show_plugins_detail():
             
         console.print(Panel("\n".join(content), title=title, border_style="grey50"))
 
+VERSION = "2.0.0"
+
+def show_help():
+    """Muestra la ayuda profesional."""
+    
+    # Título y Versión
+    console.print(Panel(
+        f"[bold blue]OMEGA CLI (oz)[/] [white]v{VERSION}[/]\n"
+        "[italic grey62]Herramienta de gestión avanzada para Omega-ZSH[/]",
+        border_style="blue"
+    ))
+
+    # Tabla de Comandos
+    table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table.add_column("Comando", style="green")
+    table.add_column("Alias", style="yellow")
+    table.add_column("Descripción")
+
+    table.add_row("--banner", "", "Muestra el Dashboard con estado del sistema y herramientas.")
+    table.add_row("--plugins", "-p, plugins", "Inspecciona el código fuente de los plugins activos.")
+    table.add_row("--help", "-h", "Muestra esta pantalla de ayuda.")
+    table.add_row("--version", "-v", "Muestra la versión instalada.")
+
+    console.print(table)
+
+    # Pie de página
+    console.print("[grey50]Ejemplo de uso:[/]")
+    console.print("  [green]oz --banner[/]   -> Ver estado del sistema")
+    console.print("  [green]oz plugins[/]    -> Ver qué hacen tus plugins\n")
+
 def main():
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
@@ -167,13 +197,16 @@ def main():
             show_banner()
         elif cmd in ["--plugins", "-p", "plugins"]:
             show_plugins_detail()
+        elif cmd in ["--version", "-v"]:
+             console.print(f"Omega-ZSH CLI [bold cyan]v{VERSION}[/]")
         elif cmd in ["--help", "-h"]:
-            console.print("[bold]Uso:[/]\n  oz --banner   -> Muestra dashboard\n  oz plugins    -> Detalla plugins instalados")
+            show_help()
         else:
-             console.print(f"[red]Comando desconocido: {cmd}[/]")
+             console.print(f"[bold red]❌ Error:[/][red] Comando desconocido '{cmd}'[/]")
+             console.print("Usa [bold yellow]oz --help[/] para ver los comandos disponibles.")
     else:
         # Por defecto muestra ayuda
-        show_banner()
+        show_help()
 
 if __name__ == "__main__":
     main()

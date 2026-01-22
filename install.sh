@@ -82,4 +82,4 @@ fi
 # --- 5. LANZAR APLICACIÓN ---
 echo -e "${GREEN}>> Todo listo. Lanzando Omega-ZSH...${NC}"
 # Pasamos todos los argumentos ($@) al script python
-exec "$VENV_DIR/bin/python" "$PROJECT_DIR/main.py" "$@"
+exec "$VENV_DIR/bin/python" -m omega_zsh "$@"
