@@ -118,6 +118,22 @@ $ oz plugins
 
 ---
 
+## 🎨 Personalización y TUI
+
+Omega-ZSH no solo gestiona el código, sino también la estética y usabilidad de tu terminal.
+
+### Fuentes FIGlet Integradas
+El paquete ahora incluye una colección curada de fuentes FIGlet (`.flf`) en sus assets:
+*   **Fuentes incluidas:** Bloody, Slant, Shadow, Small, Banner, Big, ANSI Shadow.
+*   **Ventaja:** Estas fuentes están disponibles inmediatamente después de la instalación, garantizando que tus banners personalizados funcionen en cualquier dispositivo sin dependencias externas del sistema.
+
+### Interfaz TUI Optimizada
+La interfaz gráfica (`omega`) ha sido refinada para una mejor experiencia en pantallas pequeñas (Termux):
+*   **Scroll Vertical Inteligente:** Las listas de plugins y temas ahora soportan desplazamiento fluido (`overflow-y: auto`), permitiendo navegar por cientos de opciones con facilidad.
+*   **Navegación Táctil:** Optimizado para el uso del ratón y toques en pantalla en emuladores de terminal.
+
+---
+
 ## 💡 Casos de Uso
 
 ### Caso A: El Desarrollador Móvil (Termux)
