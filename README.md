@@ -123,8 +123,8 @@ $ oz plugins
 Omega-ZSH no solo gestiona el código, sino también la estética y usabilidad de tu terminal.
 
 ### Fuentes FIGlet Integradas
-El paquete ahora incluye una colección curada de fuentes FIGlet (`.flf`) en sus assets:
-*   **Fuentes incluidas:** Bloody, Slant, Shadow, Small, Banner, Big, ANSI Shadow.
+El paquete ahora incluye una colección masiva de fuentes FIGlet (`.flf`) en sus assets:
+*   **Colección Completa:** Más de 300 fuentes (incluyendo Bloody, Slant, Shadow, 3D, y muchas más) integradas en el paquete.
 *   **Ventaja:** Estas fuentes están disponibles inmediatamente después de la instalación, garantizando que tus banners personalizados funcionen en cualquier dispositivo sin dependencias externas del sistema.
 
 ### Interfaz TUI Optimizada
