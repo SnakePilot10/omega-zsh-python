@@ -71,6 +71,15 @@ class DashboardScreen(Static):
 class PluginSelectScreen(Screen):
     """Pantalla para seleccionar plugins."""
     BINDINGS = [("escape", "pop_screen", "Volver")]
+    
+    CSS = """
+    SelectionList {
+        height: 1fr;
+        overflow-y: auto;
+        scrollbar-size-vertical: 1;
+        border: solid $primary;
+    }
+    """
 
     def __init__(self, all_plugins, selected_ids):
         super().__init__()
@@ -104,6 +113,16 @@ class PluginSelectScreen(Screen):
 class ThemeSelectScreen(Screen):
     """Pantalla para seleccionar el tema de usuario."""
     BINDINGS = [("escape", "pop_screen", "Volver")]
+    
+    CSS = """
+    #theme-list-container {
+        height: 1fr;
+        overflow-y: auto;
+        scrollbar-size-vertical: 1;
+        border: solid $accent;
+        padding: 1;
+    }
+    """
 
     def __init__(self, themes, current_theme, title="Seleccionar Tema"):
         super().__init__()
