@@ -105,7 +105,7 @@ class OmegaApp(App):
     def update_selected_theme(self, new_theme: str):
         self.selected_theme = new_theme
         self._auto_save_state()
-        self.notify(f"Tema seleccionado: {new_theme}")
+        self.notify(f"Tema '{new_theme}' guardado.\nVe a la pestaña [INSTALL] para aplicar.", title="Cambio Pendiente", timeout=4)
 
     def action_config_header(self) -> None:
         """Lanza la pantalla de configuración del header."""
@@ -211,6 +211,7 @@ class OmegaApp(App):
                 self.generator.create_default_custom_zsh(custom_path)
             
             screen.write_log("\n[bold green]¡INSTALACIÓN COMPLETADA![/]")
+            screen.write_log("[bold yellow]⚠ IMPORTANTE: Reinicia tu terminal o ejecuta 'source ~/.zshrc' para ver los cambios.[/]")
             screen.show_finish()
             
         except Exception as e:
