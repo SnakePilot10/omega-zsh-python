@@ -60,7 +60,14 @@ function yy() {
 # --- Root/Sudo Logic ---
 {% if is_termux %}
 if [ -x "$(command -v su)" ]; then
-    alias sudo='su -c "unset LD_PRELOAD; export PATH=$PREFIX/bin:$PATH; export HOME=$HOME; exec zsh"'
+    # Fallback for Termux if tsu is missing: handle arguments or default to shell
+    sudo() {
+        if [ "$#" -eq 0 ]; then
+            su -c "unset LD_PRELOAD; export PATH=$PREFIX/bin:$PATH; export HOME=$HOME; exec zsh"
+        else
+            su -c "unset LD_PRELOAD; export PATH=$PREFIX/bin:$PATH; export HOME=$HOME; \"$@\""
+        fi
+    }
 elif command -v tsu > /dev/null 2>&1; then
     alias sudo='tsu'
 fi

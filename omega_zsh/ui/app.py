@@ -189,7 +189,7 @@ class OmegaApp(App):
             omz_plugins_list = [p for p in self.selected_plugins if p not in BIN_PLUGINS]
 
             gen_context = {
-                "version": "14.0",
+                "version": "2.0.0",
                 "is_termux": self.context.is_termux,
                 "omz_dir": str(self.context.home / ".oh-my-zsh"),
                 "user_theme": self.selected_theme,

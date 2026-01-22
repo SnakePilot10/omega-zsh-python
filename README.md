@@ -139,7 +139,7 @@ La interfaz gráfica (`omega`) ha sido refinada para una mejor experiencia en pa
 
 ### Caso A: El Desarrollador Móvil (Termux)
 *   **Problema:** Configurar Zsh en Android es tedioso y propenso a errores de permisos/rutas.
-*   **Solución:** Omega detecta el entorno `com.termux`, ajusta los `shebangs`, configura las rutas de almacenamiento interno y arregla los permisos de ejecución automáticamente.
+*   **Solución:** Omega detecta el entorno `com.termux`, ajusta los `shebangs`, configura las rutas de almacenamiento interno y **maneja inteligentemente los permisos de root (sudo/tsu)** para comandos con y sin argumentos.
 
 ### Caso B: El "Distro Hopper"
 *   **Problema:** Usas Arch en casa y Ubuntu en el servidor. Tus alias de actualización (`pacman` vs `apt`) siempre rompen.

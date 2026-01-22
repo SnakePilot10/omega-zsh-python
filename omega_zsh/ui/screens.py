@@ -56,7 +56,7 @@ class DashboardScreen(Static):
         )
         
         welcome_msg = Text.from_markup(
-            f"\n[bold magenta]Welcome to Omega-ZSH v14.0[/]\n"
+            f"\n[bold magenta]Welcome to Omega-ZSH v2.0.0[/]\n"
             f"Detected User: [bold]{os.environ.get('USER', 'user')}[/]\n"
             f"Home: {ctx.home}\n",
             justify="center"
