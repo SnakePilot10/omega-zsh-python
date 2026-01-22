@@ -126,6 +126,7 @@ Omega-ZSH no solo gestiona el código, sino también la estética y usabilidad d
 El paquete ahora incluye una colección masiva de fuentes FIGlet (`.flf`) en sus assets:
 *   **Colección Completa:** Más de 300 fuentes (incluyendo Bloody, Slant, Shadow, 3D, y muchas más) integradas en el paquete.
 *   **Ventaja:** Estas fuentes están disponibles inmediatamente después de la instalación, garantizando que tus banners personalizados funcionen en cualquier dispositivo sin dependencias externas del sistema.
+*   **Robustez:** El sistema detecta automáticamente si `lolcat` (coloreado arcoíris) está instalado. Si falta, el banner se renderiza en texto plano sin romper el inicio de la terminal.
 
 ### Interfaz TUI Optimizada
 La interfaz gráfica (`omega`) ha sido refinada para una mejor experiencia en pantallas pequeñas (Termux):
