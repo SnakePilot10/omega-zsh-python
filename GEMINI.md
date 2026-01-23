@@ -11,13 +11,12 @@ Omega-ZSH is a sophisticated Zsh configuration manager designed for Linux and An
 - **3-Layer Architecture:** Separates core config, structured personal config, and manual custom overrides.
 
 ## Directory Structure
-- **`src/`**: Core application source code.
+- **`omega_zsh/`**: Core application source code.
     - **`core/`**: Business logic, state management, and installation routines.
     - **`platforms/`**: OS-specific implementations (e.g., `termux.py`, `debian.py`).
     - **`ui/`**: TUI implementation using the Textual framework.
-- **`assets/`**: Contains templates (`.zshrc.j2`) and theme definitions.
+    - **`assets/`**: Contains templates (`.zshrc.j2`) and theme definitions.
 - **`install.sh`**: Universal bootstrap script for setting up the environment.
-- **`main.py`**: Application entry point with global error handling.
 - **`requirements.txt`**: Python dependencies (`textual`, `jinja2`).
 
 ## Building and Running
@@ -38,7 +37,7 @@ The project includes a self-contained installer script that handles virtual envi
 To run the application without reinstalling dependencies every time (assuming setup is done):
 ```bash
 source .venv/bin/activate
-python main.py
+python -m omega_zsh
 ```
 
 ## Development Conventions
@@ -46,12 +45,18 @@ python main.py
 ### Architecture
 - **Dependency Management:** All dependencies are isolated in a local `.venv` directory.
 - **Logging:** Errors and runtime info are logged to `omega_crash.log` in the root directory.
-- **Templating:** Configuration files are generated using Jinja2 templates located in `assets/templates/`.
+- **Templating:** Configuration files are generated using Jinja2 templates located in `omega_zsh/assets/templates/`.
 
 ### Testing
-*TODO: Add specific testing instructions if available (e.g., `pytest`). Currently, manual verification via the TUI is the primary method.*
+The project uses `pytest` for unit testing. Tests are located in the `tests/` directory.
+
+To run tests:
+```bash
+source .venv/bin/activate
+pytest
+```
 
 ### Contribution
 - **Virtual Environment:** Ensure you are working within the `.venv` created by `install.sh`.
 - **Platform Specifics:** When adding new OS support, extend the `platforms/` module.
-- **UI Changes:** Modify `src/ui/` for interface adjustments. Verify layout on both desktop and mobile (Termux) screen sizes.
+- **UI Changes:** Modify `omega_zsh/ui/` for interface adjustments. Verify layout on both desktop and mobile (Termux) screen sizes.

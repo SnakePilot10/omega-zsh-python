@@ -153,6 +153,8 @@ La interfaz gráfica (`omega`) ha sido refinada para una mejor experiencia en pa
 
 ## 🤝 Contribución
 
+¡Tu ayuda es bienvenida! Para instrucciones detalladas sobre cómo configurar el entorno de desarrollo y ejecutar pruebas, consulta nuestra **[Guía de Contribución](CONTRIBUTING.md)**.
+
 ### Estructura del Proyecto
 ```
 omega-zsh-python/
