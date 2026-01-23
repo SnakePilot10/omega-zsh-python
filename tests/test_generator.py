@@ -13,9 +13,9 @@ def temp_home(tmp_path):
 
 @pytest.fixture
 def generator():
-    # Templates are in assets/templates relative to project root
+    # Templates are in omega_zsh/assets/templates relative to project root
     root = Path(__file__).parent.parent
-    templates_dir = root / "assets" / "templates"
+    templates_dir = root / "omega_zsh" / "assets" / "templates"
     return ConfigGenerator(templates_dir)
 
 def test_generate_zshrc(generator, temp_home):
