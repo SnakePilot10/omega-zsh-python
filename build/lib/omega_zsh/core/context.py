@@ -1,6 +1,7 @@
 import os
 import platform
 import subprocess
+import shlex
 from pathlib import Path
 from typing import Optional
 
@@ -103,9 +104,12 @@ class SystemContext:
         return which(cmd) is not None
 
     def _run_cmd(self, cmd: str) -> str:
-        """Ejecuta un comando shell y devuelve stdout limpio."""
+        """Ejecuta un comando shell de forma segura y devuelve stdout limpio."""
         try:
-            return subprocess.check_output(cmd, shell=True, text=True).strip()
+            # Usamos shlex.split para tokenizar el comando correctamente
+            # y evitar el uso de shell=True
+            args = shlex.split(cmd)
+            return subprocess.check_output(args, text=True).strip()
         except:
             return ""
 

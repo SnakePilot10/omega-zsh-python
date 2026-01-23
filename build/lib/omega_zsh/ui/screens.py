@@ -12,6 +12,9 @@ from ..core.constants import DB_PLUGINS, THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_HEA
 from ..core.context import SystemContext
 import platform
 import os
+import psutil
+from datetime import datetime
+import logging
 
 class DashboardScreen(Static):
     """Pantalla principal con el resumen de configuración."""
@@ -20,10 +23,34 @@ class DashboardScreen(Static):
         self.update_stats()
 
     def update_stats(self) -> None:
-        pass # Placeholder for real-time stats updates
+        """Actualiza las estadísticas del sistema en tiempo real."""
+        try:
+            mem = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            # Obtener uptime
+            try:
+                uptime = datetime.fromtimestamp(psutil.boot_time()).strftime("%H:%M")
+            except Exception:
+                uptime = "N/A"
+
+            # Actualizar widgets si existen (en una versión más compleja, usaríamos Reactive)
+            # Por ahora, como es Static y render se llama una vez, nos aseguramos
+            # de que los datos estén disponibles para el renderizado inicial.
+            self.stats = {
+                "mem": f"{mem.percent}%",
+                "disk": f"{disk.percent}%",
+                "uptime": uptime
+            }
+        except Exception as e:
+            logging.error(f"Error actualizando estadísticas: {e}")
+            self.stats = {"mem": "N/A", "disk": "N/A", "uptime": "N/A"}
 
     def render(self) -> Panel:
         ctx = SystemContext()
+        # Asegurarse de que tenemos stats
+        if not hasattr(self, "stats"):
+            self.update_stats()
         
         # System Info Panel
         sys_info = Table.grid(padding=1)
@@ -34,6 +61,9 @@ class DashboardScreen(Static):
         sys_info.add_row("Distro:", ctx.distro_id.title())
         sys_info.add_row("Package Mgr:", ctx.package_manager_type)
         sys_info.add_row("Termux:", "✅ Yes" if ctx.is_termux else "❌ No")
+        sys_info.add_row("RAM Usage:", self.stats.get("mem", "N/A"))
+        sys_info.add_row("Disk Usage:", self.stats.get("disk", "N/A"))
+        sys_info.add_row("Uptime:", self.stats.get("uptime", "N/A"))
         
         # Shortcuts Panel
         shortcuts = Table.grid(padding=1)
@@ -56,7 +86,7 @@ class DashboardScreen(Static):
         )
         
         welcome_msg = Text.from_markup(
-            f"\n[bold magenta]Welcome to Omega-ZSH v14.0[/]\n"
+            f"\n[bold magenta]Welcome to Omega-ZSH v2.0.0[/]\n"
             f"Detected User: [bold]{os.environ.get('USER', 'user')}[/]\n"
             f"Home: {ctx.home}\n",
             justify="center"
@@ -71,6 +101,15 @@ class DashboardScreen(Static):
 class PluginSelectScreen(Screen):
     """Pantalla para seleccionar plugins."""
     BINDINGS = [("escape", "pop_screen", "Volver")]
+    
+    CSS = """
+    SelectionList {
+        height: 1fr;
+        overflow-y: auto;
+        scrollbar-size-vertical: 1;
+        border: solid $primary;
+    }
+    """
 
     def __init__(self, all_plugins, selected_ids):
         super().__init__()
@@ -104,6 +143,16 @@ class PluginSelectScreen(Screen):
 class ThemeSelectScreen(Screen):
     """Pantalla para seleccionar el tema de usuario."""
     BINDINGS = [("escape", "pop_screen", "Volver")]
+    
+    CSS = """
+    #theme-list-container {
+        height: 1fr;
+        overflow-y: auto;
+        scrollbar-size-vertical: 1;
+        border: solid $accent;
+        padding: 1;
+    }
+    """
 
     def __init__(self, themes, current_theme, title="Seleccionar Tema"):
         super().__init__()
@@ -125,9 +174,11 @@ class ThemeSelectScreen(Screen):
     def on_theme_changed(self, event: RadioSet.Changed) -> None:
         """Actualizar estado inmediatamente al cambiar selección."""
         if event.pressed:
-            clean_id = event.pressed.id.replace("-", "_") if event.pressed.id else str(event.pressed.label)
+            # La etiqueta del RadioButton contiene el nombre real del tema.
+            # Lo convertimos a string para asegurar compatibilidad.
+            theme_name = str(event.pressed.label)
             if hasattr(self.app, "update_selected_theme"):
-                self.app.update_selected_theme(clean_id)
+                self.app.update_selected_theme(theme_name)
     
     def action_pop_screen(self) -> None:
         self.app.pop_screen()
@@ -221,16 +272,16 @@ class HeaderSelectScreen(Screen):
                 if item.name == self.header_font:
                     list_view.index = idx
                     break
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning(f"No se pudo restaurar la selección de fuente Figlet: {e}")
         self.update_preview()
 
     def update_ui_visibility(self) -> None:
         try:
             is_figlet = self.query_one("#h-figlet_custom", RadioButton).value
             self.query_one("#figlet-config").display = is_figlet
-        except Exception:
-            pass
+        except Exception as e:
+            logging.error(f"Error actualizando visibilidad de UI: {e}")
 
     def _sync_state(self):
         """Sincroniza el estado actual con la aplicación principal."""

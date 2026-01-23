@@ -9,6 +9,398 @@ omega_zsh.egg-info/dependency_links.txt
 omega_zsh.egg-info/entry_points.txt
 omega_zsh.egg-info/requires.txt
 omega_zsh.egg-info/top_level.txt
+omega_zsh/assets/fonts/1Row.flf
+omega_zsh/assets/fonts/3-D.flf
+omega_zsh/assets/fonts/3D Diagonal.flf
+omega_zsh/assets/fonts/3D-ASCII.flf
+omega_zsh/assets/fonts/3d.flf
+omega_zsh/assets/fonts/3d_diagonal.flf
+omega_zsh/assets/fonts/3x5.flf
+omega_zsh/assets/fonts/4Max.flf
+omega_zsh/assets/fonts/5 Line Oblique.flf
+omega_zsh/assets/fonts/5lineoblique.flf
+omega_zsh/assets/fonts/AMC 3 Line.flf
+omega_zsh/assets/fonts/AMC 3 Liv1.flf
+omega_zsh/assets/fonts/AMC AAA01.flf
+omega_zsh/assets/fonts/AMC Neko.flf
+omega_zsh/assets/fonts/AMC Razor.flf
+omega_zsh/assets/fonts/AMC Razor2.flf
+omega_zsh/assets/fonts/AMC Slash.flf
+omega_zsh/assets/fonts/AMC Slider.flf
+omega_zsh/assets/fonts/AMC Thin.flf
+omega_zsh/assets/fonts/AMC Tubes.flf
+omega_zsh/assets/fonts/AMC Untitled.flf
+omega_zsh/assets/fonts/ANSI Regular.flf
+omega_zsh/assets/fonts/ANSI Shadow.flf
+omega_zsh/assets/fonts/ANSI%20Shadow.flf
+omega_zsh/assets/fonts/ASCII New Roman.flf
+omega_zsh/assets/fonts/Acrobatic.flf
+omega_zsh/assets/fonts/Alligator.flf
+omega_zsh/assets/fonts/Alligator2.flf
+omega_zsh/assets/fonts/Alpha.flf
+omega_zsh/assets/fonts/Alphabet.flf
+omega_zsh/assets/fonts/Arrows.flf
+omega_zsh/assets/fonts/Avatar.flf
+omega_zsh/assets/fonts/B1FF.flf
+omega_zsh/assets/fonts/Banner.flf
+omega_zsh/assets/fonts/Banner3-D.flf
+omega_zsh/assets/fonts/Banner3.flf
+omega_zsh/assets/fonts/Banner4.flf
+omega_zsh/assets/fonts/Barbwire.flf
+omega_zsh/assets/fonts/Basic.flf
+omega_zsh/assets/fonts/Bear.flf
+omega_zsh/assets/fonts/Bell.flf
+omega_zsh/assets/fonts/Benjamin.flf
+omega_zsh/assets/fonts/Big Chief.flf
+omega_zsh/assets/fonts/Big Money-ne.flf
+omega_zsh/assets/fonts/Big Money-nw.flf
+omega_zsh/assets/fonts/Big Money-se.flf
+omega_zsh/assets/fonts/Big Money-sw.flf
+omega_zsh/assets/fonts/Big.flf
+omega_zsh/assets/fonts/Bigfig.flf
+omega_zsh/assets/fonts/Binary.flf
+omega_zsh/assets/fonts/Block.flf
+omega_zsh/assets/fonts/Blocks.flf
+omega_zsh/assets/fonts/Bloody.flf
+omega_zsh/assets/fonts/Bolger.flf
+omega_zsh/assets/fonts/Braced.flf
+omega_zsh/assets/fonts/Bright.flf
+omega_zsh/assets/fonts/Broadway KB.flf
+omega_zsh/assets/fonts/Broadway.flf
+omega_zsh/assets/fonts/Bubble.flf
+omega_zsh/assets/fonts/Bulbhead.flf
+omega_zsh/assets/fonts/Caligraphy.flf
+omega_zsh/assets/fonts/Caligraphy2.flf
+omega_zsh/assets/fonts/Calvin S.flf
+omega_zsh/assets/fonts/Cards.flf
+omega_zsh/assets/fonts/Catwalk.flf
+omega_zsh/assets/fonts/Chiseled.flf
+omega_zsh/assets/fonts/Chunky.flf
+omega_zsh/assets/fonts/Coinstak.flf
+omega_zsh/assets/fonts/Cola.flf
+omega_zsh/assets/fonts/Colossal.flf
+omega_zsh/assets/fonts/Computer.flf
+omega_zsh/assets/fonts/Contessa.flf
+omega_zsh/assets/fonts/Contrast.flf
+omega_zsh/assets/fonts/Cosmike.flf
+omega_zsh/assets/fonts/Crawford.flf
+omega_zsh/assets/fonts/Crawford2.flf
+omega_zsh/assets/fonts/Crazy.flf
+omega_zsh/assets/fonts/Cricket.flf
+omega_zsh/assets/fonts/Cursive.flf
+omega_zsh/assets/fonts/Cyberlarge.flf
+omega_zsh/assets/fonts/Cybermedium.flf
+omega_zsh/assets/fonts/Cybersmall.flf
+omega_zsh/assets/fonts/Cygnet.flf
+omega_zsh/assets/fonts/DANC4.flf
+omega_zsh/assets/fonts/DOS Rebel.flf
+omega_zsh/assets/fonts/DWhistled.flf
+omega_zsh/assets/fonts/Dancing Font.flf
+omega_zsh/assets/fonts/Decimal.flf
+omega_zsh/assets/fonts/Def Leppard.flf
+omega_zsh/assets/fonts/Delta Corps Priest 1.flf
+omega_zsh/assets/fonts/Diamond.flf
+omega_zsh/assets/fonts/Diet Cola.flf
+omega_zsh/assets/fonts/Digital.flf
+omega_zsh/assets/fonts/Doh.flf
+omega_zsh/assets/fonts/Doom.flf
+omega_zsh/assets/fonts/Dot Matrix.flf
+omega_zsh/assets/fonts/Double Shorts.flf
+omega_zsh/assets/fonts/Double.flf
+omega_zsh/assets/fonts/Dr Pepper.flf
+omega_zsh/assets/fonts/Efti Chess.flf
+omega_zsh/assets/fonts/Efti Font.flf
+omega_zsh/assets/fonts/Efti Italic.flf
+omega_zsh/assets/fonts/Efti Piti.flf
+omega_zsh/assets/fonts/Efti Robot.flf
+omega_zsh/assets/fonts/Efti Wall.flf
+omega_zsh/assets/fonts/Efti Water.flf
+omega_zsh/assets/fonts/Electronic.flf
+omega_zsh/assets/fonts/Elite.flf
+omega_zsh/assets/fonts/Epic.flf
+omega_zsh/assets/fonts/Fender.flf
+omega_zsh/assets/fonts/Filter.flf
+omega_zsh/assets/fonts/Fire Font-k.flf
+omega_zsh/assets/fonts/Fire Font-s.flf
+omega_zsh/assets/fonts/Flipped.flf
+omega_zsh/assets/fonts/Flower Power.flf
+omega_zsh/assets/fonts/Four Tops.flf
+omega_zsh/assets/fonts/Fraktur.flf
+omega_zsh/assets/fonts/Fun Face.flf
+omega_zsh/assets/fonts/Fun Faces.flf
+omega_zsh/assets/fonts/Fuzzy.flf
+omega_zsh/assets/fonts/Georgi16.flf
+omega_zsh/assets/fonts/Georgia11.flf
+omega_zsh/assets/fonts/Ghost.flf
+omega_zsh/assets/fonts/Ghoulish.flf
+omega_zsh/assets/fonts/Glenyn.flf
+omega_zsh/assets/fonts/Goofy.flf
+omega_zsh/assets/fonts/Gothic.flf
+omega_zsh/assets/fonts/Graceful.flf
+omega_zsh/assets/fonts/Gradient.flf
+omega_zsh/assets/fonts/Graffiti.flf
+omega_zsh/assets/fonts/Greek.flf
+omega_zsh/assets/fonts/Heart Left.flf
+omega_zsh/assets/fonts/Heart Right.flf
+omega_zsh/assets/fonts/Henry 3D.flf
+omega_zsh/assets/fonts/Hex.flf
+omega_zsh/assets/fonts/Hieroglyphs.flf
+omega_zsh/assets/fonts/Hollywood.flf
+omega_zsh/assets/fonts/Horizontal Left.flf
+omega_zsh/assets/fonts/Horizontal Right.flf
+omega_zsh/assets/fonts/ICL-1900.flf
+omega_zsh/assets/fonts/Impossible.flf
+omega_zsh/assets/fonts/Invita.flf
+omega_zsh/assets/fonts/Isometric1.flf
+omega_zsh/assets/fonts/Isometric2.flf
+omega_zsh/assets/fonts/Isometric3.flf
+omega_zsh/assets/fonts/Isometric4.flf
+omega_zsh/assets/fonts/Italic.flf
+omega_zsh/assets/fonts/Ivrit.flf
+omega_zsh/assets/fonts/JS Block Letters.flf
+omega_zsh/assets/fonts/JS Bracket Letters.flf
+omega_zsh/assets/fonts/JS Capital Curves.flf
+omega_zsh/assets/fonts/JS Cursive.flf
+omega_zsh/assets/fonts/JS Stick Letters.flf
+omega_zsh/assets/fonts/Jacky.flf
+omega_zsh/assets/fonts/Jazmine.flf
+omega_zsh/assets/fonts/Jerusalem.flf
+omega_zsh/assets/fonts/Katakana.flf
+omega_zsh/assets/fonts/Kban.flf
+omega_zsh/assets/fonts/Keyboard.flf
+omega_zsh/assets/fonts/Knob.flf
+omega_zsh/assets/fonts/Konto Slant.flf
+omega_zsh/assets/fonts/Konto.flf
+omega_zsh/assets/fonts/LCD.flf
+omega_zsh/assets/fonts/Larry 3D 2.flf
+omega_zsh/assets/fonts/Larry 3D.flf
+omega_zsh/assets/fonts/Lean.flf
+omega_zsh/assets/fonts/Letters.flf
+omega_zsh/assets/fonts/Lil Devil.flf
+omega_zsh/assets/fonts/Line Blocks.flf
+omega_zsh/assets/fonts/Linux.flf
+omega_zsh/assets/fonts/Lockergnome.flf
+omega_zsh/assets/fonts/Madrid.flf
+omega_zsh/assets/fonts/Marquee.flf
+omega_zsh/assets/fonts/Maxfour.flf
+omega_zsh/assets/fonts/Merlin1.flf
+omega_zsh/assets/fonts/Merlin2.flf
+omega_zsh/assets/fonts/Mike.flf
+omega_zsh/assets/fonts/Mini.flf
+omega_zsh/assets/fonts/Mirror.flf
+omega_zsh/assets/fonts/Mnemonic.flf
+omega_zsh/assets/fonts/Modular.flf
+omega_zsh/assets/fonts/Morse.flf
+omega_zsh/assets/fonts/Morse2.flf
+omega_zsh/assets/fonts/Moscow.flf
+omega_zsh/assets/fonts/Mshebrew210.flf
+omega_zsh/assets/fonts/Muzzle.flf
+omega_zsh/assets/fonts/NScript.flf
+omega_zsh/assets/fonts/NT Greek.flf
+omega_zsh/assets/fonts/NV Script.flf
+omega_zsh/assets/fonts/Nancyj-Fancy.flf
+omega_zsh/assets/fonts/Nancyj-Improved.flf
+omega_zsh/assets/fonts/Nancyj-Underlined.flf
+omega_zsh/assets/fonts/Nancyj.flf
+omega_zsh/assets/fonts/Nipples.flf
+omega_zsh/assets/fonts/O8.flf
+omega_zsh/assets/fonts/OS2.flf
+omega_zsh/assets/fonts/Octal.flf
+omega_zsh/assets/fonts/Ogre.flf
+omega_zsh/assets/fonts/Old Banner.flf
+omega_zsh/assets/fonts/Patorjk's Cheese.flf
+omega_zsh/assets/fonts/Patorjk-HeX.flf
+omega_zsh/assets/fonts/Pawp.flf
+omega_zsh/assets/fonts/Peaks Slant.flf
+omega_zsh/assets/fonts/Peaks.flf
+omega_zsh/assets/fonts/Pebbles.flf
+omega_zsh/assets/fonts/Pepper.flf
+omega_zsh/assets/fonts/Poison.flf
+omega_zsh/assets/fonts/Puffy.flf
+omega_zsh/assets/fonts/Puzzle.flf
+omega_zsh/assets/fonts/Pyramid.flf
+omega_zsh/assets/fonts/Rammstein.flf
+omega_zsh/assets/fonts/Rectangles.flf
+omega_zsh/assets/fonts/Red Phoenix.flf
+omega_zsh/assets/fonts/Relief.flf
+omega_zsh/assets/fonts/Relief2.flf
+omega_zsh/assets/fonts/Reverse.flf
+omega_zsh/assets/fonts/Roman.flf
+omega_zsh/assets/fonts/Rot13.flf
+omega_zsh/assets/fonts/Rotated.flf
+omega_zsh/assets/fonts/Rounded.flf
+omega_zsh/assets/fonts/Rowan Cap.flf
+omega_zsh/assets/fonts/Rozzo.flf
+omega_zsh/assets/fonts/Runic.flf
+omega_zsh/assets/fonts/Runyc.flf
+omega_zsh/assets/fonts/S Blood.flf
+omega_zsh/assets/fonts/SL Script.flf
+omega_zsh/assets/fonts/Santa Clara.flf
+omega_zsh/assets/fonts/Script.flf
+omega_zsh/assets/fonts/Serifcap.flf
+omega_zsh/assets/fonts/Shadow.flf
+omega_zsh/assets/fonts/Shimrod.flf
+omega_zsh/assets/fonts/Short.flf
+omega_zsh/assets/fonts/Slant Relief.flf
+omega_zsh/assets/fonts/Slant.flf
+omega_zsh/assets/fonts/Slide.flf
+omega_zsh/assets/fonts/Small Caps.flf
+omega_zsh/assets/fonts/Small Isometric1.flf
+omega_zsh/assets/fonts/Small Keyboard.flf
+omega_zsh/assets/fonts/Small Poison.flf
+omega_zsh/assets/fonts/Small Script.flf
+omega_zsh/assets/fonts/Small Shadow.flf
+omega_zsh/assets/fonts/Small Slant.flf
+omega_zsh/assets/fonts/Small Tengwar.flf
+omega_zsh/assets/fonts/Small.flf
+omega_zsh/assets/fonts/Soft.flf
+omega_zsh/assets/fonts/Speed.flf
+omega_zsh/assets/fonts/Spliff.flf
+omega_zsh/assets/fonts/Stacey.flf
+omega_zsh/assets/fonts/Stampate.flf
+omega_zsh/assets/fonts/Stampatello.flf
+omega_zsh/assets/fonts/Standard.flf
+omega_zsh/assets/fonts/Star Strips.flf
+omega_zsh/assets/fonts/Star Wars.flf
+omega_zsh/assets/fonts/Stellar.flf
+omega_zsh/assets/fonts/Stforek.flf
+omega_zsh/assets/fonts/Stick Letters.flf
+omega_zsh/assets/fonts/Stop.flf
+omega_zsh/assets/fonts/Straight.flf
+omega_zsh/assets/fonts/Stronger Than All.flf
+omega_zsh/assets/fonts/Sub-Zero.flf
+omega_zsh/assets/fonts/Swamp Land.flf
+omega_zsh/assets/fonts/Swan.flf
+omega_zsh/assets/fonts/Sweet.flf
+omega_zsh/assets/fonts/THIS.flf
+omega_zsh/assets/fonts/Tanja.flf
+omega_zsh/assets/fonts/Tengwar.flf
+omega_zsh/assets/fonts/Term.flf
+omega_zsh/assets/fonts/Test1.flf
+omega_zsh/assets/fonts/The Edge.flf
+omega_zsh/assets/fonts/Thick.flf
+omega_zsh/assets/fonts/Thin.flf
+omega_zsh/assets/fonts/Thorned.flf
+omega_zsh/assets/fonts/Three Point.flf
+omega_zsh/assets/fonts/Ticks Slant.flf
+omega_zsh/assets/fonts/Ticks.flf
+omega_zsh/assets/fonts/Tiles.flf
+omega_zsh/assets/fonts/Tinker-Toy.flf
+omega_zsh/assets/fonts/Tombstone.flf
+omega_zsh/assets/fonts/Train.flf
+omega_zsh/assets/fonts/Trek.flf
+omega_zsh/assets/fonts/Tsalagi.flf
+omega_zsh/assets/fonts/Tubes-Regular.flf
+omega_zsh/assets/fonts/Tubes-Smushed.flf
+omega_zsh/assets/fonts/Tubular.flf
+omega_zsh/assets/fonts/Twisted.flf
+omega_zsh/assets/fonts/Two Point.flf
+omega_zsh/assets/fonts/USA Flag.flf
+omega_zsh/assets/fonts/Univers.flf
+omega_zsh/assets/fonts/Varsity.flf
+omega_zsh/assets/fonts/Wavy.flf
+omega_zsh/assets/fonts/Weird.flf
+omega_zsh/assets/fonts/Wet Letter.flf
+omega_zsh/assets/fonts/Whimsy.flf
+omega_zsh/assets/fonts/Wow.flf
+omega_zsh/assets/fonts/alligator3.flf
+omega_zsh/assets/fonts/amc3line.flf
+omega_zsh/assets/fonts/amc3liv1.flf
+omega_zsh/assets/fonts/amcaaa01.flf
+omega_zsh/assets/fonts/amcneko.flf
+omega_zsh/assets/fonts/amcrazo2.flf
+omega_zsh/assets/fonts/amcrazor.flf
+omega_zsh/assets/fonts/amcslash.flf
+omega_zsh/assets/fonts/amcslder.flf
+omega_zsh/assets/fonts/amcthin.flf
+omega_zsh/assets/fonts/amctubes.flf
+omega_zsh/assets/fonts/amcun1.flf
+omega_zsh/assets/fonts/ascii_new_roman.flf
+omega_zsh/assets/fonts/banner.flf
+omega_zsh/assets/fonts/big.flf
+omega_zsh/assets/fonts/bigchief.flf
+omega_zsh/assets/fonts/block.flf
+omega_zsh/assets/fonts/broadway_kb.flf
+omega_zsh/assets/fonts/bubble.flf
+omega_zsh/assets/fonts/calgphy2.flf
+omega_zsh/assets/fonts/cosmic.flf
+omega_zsh/assets/fonts/dancingfont.flf
+omega_zsh/assets/fonts/defleppard.flf
+omega_zsh/assets/fonts/dietcola.flf
+omega_zsh/assets/fonts/digital.flf
+omega_zsh/assets/fonts/dosrebel.flf
+omega_zsh/assets/fonts/dotmatrix.flf
+omega_zsh/assets/fonts/doubleshorts.flf
+omega_zsh/assets/fonts/drpepper.flf
+omega_zsh/assets/fonts/eftichess.flf
+omega_zsh/assets/fonts/eftifont.flf
+omega_zsh/assets/fonts/eftipiti.flf
+omega_zsh/assets/fonts/eftirobot.flf
+omega_zsh/assets/fonts/eftitalic.flf
+omega_zsh/assets/fonts/eftiwall.flf
+omega_zsh/assets/fonts/eftiwater.flf
+omega_zsh/assets/fonts/fire_font-k.flf
+omega_zsh/assets/fonts/fire_font-s.flf
+omega_zsh/assets/fonts/flowerpower.flf
+omega_zsh/assets/fonts/fourtops.flf
+omega_zsh/assets/fonts/funface.flf
+omega_zsh/assets/fonts/funfaces.flf
+omega_zsh/assets/fonts/halfiwi.flf
+omega_zsh/assets/fonts/heart_left.flf
+omega_zsh/assets/fonts/heart_right.flf
+omega_zsh/assets/fonts/henry3d.flf
+omega_zsh/assets/fonts/horizontalleft.flf
+omega_zsh/assets/fonts/horizontalright.flf
+omega_zsh/assets/fonts/ivrit.flf
+omega_zsh/assets/fonts/koholint.flf
+omega_zsh/assets/fonts/kompaktblk.flf
+omega_zsh/assets/fonts/kontoslant.flf
+omega_zsh/assets/fonts/larry3d.flf
+omega_zsh/assets/fonts/lean.flf
+omega_zsh/assets/fonts/lildevil.flf
+omega_zsh/assets/fonts/lineblocks.flf
+omega_zsh/assets/fonts/maxiwi.flf
+omega_zsh/assets/fonts/mini.flf
+omega_zsh/assets/fonts/miniwi.flf
+omega_zsh/assets/fonts/mnemonic.flf
+omega_zsh/assets/fonts/mono9.flf
+omega_zsh/assets/fonts/ntgreek.flf
+omega_zsh/assets/fonts/oldbanner.flf
+omega_zsh/assets/fonts/peaksslant.flf
+omega_zsh/assets/fonts/red_phoenix.flf
+omega_zsh/assets/fonts/rev.flf
+omega_zsh/assets/fonts/rowancap.flf
+omega_zsh/assets/fonts/s-relief.flf
+omega_zsh/assets/fonts/santaclara.flf
+omega_zsh/assets/fonts/sblood.flf
+omega_zsh/assets/fonts/script.flf
+omega_zsh/assets/fonts/shadow.flf
+omega_zsh/assets/fonts/six-fo.flf
+omega_zsh/assets/fonts/slant.flf
+omega_zsh/assets/fonts/slscript.flf
+omega_zsh/assets/fonts/small.flf
+omega_zsh/assets/fonts/smallcaps.flf
+omega_zsh/assets/fonts/smisome1.flf
+omega_zsh/assets/fonts/smkeyboard.flf
+omega_zsh/assets/fonts/smpoison.flf
+omega_zsh/assets/fonts/smscript.flf
+omega_zsh/assets/fonts/smshadow.flf
+omega_zsh/assets/fonts/smslant.flf
+omega_zsh/assets/fonts/smtengwar.flf
+omega_zsh/assets/fonts/standard.flf
+omega_zsh/assets/fonts/starstrips.flf
+omega_zsh/assets/fonts/starwars.flf
+omega_zsh/assets/fonts/stencil.flf
+omega_zsh/assets/fonts/swampland.flf
+omega_zsh/assets/fonts/term.flf
+omega_zsh/assets/fonts/terminus.flf
+omega_zsh/assets/fonts/terminus_dots.flf
+omega_zsh/assets/fonts/threepoint.flf
+omega_zsh/assets/fonts/ticksslant.flf
+omega_zsh/assets/fonts/twopoint.flf
+omega_zsh/assets/fonts/ublk.flf
+omega_zsh/assets/fonts/usaflag.flf
+omega_zsh/assets/fonts/wetletter.flf
 omega_zsh/assets/templates/personal.zsh.j2
 omega_zsh/assets/themes/bira_elegante.zsh-theme
 omega_zsh/assets/themes/bira_espacial.zsh-theme
