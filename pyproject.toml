@@ -17,6 +17,11 @@ dependencies = [
     "psutil>=7.2.1"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0"
+]
+
 [project.scripts]
 omega = "omega_zsh.__main__:main"
 oz = "omega_zsh.cli.oz_tool:main"
