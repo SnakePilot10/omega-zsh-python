@@ -1,8 +1,12 @@
-# Hacker Matrix
-local return_code="%(?..%{$fg[red]%}%? ERR%{$reset_color%})"
-local user_host="%B%(!.%{$fg[red]%}.%{$fg[green]%})%n@%m%{$reset_color%} "
+# Matrix God Tier - "The Construct"
+local return_code="%(?..%F{196}ERROR:%?%f)"
+# Colores Matrix: 46 (Brillante), 40, 34, 28, 22 (Oscuro)
+local user_host="%B%F{046}%n%F{040}@%F{034}%m%f"
 local user_symbol='%(!.#.>_)'
-local current_dir="%B%{$fg[green]%}%~%{$reset_color%}"
+
+# Path con efecto "Digital Decay"
+local current_dir="%B%F{118}[ %F{154}%~ %F{118}]%f"
+
 local conda_prompt='$(conda_prompt_info)'
 local vcs_branch='$(git_prompt_info)$(hg_prompt_info)'
 local rvm_ruby='$(ruby_prompt_info)'
@@ -13,26 +17,26 @@ else
     local kube_prompt=''
 fi
 
-ZSH_THEME_RVM_PROMPT_OPTIONS="i v g"
+# Decoración binaria aleatoria estática para velocidad
+local bin_deco="%F{022}10110%F{028}01%F{034}10%F{040}01%f"
 
-PROMPT="⌨️ ${conda_prompt}${user_host}${current_dir}${rvm_ruby}${vcs_branch}${venv_prompt}${kube_prompt}
-└[CODE] %B${user_symbol}%b "
-RPROMPT="%B%{$fg[red]%}${return_code}%b%{$reset_color%}"
+# Estructura "Circuit Board" (╓ ╙)
+PROMPT="
+%F{028}╓──${bin_deco}──$user_host $current_dir
+%F{028}╙─▪%B%F{046}${user_symbol}%f "
 
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg[green]%}💾["
-ZSH_THEME_GIT_PROMPT_SUFFIX="]%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[red]%}⚠"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}✓"
+# Info técnica a la derecha para limpiar la vista
+RPROMPT="${conda_prompt}${vcs_branch}${venv_prompt} ${return_code}"
 
-ZSH_THEME_HG_PROMPT_PREFIX="$ZSH_THEME_GIT_PROMPT_PREFIX"
-ZSH_THEME_HG_PROMPT_SUFFIX="$ZSH_THEME_GIT_PROMPT_SUFFIX"
-ZSH_THEME_HG_PROMPT_DIRTY="$ZSH_THEME_GIT_PROMPT_DIRTY"
-ZSH_THEME_HG_PROMPT_CLEAN="$ZSH_THEME_GIT_PROMPT_CLEAN"
+# Git estilo "Raw Data"
+ZSH_THEME_GIT_PROMPT_PREFIX="%F{046}git::"
+ZSH_THEME_GIT_PROMPT_SUFFIX=""
+ZSH_THEME_GIT_PROMPT_DIRTY="%F{196}![UNSYNC]"
+ZSH_THEME_GIT_PROMPT_CLEAN="%F{046}[SYNC]"
 
-ZSH_THEME_RUBY_PROMPT_PREFIX="%{$fg[green]%}🔑["
-ZSH_THEME_RUBY_PROMPT_SUFFIX="]%{$reset_color%}"
+ZSH_THEME_RUBY_PROMPT_PREFIX="%F{046}rb::"
+ZSH_THEME_RUBY_PROMPT_SUFFIX=""
 
-ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX="%{$fg[green]%}🔒["
-ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX="]%{$reset_color%}"
-ZSH_THEME_VIRTUALENV_PREFIX="$ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX"
-ZSH_THEME_VIRTUALENV_SUFFIX="$ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX"
+ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX="%F{046}venv::"
+ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX=""
+

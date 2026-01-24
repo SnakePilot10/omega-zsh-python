@@ -1,38 +1,35 @@
-# Futurista Neon
-local return_code="%(?..%{$fg[red]%}%? ERR%{$reset_color%})"
-local user_host="%B%(!.%{$fg[red]%}.%{$fg[cyan]%})%n@%m%{$reset_color%} "
-local user_symbol='%(!.#.>>)'
-local current_dir="%B%{$fg[magenta]%}%~%{$reset_color%}"
+# Futurista Neon God Tier - "Night City HUD"
+local return_code="%(?..%F{196}☠ %?%f)"
+
+# Neon Palette: Pink 198/201, Cyan 051/045, Purple 093
+local c_pink="%F{201}"
+local c_cyan="%F{051}"
+local c_purp="%F{093}"
+local c_warn="%F{196}"
+
+local user_host="${c_pink}❲ %n ${c_purp}⚡ ${c_cyan}%m ${c_pink}❳%f"
+local user_symbol='%(!.#.❯❯❯)'
+local current_dir="${c_cyan}📂 %~%f"
 local conda_prompt='$(conda_prompt_info)'
 local vcs_branch='$(git_prompt_info)$(hg_prompt_info)'
 local rvm_ruby='$(ruby_prompt_info)'
 local venv_prompt='$(virtualenv_prompt_info)'
-if [[ "${plugins[@]}" =~ 'kube-ps1' ]]; then
-    local kube_prompt='$(kube_ps1)'
-else
-    local kube_prompt=''
-fi
 
-ZSH_THEME_RVM_PROMPT_OPTIONS="i v g"
+# HUD Superior con Bloques Sólidos (Mecha Anime Style)
+PROMPT="
+${c_cyan}▛▀▀${c_pink}▀${c_purp}▀${c_pink}▀${c_cyan}▀${user_host}▀▀${current_dir}
+${c_cyan}▙▄▄►%f ${user_symbol} "
 
-PROMPT="┌[CIRCUIT] ${conda_prompt}${user_host}${current_dir}${rvm_ruby}${vcs_branch}${venv_prompt}${kube_prompt}
-└[SYSTEM] %B${user_symbol}%b "
-RPROMPT="%B%{$fg[red]%}${return_code}%b%{$reset_color%}"
+# Info flotante a la derecha
+RPROMPT="${c_purp}${conda_prompt}${venv_prompt}${vcs_branch} ${return_code}"
 
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg[cyan]%}⚡["
-ZSH_THEME_GIT_PROMPT_SUFFIX="]%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[red]%}✖"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}✔"
+# Git estilo Cyber
+ZSH_THEME_GIT_PROMPT_PREFIX="${c_pink}git:❲"
+ZSH_THEME_GIT_PROMPT_SUFFIX="${c_pink}❳%f"
+ZSH_THEME_GIT_PROMPT_DIRTY="${c_warn}✖"
+ZSH_THEME_GIT_PROMPT_CLEAN="${c_cyan}✔"
 
-ZSH_THEME_HG_PROMPT_PREFIX="$ZSH_THEME_GIT_PROMPT_PREFIX"
-ZSH_THEME_HG_PROMPT_SUFFIX="$ZSH_THEME_GIT_PROMPT_SUFFIX"
-ZSH_THEME_HG_PROMPT_DIRTY="$ZSH_THEME_GIT_PROMPT_DIRTY"
-ZSH_THEME_HG_PROMPT_CLEAN="$ZSH_THEME_GIT_PROMPT_CLEAN"
-
-ZSH_THEME_RUBY_PROMPT_PREFIX="%{$fg[magenta]%}💎["
-ZSH_THEME_RUBY_PROMPT_SUFFIX="]%{$reset_color%}"
-
-ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX="%{$fg[cyan]%}🌀["
-ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX="]%{$reset_color%}"
+ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX="${c_purp}sys:❲"
+ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX="${c_purp}❳%f"
 ZSH_THEME_VIRTUALENV_PREFIX="$ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX"
 ZSH_THEME_VIRTUALENV_SUFFIX="$ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX"
