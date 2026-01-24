@@ -194,7 +194,9 @@ class ThemeSelectScreen(Screen):
                 with Vertical(id="theme-list-container"):
                     with RadioSet(id="theme-radios"):
                         for theme in self.themes:
-                            yield RadioButton(f"{theme.id}", id=theme.id.replace("_", "-"), value=(theme.id == self.current_theme))
+                            # Prefijar ID con 't-' para cumplir reglas de Textual (no empezar con número)
+                            safe_id = f"t-{theme.id.replace('_', '-')}"
+                            yield RadioButton(f"{theme.id}", id=safe_id, value=(theme.id == self.current_theme))
             
             # Panel Derecho: Previsualización
             with Vertical(id="theme-preview-container"):
