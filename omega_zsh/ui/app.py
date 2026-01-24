@@ -86,14 +86,42 @@ class OmegaApp(App):
         self.push_screen(screen)
 
     def action_config_themes(self) -> None:
-        # Cargar temas dinámicamente de assets
+        # 1. Cargar temas dinámicamente de assets (Omega God Tier)
         custom_themes_path = Path(__file__).parent.parent / "assets/themes"
-        custom_themes = []
+        omega_themes = []
         if custom_themes_path.exists():
             for f in custom_themes_path.glob("*.zsh-theme"):
-                custom_themes.append(ThemeDef(f.stem, "Local Custom Theme"))
+                omega_themes.append(ThemeDef(f.stem, "Omega God Tier", str(f)))
         
-        all_themes = THEMES_OMZ_BUILTIN + custom_themes
+        # 2. Cargar temas estándar de Oh My Zsh
+        omz_themes_path = self.context.home / ".oh-my-zsh/themes"
+        omz_themes = []
+        if omz_themes_path.exists():
+            for f in omz_themes_path.glob("*.zsh-theme"):
+                omz_themes.append(ThemeDef(f.stem, "Standard OMZ", str(f)))
+
+        # 3. Cargar temas custom de usuario (manualmente instalados)
+        user_custom_path = self.context.home / ".oh-my-zsh/custom/themes"
+        user_themes = []
+        if user_custom_path.exists():
+             for f in user_custom_path.glob("*.zsh-theme"):
+                # Evitar duplicados si ya están en Omega Themes (que se instalan aquí)
+                if not any(t.id == f.stem for t in omega_themes):
+                    user_themes.append(ThemeDef(f.stem, "User Custom", str(f)))
+
+        # 4. Combinar todo en un mapa para unicidad (ID -> ThemeDef)
+        # El orden de inserción importa para conflictos: Omega > User > Standard
+        all_themes_map = {t.id: t for t in omz_themes}
+        all_themes_map.update({t.id: t for t in user_themes})
+        all_themes_map.update({t.id: t for t in omega_themes})
+        
+        # 5. Asegurar que los Builtin destacados estén (por si acaso el scan falló o no están instalados aún)
+        # Esto es opcional, pero mantiene la lista "curada" visible.
+        # Sin embargo, si el archivo no existe, seleccionarlo podría dar error.
+        # Asumiremos que el scan es la fuente de verdad.
+
+        all_themes = sorted(all_themes_map.values(), key=lambda x: x.id.lower())
+        
         screen = ThemeSelectScreen(all_themes, self.selected_theme, "Select User Theme")
         self.push_screen(screen)
 

@@ -12,6 +12,7 @@ class PluginDef:
 class ThemeDef:
     id: str
     desc: str
+    path: Optional[str] = None
 
 @dataclass
 class HeaderDef:

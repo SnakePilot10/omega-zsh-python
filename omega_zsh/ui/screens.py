@@ -12,6 +12,7 @@ from ..core.constants import DB_PLUGINS, THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_HEA
 from ..core.context import SystemContext
 import platform
 import os
+import shutil
 import psutil
 from datetime import datetime
 import logging
@@ -141,16 +142,35 @@ class PluginSelectScreen(Screen):
         self.app.pop_screen()
 
 class ThemeSelectScreen(Screen):
-    """Pantalla para seleccionar el tema de usuario."""
+    """Pantalla para seleccionar el tema de usuario con previsualización."""
     BINDINGS = [("escape", "pop_screen", "Volver")]
     
     CSS = """
+    #theme-sidebar {
+        width: 35%;
+        height: 100%;
+        border-right: tall $primary;
+        padding: 1;
+    }
     #theme-list-container {
         height: 1fr;
         overflow-y: auto;
         scrollbar-size-vertical: 1;
-        border: solid $accent;
+    }
+    #theme-preview-container {
+        width: 65%;
+        height: 100%;
+        padding: 2;
+        align: center middle;
+    }
+    #theme-preview-box {
+        background: #000000;
+        border: heavy $accent;
+        width: 90%;
+        height: auto;
+        min-height: 5;
         padding: 1;
+        color: $text;
     }
     """
 
@@ -159,29 +179,100 @@ class ThemeSelectScreen(Screen):
         self.themes = themes
         self.current_theme = current_theme
         self.screen_title = title
-        self.selected_theme_id = current_theme
+        # Mapa rápido para buscar path por id
+        self.themes_map = {t.id: t for t in themes}
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label(f"[bold magenta]{self.screen_title}[/]")
-        with Vertical(id="theme-list-container"):
-            with RadioSet(id="theme-radios"):
-                for theme in self.themes:
-                    yield RadioButton(f"{theme.id}", id=theme.id.replace("_", "-"), value=(theme.id == self.current_theme))
+        
+        with Horizontal():
+            # Panel Izquierdo: Lista de Temas
+            with Vertical(id="theme-sidebar"):
+                yield Label("[bold yellow]Available Themes:[/]")
+                with Vertical(id="theme-list-container"):
+                    with RadioSet(id="theme-radios"):
+                        for theme in self.themes:
+                            yield RadioButton(f"{theme.id}", id=theme.id.replace("_", "-"), value=(theme.id == self.current_theme))
+            
+            # Panel Derecho: Previsualización
+            with Vertical(id="theme-preview-container"):
+                yield Label("[bold green]Live Preview (Real Zsh Render):[/]")
+                yield Static("Select a theme to preview...", id="theme-preview-box")
+                yield Label("\n[dim]Note: Preview renders the prompt using a subprocess.[/]")
+
         yield Footer()
+
+    def on_mount(self) -> None:
+        # Generar preview inicial si hay un tema seleccionado
+        if self.current_theme:
+            self.generate_preview(self.current_theme)
 
     @on(RadioSet.Changed, "#theme-radios")
     def on_theme_changed(self, event: RadioSet.Changed) -> None:
-        """Actualizar estado inmediatamente al cambiar selección."""
+        """Actualizar estado y generar preview al cambiar selección."""
         if event.pressed:
-            # La etiqueta del RadioButton contiene el nombre real del tema.
-            # Lo convertimos a string para asegurar compatibilidad.
             theme_name = str(event.pressed.label)
             if hasattr(self.app, "update_selected_theme"):
                 self.app.update_selected_theme(theme_name)
-    
-    def action_pop_screen(self) -> None:
-        self.app.pop_screen()
+            
+            self.generate_preview(theme_name)
+
+    def generate_preview(self, theme_id: str) -> None:
+        """Ejecuta una instancia aislada de Zsh para renderizar el prompt."""
+        preview_box = self.query_one("#theme-preview-box", Static)
+        theme = self.themes_map.get(theme_id)
+        
+        if not theme or not theme.path:
+            preview_box.update(Text("Preview not available (No path found)", style="red"))
+            return
+
+        preview_box.update(Text("Rendering...", style="yellow"))
+        
+        # Encontrar binario de zsh
+        zsh_bin = "/data/data/com.termux/files/usr/bin/zsh"
+        if not os.path.exists(zsh_bin):
+            zsh_bin = shutil.which("zsh")
+        
+        if not zsh_bin:
+            preview_box.update(Text("Error: Zsh binary not found.", style="bold red"))
+            return
+
+        # Comando para simular el prompt
+        # 1. Definir variables básicas para evitar errores
+        # 2. Cargar el tema
+        # 3. Imprimir el prompt expandido
+        cmd_script = (
+            f"source {theme.path} 2>/dev/null;"
+            "print -P \"${PROMPT:-$PS1} ls -la\""
+        )
+        
+        try:
+            import subprocess
+            result = subprocess.run(
+                [zsh_bin, "-c", cmd_script],
+                capture_output=True,
+                text=True,
+                timeout=2,
+                env={**os.environ, "TERM": "xterm-256color"} # Forzar color
+            )
+            
+            if result.returncode == 0 and result.stdout.strip():
+                # Renderizar ANSI
+                # Rich maneja ANSI automáticamente con Text.from_ansi
+                try:
+                    ansi_text = Text.from_ansi(result.stdout)
+                    preview_box.update(ansi_text)
+                except Exception as e:
+                    preview_box.update(Text(f"Error parsing ANSI: {e}", style="red"))
+            else:
+                err_msg = result.stderr.strip() or "No output returned"
+                preview_box.update(Text(f"Preview Error:\n{err_msg}", style="dim red"))
+                
+        except subprocess.TimeoutExpired:
+            preview_box.update(Text("Preview timed out (Theme too slow?)", style="orange"))
+        except Exception as e:
+            preview_box.update(Text(f"Execution Error: {e}", style="red"))
 
 from ..core.figlet import FigletManager
 
