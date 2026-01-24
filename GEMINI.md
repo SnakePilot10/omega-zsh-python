@@ -5,7 +5,10 @@ Omega-ZSH is a sophisticated Zsh configuration manager designed for Linux and An
 
 ### Key Features
 - **Cross-Platform:** Supports Termux (Android), Debian/Ubuntu, Arch, Fedora, and Alpine.
-- **TUI Interface:** Built with `textual`, offering a mouse-compatible, visual dashboard.
+- **TUI Interface:** Built with `textual` 6.x+, offering a mouse-compatible, visual dashboard.
+    - **Live Preview:** Real-time rendering of Zsh prompts (Themes) and Headers (Fastfetch/Cow) using isolated subprocesses (`zsh -c`, `fastfetch --pipe`).
+    - **Focus Navigation:** Previews update automatically on focus change (arrow keys).
+    - **Quick Apply (`A`):** Fast configuration regeneration without full package re-installation.
 - **Advanced CLI (oz):** Fast management tool with:
     - `oz bench`: Startup speed benchmark with optimization diagnostics.
     - `oz stats`: Command usage analysis with smart alias suggestions.
@@ -20,9 +23,14 @@ Omega-ZSH is a sophisticated Zsh configuration manager designed for Linux and An
     - **`core/`**: Business logic, state management, and installation routines.
     - **`platforms/`**: OS-specific implementations (e.g., `termux.py`, `debian.py`).
     - **`ui/`**: TUI implementation using the Textual framework.
+        - `app.py`: Main App class, Action handlers (`apply_changes`, `install`).
+        - `screens.py`: UI Screens (`ThemeSelectScreen` with split preview layout).
     - **`assets/`**: Contains templates (`.zshrc.j2`) and theme definitions.
 - **`install.sh`**: Universal bootstrap script for setting up the environment.
 - **`requirements.txt`**: Python dependencies (`textual`, `jinja2`).
+- **`.github/workflows/`**: CI/CD Pipelines.
+    - `ci.yml`: Tests & Linting (Ruff).
+    - `release.yml`: Automatic GitHub Releases on tags.
 
 ## Building and Running
 
@@ -54,6 +62,7 @@ python -m omega_zsh
 
 ### Testing
 The project uses `pytest` for unit testing. Tests are located in the `tests/` directory.
+- **UI Testing:** Uses `unittest.mock` and `MockApp` to test TUI logic without a full display server.
 
 To run tests:
 ```bash
