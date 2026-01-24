@@ -14,6 +14,7 @@ import platform
 import os
 import shutil
 import psutil
+import subprocess
 from datetime import datetime
 import logging
 
@@ -414,23 +415,68 @@ class HeaderSelectScreen(Screen):
         
         if self.current_header == "none":
             preview_area.update(Text("No header selected", style="dim"))
-        elif self.current_header == "fastfetch":
-            preview_area.update(Text("System Info Panel\n(Simulated Fastfetch)", style="bold blue"))
-        elif self.current_header == "cow":
-            cow_art = r"""
- < Moo >
- ------
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
-            """
-            preview_area.update(Text(cow_art))
-        elif self.current_header == "figlet_custom":
+            return
+
+        # Renderizado en vivo para Figlet (Interno, rápido)
+        if self.current_header == "figlet_custom":
             width = preview_area.size.width or 60
             art = self.figlet.render(self.header_text, self.header_font, width=width - 4)
             preview_area.update(Text(art))
+            return
+
+        # Renderizado basado en comandos externos (Fastfetch, Cow)
+        preview_area.update(Text("Rendering live preview...", style="yellow"))
+        
+        cmd = None
+        if self.current_header == "fastfetch":
+            # Forzamos color y estructura reducida si es posible
+            if shutil.which("fastfetch"):
+                cmd = ["fastfetch", "--pipe", "false"] 
+            else:
+                preview_area.update(Text("Fastfetch not installed.\nInstall it via 'oz plugins' or system manager.", style="red"))
+                return
+                
+        elif self.current_header == "cow":
+            # Intentamos pipeline completo: fortune | cowsay | lolcat
+            # Nota: lolcat a veces da problemas en subprocess no interactivos, probamos sin el o forzando
+            has_fortune = shutil.which("fortune")
+            has_cowsay = shutil.which("cowsay")
+            
+            if has_fortune and has_cowsay:
+                # Ejecutamos vía shell para soportar pipes
+                cmd_str = "fortune | cowsay"
+                if shutil.which("lolcat"):
+                    cmd_str += " | lolcat --force"
+                cmd = ["sh", "-c", cmd_str]
+            else:
+                preview_area.update(Text("Need 'fortune' and 'cowsay' installed.", style="red"))
+                return
+
+        if cmd:
+            try:
+                # Ejecución asíncrona simulada (bloqueante pero con timeout corto)
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=2.0,
+                    env={**os.environ, "TERM": "xterm-256color", "FORCE_COLOR": "1"}
+                )
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    try:
+                        ansi_text = Text.from_ansi(result.stdout)
+                        preview_area.update(ansi_text)
+                    except Exception as e:
+                        preview_area.update(Text(f"ANSI Parse Error: {e}", style="red"))
+                else:
+                    err = result.stderr or "No output"
+                    preview_area.update(Text(f"Command execution failed:\n{err}", style="dim red"))
+            
+            except subprocess.TimeoutExpired:
+                preview_area.update(Text("Preview timed out (Command took too long)", style="orange"))
+            except Exception as e:
+                preview_area.update(Text(f"Preview Error: {e}", style="red"))
 
     def action_pop_screen(self) -> None:
         self.app.pop_screen()
