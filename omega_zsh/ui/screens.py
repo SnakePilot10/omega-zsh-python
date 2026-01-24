@@ -1,5 +1,5 @@
 from textual.app import ComposeResult
-from textual import on
+from textual import on, events
 from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, SelectionList, RadioSet, RadioButton, Label, Log, Button, Input, ListView, ListItem
 from textual.containers import Vertical, Horizontal, Grid
@@ -219,6 +219,14 @@ class ThemeSelectScreen(Screen):
             
             self.generate_preview(theme_name)
 
+    def on_descendant_focus(self, event: events.DescendantFocus) -> None:
+        """Generar preview al navegar (sin seleccionar) para mejor UX."""
+        # El control que ganó el foco
+        control = event.control
+        if isinstance(control, RadioButton) and control.parent and control.parent.id == "theme-radios":
+            theme_name = str(control.label)
+            self.generate_preview(theme_name)
+
     def generate_preview(self, theme_id: str) -> None:
         """Ejecuta una instancia aislada de Zsh para renderizar el prompt."""
         preview_box = self.query_one("#theme-preview-box", Static)
@@ -390,6 +398,17 @@ class HeaderSelectScreen(Screen):
         self.update_ui_visibility()
         self.update_preview()
         self._sync_state()
+
+    def on_descendant_focus(self, event: events.DescendantFocus) -> None:
+        """Preview on navigation."""
+        control = event.control
+        # ID format: h-<header_id>
+        if isinstance(control, RadioButton) and control.id and control.id.startswith("h-"):
+            temp_header = control.id.replace("h-", "")
+            self.current_header = temp_header
+            self.update_ui_visibility()
+            self.update_preview()
+            # No guardamos (_sync_state) hasta selección explícita
 
     @on(Input.Changed, "#figlet-text-input")
     def on_text_changed(self, event: Input.Changed) -> None:

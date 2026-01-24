@@ -32,7 +32,8 @@ class OmegaApp(App):
         Binding("p", "config_plugins", "Plugins"),
         Binding("t", "config_themes", "Themes"),
         Binding("h", "config_header", "Header"),
-        Binding("i", "start_install", "INSTALL", show=True, priority=True),
+        Binding("a", "apply_changes", "APPLY (Quick)", show=True),
+        Binding("i", "start_install", "FULL INSTALL", show=True, priority=True),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -77,7 +78,15 @@ class OmegaApp(App):
         yield Footer()
 
     def action_switch_tab(self, tab_id: str) -> None:
-        self.query_one(TabbedContent).active = tab_id
+        # Intentar volver a la pantalla principal si hay modales abiertos
+        while len(self.screen_stack) > 1:
+            self.pop_screen()
+        
+        # Ahora buscar el TabbedContent en la pantalla principal
+        try:
+            self.query_one(TabbedContent).active = tab_id
+        except Exception:
+            logging.warning("No se pudo cambiar de tab: TabbedContent no encontrado.")
 
     # --- MANEJADORES DE ACCIONES ---
 
@@ -133,7 +142,7 @@ class OmegaApp(App):
     def update_selected_theme(self, new_theme: str):
         self.selected_theme = new_theme
         self._auto_save_state()
-        self.notify(f"Tema '{new_theme}' guardado.\nVe a la pestaña [INSTALL] para aplicar.", title="Cambio Pendiente", timeout=4)
+        # Notificación eliminada para evitar spam durante navegación
 
     def action_config_header(self) -> None:
         """Lanza la pantalla de configuración del header."""
@@ -146,7 +155,7 @@ class OmegaApp(App):
         self.header_text = header_text
         self.header_font = header_font
         self._auto_save_state()
-        self.notify(f"Configuración de Header actualizada.")
+        # Notificación eliminada para evitar spam durante navegación
 
     def _auto_save_state(self):
         """Guarda el estado actual en disco (Auto-save)."""
@@ -162,6 +171,51 @@ class OmegaApp(App):
             self.state_manager.save(current_state)
         except Exception as e:
             logging.warning(f"Fallo al guardar auto-save: {e}")
+
+    def action_apply_changes(self) -> None:
+        """Genera los archivos de configuración rápidamente sin reinstalar paquetes."""
+        self.notify("Aplicando cambios...", title="Omega Apply")
+        
+        try:
+            # 1. Guardar Estado
+            self._auto_save_state()
+            
+            # 2. Paths
+            zshrc_path = self.context.home / ".zshrc"
+            personal_path = self.context.home / ".omega-zsh/personal.zsh"
+            custom_path = self.context.home / ".omega-zsh/custom.zsh"
+
+            # 3. Preparar Contexto
+            omz_plugins_list = [p for p in self.selected_plugins if p not in BIN_PLUGINS]
+
+            gen_context = {
+                "version": "2.0.0",
+                "is_termux": self.context.is_termux,
+                "omz_dir": str(self.context.home / ".oh-my-zsh"),
+                "user_theme": self.selected_theme,
+                "root_theme": self.selected_root_theme,
+                "plugins": omz_plugins_list,
+                "active_tools": self.selected_plugins,
+                "personal_zsh": str(personal_path),
+                "custom_zsh": str(custom_path),
+                "header_cmd": self.selected_header_cmd()
+            }
+            
+            # 4. Generar Archivos
+            self.generator.generate_personal_config(personal_path, {
+                "extra_paths": ["/usr/local/bin", "$HOME/.cargo/bin", "$HOME/.local/bin"],
+                "aliases": {"lg": "lazygit", "upd": "omega-update"}
+            })
+
+            if self.generator.generate_zshrc(zshrc_path, gen_context):
+                self.generator.create_default_custom_zsh(custom_path)
+                self.notify("¡Cambios Aplicados! Ejecuta 'source ~/.zshrc'", title="Éxito", severity="information", timeout=5)
+            else:
+                self.notify("Error generando .zshrc", title="Error", severity="error")
+                
+        except Exception as e:
+            logging.error(f"Fallo en Apply: {e}", exc_info=True)
+            self.notify(f"Error: {e}", title="Fallo Crítico", severity="error")
 
     # --- PROCESO DE INSTALACIÓN ---
 
