@@ -61,6 +61,7 @@ function yy() {
 {% if is_termux %}
 if [ -x "$(command -v su)" ]; then
     # Fallback for Termux if tsu is missing: handle arguments or default to shell
+    unalias sudo 2>/dev/null
     sudo() {
         if [ "$#" -eq 0 ]; then
             su -c "unset LD_PRELOAD; export PATH=$PREFIX/bin:$PATH; export HOME=$HOME; exec zsh"
