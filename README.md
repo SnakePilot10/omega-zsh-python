@@ -85,48 +85,30 @@ Ejecuta `omega` para entrar al panel de control visual.
 *   **Instalador:** Repara o reinstala paquetes del sistema (`fzf`, `eza`, `bat`) automáticamente.
 
 ### 2. CLI de Alta Velocidad (`oz`)
-La herramienta `oz` está diseñada para invocarse frecuentemente en tu flujo de trabajo.
+La herramienta `oz` es una navaja suiza diseñada para optimizar tu flujo de trabajo diario.
 
-**Comandos disponibles:**
-*   `oz --banner`: Muestra el estado del sistema (CPU, RAM, Disco) y herramientas activas.
-*   `oz plugins`: Inspecciona el código de los plugins cargados (ver abajo).
-
----
-
-## 🧩 Gestión de Plugins
-
-Omega-ZSH introduce un sistema de gestión de plugins transparente.
-
-### Activación
-Desde la TUI (`omega`), navega a la pestaña "Plugins". Puedes activar/desactivar plugins populares (`git`, `docker`, `python`, `z`, `syntax-highlighting`) con un clic o tecla.
-
-### Inspector Inteligente (`oz plugins`)
-A diferencia de otros frameworks, Omega te permite ver **qué hace realmente** un plugin activado sin salir de la terminal. Analiza los archivos fuente y extrae alias y funciones.
-
-**Ejemplo de Salida:**
-```text
-$ oz plugins
-
-📦 Plugin: git
-  ├── gaa: git add --all
-  ├── gcmsg: git commit -m
-  └── gp: git push
-
-📦 Plugin: z (Directory Jumping)
-  └── z <destino>: Salta a un directorio frecuente
-```
+**Comandos "God Tier" disponibles:**
+*   `oz banner`: Dashboard con estado del sistema (CPU, RAM, Disco) y herramientas activas.
+*   `oz bench`: **Prueba de Hyperdrive**. Mide la velocidad de inicio de tu shell y ofrece **diagnósticos precisos** para acelerarla.
+*   `oz stats`: **Telemetría de Comandos**. Analiza qué usas más y te **sugiere alias inteligentes** para ahorrar pulsaciones.
+*   `oz themes`: **Arsenal Completo**. Escanea y lista absolutamente todos los temas instalados (Omega, OMZ y Custom).
+*   `oz plugins`: **Inspector de Código**. Explica qué alias y funciones añade cada plugin activo.
+*   `oz update`: **Protocolo de Sincronización**. Actualiza el núcleo de Omega-ZSH con las últimas mejoras y temas.
 
 ---
 
-## 🎨 Personalización y TUI
+## 🎨 Temas "God Tier"
 
-Omega-ZSH no solo gestiona el código, sino también la estética y usabilidad de tu terminal.
+Omega-ZSH incluye una colección exclusiva de temas diseñados para ser visualmente impactantes:
+*   **Matrix (The Construct):** Flujo de datos binarios con degradados digitales.
+*   **Futurista (Night City HUD):** Interfaz Cyberpunk de alta densidad con bloques mecha.
+*   **Gótico (Nosferatu):** Estética vampírica con rojo sangre y hierro forjado.
+*   **Espacial (Interstellar):** UI de nave estelar con trayectorias orbitales.
+*   **Elegante (Royal Gold):** Lujo en oro y pizarra Art Deco.
+*   **Retro (Pip-Boy):** Terminal de fósforo verde estilo BIOS/Fallout.
+*   **Naturaleza (Elven Forest):** Conectores orgánicos de enredaderas y follaje.
 
-### Fuentes FIGlet Integradas
-El paquete ahora incluye una colección masiva de fuentes FIGlet (`.flf`) en sus assets:
-*   **Colección Completa:** Más de 300 fuentes (incluyendo Bloody, Slant, Shadow, 3D, y muchas más) integradas en el paquete.
-*   **Ventaja:** Estas fuentes están disponibles inmediatamente después de la instalación, garantizando que tus banners personalizados funcionen en cualquier dispositivo sin dependencias externas del sistema.
-*   **Robustez:** El sistema detecta automáticamente si `lolcat` (coloreado arcoíris) está instalado. Si falta, el banner se renderiza en texto plano sin romper el inicio de la terminal.
+Cada tema utiliza conectores estructurales únicos (`▛`, `╓`, `┏`, `╭〰`) que rompen la estética tradicional de Zsh.
 
 ### Interfaz TUI Optimizada
 La interfaz gráfica (`omega`) ha sido refinada para una mejor experiencia en pantallas pequeñas (Termux):

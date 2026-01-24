@@ -6,7 +6,12 @@ Omega-ZSH is a sophisticated Zsh configuration manager designed for Linux and An
 ### Key Features
 - **Cross-Platform:** Supports Termux (Android), Debian/Ubuntu, Arch, Fedora, and Alpine.
 - **TUI Interface:** Built with `textual`, offering a mouse-compatible, visual dashboard.
-- **Modular Management:** Easily toggle plugins and switch themes.
+- **Advanced CLI (oz):** Fast management tool with:
+    - `oz bench`: Startup speed benchmark with optimization diagnostics.
+    - `oz stats`: Command usage analysis with smart alias suggestions.
+    - `oz themes`: Complete scan of all installed themes (Omega, OMZ, Custom).
+    - `oz update`: Automated source code synchronization.
+- **God Tier Themes:** A curated collection of highly aesthetic themes (Matrix, Cyberpunk, Gothic, Space, etc.) with unique structural connectors.
 - **Safe Configuration:** Uses atomic writes and backups to prevent data loss.
 - **3-Layer Architecture:** Separates core config, structured personal config, and manual custom overrides.
 
