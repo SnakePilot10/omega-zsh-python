@@ -13,6 +13,15 @@ class TermuxPlatform(BasePlatform):
         resolved_name = package_name
         if package_name == "fd": resolved_name = "fd" # Termux usa fd directamente
         
+        # FIX: lolcat no está en repositorios de Termux, instalar vía pip del sistema
+        if package_name == "lolcat":
+            cmd = [
+                "/data/data/com.termux/files/usr/bin/python3", 
+                "-m", "pip", "install", 
+                "lolcat", "--break-system-packages"
+            ]
+            return self._run_command(cmd, on_progress)
+        
         cmd = [self.pkg_mgr, "install", "-y", resolved_name]
         return self._run_command(cmd, on_progress)
 

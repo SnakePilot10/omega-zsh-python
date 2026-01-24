@@ -202,7 +202,7 @@ class OmegaApp(App):
             }
             
             self.generator.generate_personal_config(personal_path, {
-                "extra_paths": ["/usr/local/bin", "$HOME/.cargo/bin"],
+                "extra_paths": ["/usr/local/bin", "$HOME/.cargo/bin", "$HOME/.local/bin"],
                 "aliases": {"lg": "lazygit", "upd": "omega-update"}
             })
 
