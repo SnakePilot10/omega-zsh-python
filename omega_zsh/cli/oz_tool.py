@@ -54,6 +54,31 @@ def get_active_plugins():
         return [p for p in match.group(1).replace('\n', ' ').split() if p]
     return []
 
+def inspect_plugin(plugin_name):
+    """Busca un plugin y extrae sus alias/funciones principales."""
+    paths = [
+        CUSTOM_PLUGINS / plugin_name / f"{plugin_name}.plugin.zsh",
+        STANDARD_PLUGINS / plugin_name / f"{plugin_name}.plugin.zsh",
+        CUSTOM_PLUGINS / plugin_name / f"{plugin_name}.zsh", 
+        STANDARD_PLUGINS / plugin_name / f"{plugin_name}.zsh"
+    ]
+    plugin_path = next((p for p in paths if p.exists()), None)
+    if not plugin_path:
+        return {"found": False, "aliases": [], "functions": []}
+
+    content = plugin_path.read_text(errors="ignore")
+    # Regex para extraer alias y funciones
+    aliases = re.findall(r"^alias\s+([\w-]+)=", content, re.MULTILINE)
+    functions = re.findall(r"^function\s+([\w-]+)", content, re.MULTILINE)
+    functions += re.findall(r"^([\w-]+)\(\)\s*\{", content, re.MULTILINE)
+    
+    return {
+        "found": True, 
+        "path": str(plugin_path),
+        "aliases": sorted(list(set(aliases))),
+        "functions": sorted(list(set(functions)))
+    }
+
 # --- BENCHMARK CON DIAGNÓSTICO ---
 def benchmark_shell():
     """Mide tiempo de inicio y da CONSEJOS de optimización."""
@@ -169,7 +194,7 @@ def list_themes():
         table.add_row(name, origin)
         
     console.print(table)
-    console.print("[yellow]Para usar uno:[/] Edita ~/.zshrc y cambia ZSH_THEME='nombre'
+    console.print("[yellow]Para usar uno:[/] Edita ~/.zshrc y cambia ZSH_THEME='nombre'")
 
 # --- ACTUALIZADOR ---
 def self_update():
@@ -239,12 +264,31 @@ def main():
     else:
         show_help()
 
-# Stub para funciones viejas que no cambié logicamente pero necesito para que corra
 def show_plugins_detail():
+    """Detalla todos los plugins instalados."""
     plugins = get_active_plugins()
-    console.print(f"[bold green]Plugins Activos ({len(plugins)}):[/]")
-    for p in plugins:
-        console.print(f" - {p}")
+    if not plugins:
+        console.print("[yellow]No se detectaron plugins activos en .zshrc[/]")
+        return
+
+    console.print(f"[bold green]Detectados {len(plugins)} plugins activos en .zshrc[/]\n")
+    for p_name in plugins:
+        info = inspect_plugin(p_name)
+        title = f"[bold cyan]📦 {p_name}[/]"
+        if not info["found"]:
+            console.print(Panel(f"No se encontró el archivo fuente (posible plugin nativo de OMZ sin script .zsh).", title=title, border_style="grey39"))
+            continue
+        
+        content = []
+        if info["aliases"]:
+            content.append(f"[bold yellow]Alias ({len(info['aliases'])}):[/] " + ", ".join(info["aliases"][:10]) + ("..." if len(info['aliases'])>10 else ""))
+        if info["functions"]:
+            content.append(f"[bold green]Funciones ({len(info['functions'])}):[/] " + ", ".join(info["functions"][:5]) + ("..." if len(info['functions'])>5 else ""))
+        
+        if not content:
+            content = ["[italic grey]Este plugin no exporta alias o funciones explícitas.[/]"]
+            
+        console.print(Panel("\n".join(content), title=title, border_style="grey50"))
 
 def show_banner():
     stats = get_system_stats()
