@@ -183,6 +183,7 @@ class ThemeSelectScreen(Screen):
         self.screen_title = title
         # Mapa rápido para buscar path por id
         self.themes_map = {t.id: t for t in themes}
+        self.radio_map = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -197,6 +198,7 @@ class ThemeSelectScreen(Screen):
                         for theme in self.themes:
                             # Prefijar ID con 't-' para cumplir reglas de Textual (no empezar con número)
                             safe_id = f"t-{re.sub(r'[^a-zA-Z0-9-]', '-', theme.id)}"
+                            self.radio_map[safe_id] = theme.id
                             
                             # Formatear etiqueta legible para el usuario (ej: "my_theme" -> "My Theme")
                             # Mantenemos caracteres especiales al final si existen (como '+') para variantes
@@ -226,19 +228,21 @@ class ThemeSelectScreen(Screen):
     def on_theme_changed(self, event: RadioSet.Changed) -> None:
         """Actualizar estado y generar preview al cambiar selección."""
         if event.pressed:
-            theme_name = str(event.pressed.label)
-            if hasattr(self.app, "update_selected_theme"):
-                self.app.update_selected_theme(theme_name)
-            
-            self.generate_preview(theme_name)
+            theme_id = self.radio_map.get(event.pressed.id)
+            if theme_id:
+                if hasattr(self.app, "update_selected_theme"):
+                    self.app.update_selected_theme(theme_id)
+                
+                self.generate_preview(theme_id)
 
     def on_descendant_focus(self, event: events.DescendantFocus) -> None:
         """Generar preview al navegar (sin seleccionar) para mejor UX."""
         # El control que ganó el foco
         control = event.control
         if isinstance(control, RadioButton) and control.parent and control.parent.id == "theme-radios":
-            theme_name = str(control.label)
-            self.generate_preview(theme_name)
+            theme_id = self.radio_map.get(control.id)
+            if theme_id:
+                self.generate_preview(theme_id)
 
     def generate_preview(self, theme_id: str) -> None:
         """Ejecuta una instancia aislada de Zsh para renderizar el prompt."""

@@ -113,7 +113,7 @@ class OmegaApp(App):
         user_custom_path = self.context.home / ".oh-my-zsh/custom/themes"
         user_themes = []
         if user_custom_path.exists():
-             for f in user_custom_path.glob("*.zsh-theme"):
+             for f in user_custom_path.rglob("*.zsh-theme"):
                 # Evitar duplicados si ya están en Omega Themes (que se instalan aquí)
                 if not any(t.id == f.stem for t in omega_themes):
                     user_themes.append(ThemeDef(f.stem, "User Custom", str(f)))

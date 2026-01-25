@@ -111,6 +111,7 @@ def test_action_config_themes_discovery(mock_path, mock_app):
         mock_user_custom_dir = MagicMock()
         mock_user_custom_dir.exists.return_value = True
         mock_user_custom_dir.glob.return_value = [theme3]
+        mock_user_custom_dir.rglob.return_value = [theme3]
 
         # Handle: self.context.home / ".oh-my-zsh/themes"
         # and: self.context.home / ".oh-my-zsh/custom/themes"
