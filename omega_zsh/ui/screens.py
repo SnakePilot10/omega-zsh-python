@@ -265,10 +265,32 @@ class ThemeSelectScreen(Screen):
             return
 
         # Comando para simular el prompt
-        # 1. Definir variables básicas para evitar errores
-        # 2. Cargar el tema
-        # 3. Imprimir el prompt expandido
+        # 1. Definir mocks para funciones de OMZ que faltan en un shell limpio
+        # 2. Cargar colores
+        # 3. Cargar el tema
+        # 4. Imprimir el prompt expandido
+        
+        mocks = (
+            "autoload -U colors && colors;"
+            "setopt prompt_subst;"
+            "function git_prompt_info() { "
+            "  local prefix=\"${ZSH_THEME_GIT_PROMPT_PREFIX:- git:(}\";"
+            "  local suffix=\"${ZSH_THEME_GIT_PROMPT_SUFFIX:-)}\";"
+            "  local dirty=\"${ZSH_THEME_GIT_PROMPT_DIRTY:-*}\";"
+            "  echo \"${prefix}master${dirty}${suffix}\";"
+            "};"
+            "function hg_prompt_info() { echo ''; };"
+            "function ruby_prompt_info() { echo ''; };"
+            "function virtualenv_prompt_info() { echo ''; };"
+            "function kube_ps1() { echo ''; };"
+            "function azure_prompt_info() { echo ''; };"
+            "function aws_prompt_info() { echo ''; };"
+            "function node_prompt_info() { echo ''; };"
+            "function nvm_prompt_info() { echo ''; };"
+        )
+
         cmd_script = (
+            f"{mocks}"
             f"source {theme.path} 2>/dev/null;"
             "print -P \"${PROMPT:-$PS1} ls -la\""
         )

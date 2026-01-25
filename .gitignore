@@ -15,5 +15,6 @@ personal.zsh
 custom.zsh
 .zshrc
 .zshrc.bak.*
-*.swpbuild/
+*.swp
+build/
 *.egg-info/
