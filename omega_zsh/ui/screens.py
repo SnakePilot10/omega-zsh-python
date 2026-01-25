@@ -17,6 +17,7 @@ import psutil
 import subprocess
 from datetime import datetime
 import logging
+import re
 
 class DashboardScreen(Static):
     """Pantalla principal con el resumen de configuración."""
@@ -195,8 +196,18 @@ class ThemeSelectScreen(Screen):
                     with RadioSet(id="theme-radios"):
                         for theme in self.themes:
                             # Prefijar ID con 't-' para cumplir reglas de Textual (no empezar con número)
-                            safe_id = f"t-{theme.id.replace('_', '-')}"
-                            yield RadioButton(f"{theme.id}", id=safe_id, value=(theme.id == self.current_theme))
+                            safe_id = f"t-{re.sub(r'[^a-zA-Z0-9-]', '-', theme.id)}"
+                            
+                            # Formatear etiqueta legible para el usuario (ej: "my_theme" -> "My Theme")
+                            # Mantenemos caracteres especiales al final si existen (como '+') para variantes
+                            clean_name = theme.id.replace('_', ' ').replace('-', ' ').strip()
+                            # Caso especial para nombres cortos que se ven mejor en mayúsculas
+                            if len(clean_name) <= 3:
+                                display_label = clean_name.upper()
+                            else:
+                                display_label = clean_name.title()
+                            
+                            yield RadioButton(display_label, id=safe_id, value=(theme.id == self.current_theme))
             
             # Panel Derecho: Previsualización
             with Vertical(id="theme-preview-container"):
