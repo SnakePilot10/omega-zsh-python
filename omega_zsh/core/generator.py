@@ -1,6 +1,4 @@
 import os
-import shutil
-import time
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from typing import List, Dict, Any
@@ -12,11 +10,6 @@ class ConfigGenerator:
     def generate_zshrc(self, output_path: Path, context: Dict[str, Any]) -> bool:
         """Genera el archivo .zshrc a partir de la plantilla."""
         try:
-            # 1. Crear backup si existe
-            if output_path.exists():
-                backup_path = output_path.with_suffix(f".bak.{int(time.time())}")
-                shutil.copy2(output_path, backup_path)
-
             # 2. Renderizar plantilla
             template = self.env.get_template(".zshrc.j2")
             content = template.render(context)

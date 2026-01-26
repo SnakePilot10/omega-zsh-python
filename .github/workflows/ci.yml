@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Install Ruff
         run: pip install ruff
       - name: Run Ruff Check
@@ -39,9 +43,8 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        # Instala el paquete en modo editable + dependencias de desarrollo
-        pip install -e .
-        pip install pytest
+        # Instala el paquete en modo editable + dependencias de desarrollo definidas en pyproject.toml
+        pip install -e .[dev]
 
     - name: Run Tests
       run: |
