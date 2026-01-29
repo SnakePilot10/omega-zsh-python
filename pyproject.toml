@@ -8,7 +8,7 @@ version = "2.0.0"
 description = "The Ultimate Shell Manager for Linux & Android (Termux)"
 readme = "README.md"
 authors = [{ name = "SnakePilot10" }]
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "rich>=14.2.0",
@@ -20,7 +20,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0"
+    "pytest>=7.0.0",
+    "ruff>=0.9.0"
 ]
 
 [project.scripts]

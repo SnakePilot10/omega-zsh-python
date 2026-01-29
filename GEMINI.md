@@ -50,27 +50,38 @@ The project includes a self-contained installer script that handles virtual envi
 To run the application without reinstalling dependencies every time (assuming setup is done):
 ```bash
 source .venv/bin/activate
+pip install -e ".[dev]"
 python -m omega_zsh
 ```
 
 ## Development Conventions
 
 ### Architecture
-- **Dependency Management:** All dependencies are isolated in a local `.venv` directory.
+- **Dependency Management:** All dependencies are isolated in a local `.venv` directory. Dev dependencies are managed via `pyproject.toml` (optional-dependencies).
 - **Logging:** Errors and runtime info are logged to `omega_crash.log` in the root directory.
 - **Templating:** Configuration files are generated using Jinja2 templates located in `omega_zsh/assets/templates/`.
 
-### Testing
-The project uses `pytest` for unit testing. Tests are located in the `tests/` directory.
-- **UI Testing:** Uses `unittest.mock` and `MockApp` to test TUI logic without a full display server.
+### Testing & Quality
+The project uses `pytest` for unit testing and `ruff` for linting.
+- **Coverage:** We aim for high test coverage on core modules (`core/context.py`, `core/state.py`).
+- **Tools:**
+    - `pytest`: Run tests.
+    - `pytest-cov`: Generate coverage reports.
+    - `ruff`: Static analysis and formatting.
 
-To run tests:
+To run tests with coverage:
 ```bash
 source .venv/bin/activate
-pytest
+pytest --cov=omega_zsh
 ```
 
 ### Contribution
 - **Virtual Environment:** Ensure you are working within the `.venv` created by `install.sh`.
 - **Platform Specifics:** When adding new OS support, extend the `platforms/` module.
 - **UI Changes:** Modify `omega_zsh/ui/` for interface adjustments. Verify layout on both desktop and mobile (Termux) screen sizes.
+
+## Recent Changes (CI/CD Overhaul)
+- **Ruff Integration:** Added `ruff` to `pyproject.toml` and CI workflows for consistent code quality.
+- **CI Fixes:** Updated `ci.yml` to install dependencies correctly via `pip install ".[dev]"`.
+- **Test Coverage:** Significantly increased test coverage (~60%) by adding tests for `__main__.py`, `SystemContext`, and edge cases in `tests/test_coverage_gap.py`.
+- **License:** Updated license definition in `pyproject.toml` to comply with PEP 621 standards.

@@ -106,15 +106,38 @@ Temas diseñados con conectores estructurales únicos (`▛`, `╓`, `┏`):
 
 ## 🤝 Contribución
 
-El proyecto cuenta con un pipeline de CI/CD robusto:
-*   **Linting:** Código verificado con `ruff` para calidad y estilo.
-*   **Tests:** Pruebas unitarias automáticas en cada push.
-*   **Releases:** Generación automática de releases en GitHub al crear tags (`v*`).
+El proyecto cuenta con un pipeline de CI/CD robusto que asegura la calidad del código.
 
-Para contribuir:
-1.  `python -m venv .venv && source .venv/bin/activate`
-2.  `pip install -e .`
-3.  `pytest`
+### Configuración del Entorno de Desarrollo
+Para contribuir, configura tu entorno localmente:
+
+```bash
+# Crear entorno virtual
+python -m venv .venv
+source .venv/bin/activate
+
+# Instalar dependencias en modo editable + herramientas de desarrollo
+pip install -e ".[dev]"
+```
+
+### Comandos de Calidad
+Antes de enviar un Pull Request, asegúrate de que todo esté en orden:
+
+*   **Tests:** Ejecuta la suite de pruebas con reporte de cobertura.
+    ```bash
+    pytest --cov=omega_zsh
+    ```
+*   **Linting:** Verifica el estilo y busca errores con `ruff`.
+    ```bash
+    ruff check .
+    ruff format --check .
+    ```
+
+### CI/CD
+Cada push a `main` activa automáticamente:
+*   Linting con Ruff.
+*   Tests en múltiples versiones de Python (3.10, 3.11, 3.12).
+*   Generación de releases automática al crear tags (`v*`).
 
 ---
 Copyright © 2026 SnakePilot10. Licencia MIT.
