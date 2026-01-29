@@ -1,7 +1,9 @@
 import pytest
 import shutil
+import sys
 from pathlib import Path
 from omega_zsh.core.generator import ConfigGenerator
+import omega_zsh
 
 @pytest.fixture
 def temp_home(tmp_path):
@@ -13,10 +15,24 @@ def temp_home(tmp_path):
 
 @pytest.fixture
 def generator():
-    # Templates are in omega_zsh/assets/templates relative to project root
-    root = Path(__file__).parent.parent
-    templates_dir = root / "omega_zsh" / "assets" / "templates"
-    return ConfigGenerator(templates_dir)
+    # Estrategia robusta para encontrar templates
+    
+    # 1. Intentar ruta relativa al repositorio (Desarrollo local / CI checkout)
+    repo_root = Path(__file__).parent.parent
+    source_templates = repo_root / "omega_zsh" / "assets" / "templates"
+    
+    if source_templates.exists():
+        return ConfigGenerator(source_templates)
+        
+    # 2. Intentar ruta relativa al paquete instalado (si se instaló en site-packages)
+    pkg_root = Path(omega_zsh.__file__).parent
+    installed_templates = pkg_root / "assets" / "templates"
+    
+    if installed_templates.exists():
+        return ConfigGenerator(installed_templates)
+
+    # 3. Fallback para debugging
+    raise FileNotFoundError(f"No se encontraron templates en {source_templates} ni en {installed_templates}")
 
 def test_generate_zshrc(generator, temp_home):
     output_path = temp_home / ".zshrc"
@@ -34,7 +50,7 @@ def test_generate_zshrc(generator, temp_home):
     }
     
     success = generator.generate_zshrc(output_path, context)
-    assert success
+    assert success, "Fallo al generar .zshrc"
     assert output_path.exists()
     content = output_path.read_text()
     assert "export ZSH" in content
@@ -51,7 +67,7 @@ def test_generate_personal_config(generator, temp_home):
     }
     
     success = generator.generate_personal_config(output_path, context)
-    assert success
+    assert success, "Fallo al generar personal.zsh"
     assert output_path.exists()
     content = output_path.read_text()
     assert "export MY_VAR=\"123\"" in content
