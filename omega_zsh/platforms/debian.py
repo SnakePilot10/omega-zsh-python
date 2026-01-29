@@ -23,8 +23,10 @@ class DebianPlatform(BasePlatform):
     def install_package(self, package_name: str, on_progress: Optional[Callable[[str], None]] = None) -> bool:
         resolved_name = package_name
         # Mapeos específicos de Debian
-        if package_name == "fd": resolved_name = "fd-find"
-        elif package_name == "bat": resolved_name = "bat"
+        if package_name == "fd":
+            resolved_name = "fd-find"
+        elif package_name == "bat":
+            resolved_name = "bat"
         
         cmd = self._get_base_cmd("install")
         cmd.append(resolved_name)

@@ -3,7 +3,7 @@ import platform
 import subprocess
 import shlex
 from pathlib import Path
-from typing import Optional
+
 
 class SystemContext:
     _instance = None
@@ -93,10 +93,14 @@ class SystemContext:
             self.package_manager_type = "xbps"
         else:
             # Fallback por detección de binario
-            if self._command_exists("apt-get"): self.package_manager_type = "apt"
-            elif self._command_exists("pacman"): self.package_manager_type = "pacman"
-            elif self._command_exists("dnf"): self.package_manager_type = "dnf"
-            elif self._command_exists("apk"): self.package_manager_type = "apk"
+            if self._command_exists("apt-get"):
+                self.package_manager_type = "apt"
+            elif self._command_exists("pacman"):
+                self.package_manager_type = "pacman"
+            elif self._command_exists("dnf"):
+                self.package_manager_type = "dnf"
+            elif self._command_exists("apk"):
+                self.package_manager_type = "apk"
 
     def _command_exists(self, cmd: str) -> bool:
         """Verifica si un comando existe en el PATH."""
@@ -110,7 +114,7 @@ class SystemContext:
             # y evitar el uso de shell=True
             args = shlex.split(cmd)
             return subprocess.check_output(args, text=True).strip()
-        except:
+        except Exception:
             return ""
 
     def __repr__(self):

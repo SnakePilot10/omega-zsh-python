@@ -2,7 +2,7 @@ import json
 import re
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
-from typing import List, Optional
+from typing import List
 
 @dataclass
 class AppState:
@@ -68,9 +68,12 @@ class StateManager:
                 state.selected_plugins = cleaned.split()
 
             # Detectar Header (Heurística)
-            if "fastfetch" in content: state.selected_header = "fastfetch"
-            elif "figlet" in content: state.selected_header = "figlet_slant"
-            elif "cowsay" in content: state.selected_header = "cow"
+            if "fastfetch" in content:
+                state.selected_header = "fastfetch"
+            elif "figlet" in content:
+                state.selected_header = "figlet_slant"
+            elif "cowsay" in content:
+                state.selected_header = "cow"
             
         except Exception as e:
             import logging

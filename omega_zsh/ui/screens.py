@@ -2,15 +2,16 @@ from textual.app import ComposeResult
 from textual import on, events
 from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, SelectionList, RadioSet, RadioButton, Label, Log, Button, Input, ListView, ListItem
-from textual.containers import Vertical, Horizontal, Grid
+from textual.containers import Vertical, Horizontal
 from textual.widgets.selection_list import Selection
 from rich.table import Table
 from rich.panel import Panel
 from rich.align import Align
 from rich.text import Text
-from ..core.constants import DB_PLUGINS, THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_HEADERS
+from ..core.constants import DB_PLUGINS, DB_HEADERS
 from ..core.context import SystemContext
-import platform
+from ..core.figlet import FigletManager
+
 import os
 import shutil
 import psutil
@@ -322,7 +323,6 @@ class ThemeSelectScreen(Screen):
         except Exception as e:
             preview_box.update(Text(f"Execution Error: {e}", style="red"))
 
-from ..core.figlet import FigletManager
 
 class HeaderSelectScreen(Screen):
     """Pantalla avanzada para seleccionar y personalizar el Header."""

@@ -11,7 +11,8 @@ class TermuxPlatform(BasePlatform):
     def install_package(self, package_name: str, on_progress: Optional[Callable[[str], None]] = None) -> bool:
         # Resolvemos nombres específicos de paquetes si es necesario
         resolved_name = package_name
-        if package_name == "fd": resolved_name = "fd" # Termux usa fd directamente
+        if package_name == "fd":
+            resolved_name = "fd"  # Termux usa fd directamente
         
         # FIX: lolcat no está en repositorios de Termux, instalar vía pip del sistema
         if package_name == "lolcat":

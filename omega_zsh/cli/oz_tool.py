@@ -12,7 +12,6 @@ from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.layout import Layout
 from rich.text import Text
 from rich import box
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -37,7 +36,7 @@ def get_system_stats():
     disk = psutil.disk_usage('/')
     try:
         uptime = datetime.fromtimestamp(psutil.boot_time()).strftime("%H:%M")
-    except:
+    except Exception:
         uptime = "N/A"
     return {
         "os": "Android/Termux" if "Android" in platform.system() or os.path.exists("/system/build.prop") else platform.system(),
@@ -194,7 +193,7 @@ def list_themes():
         table.add_row(name, origin)
         
     console.print(table)
-    console.print("[yellow]Para usar uno:[/] Edita ~/.zshrc y cambia ZSH_THEME='nombre'")
+    console.print("[yellow]Para usar uno:[/] Edita ~/.zshrc y cambia ZSH_THEME='tu_tema'")
 
 # --- ACTUALIZADOR ---
 def self_update():
@@ -225,7 +224,7 @@ def self_update():
 def show_help():
     """Muestra la ayuda."""
     console.print(Panel(
-        f"[bold blue]OMEGA CLI (oz)[/] [white]v2.2.0[/]\n[italic]Herramienta de Gestión Avanzada[/]",
+        "[bold blue]OMEGA CLI (oz)[/] [white]v2.2.0[/]\n[italic]Herramienta de Gestión Avanzada[/]",
         border_style="blue"
     ))
     table = Table(box=box.SIMPLE)
@@ -276,7 +275,7 @@ def show_plugins_detail():
         info = inspect_plugin(p_name)
         title = f"[bold cyan]📦 {p_name}[/]"
         if not info["found"]:
-            console.print(Panel(f"No se encontró el archivo fuente (posible plugin nativo de OMZ sin script .zsh).", title=title, border_style="grey39"))
+            console.print(Panel("No se encontró el archivo fuente (posible plugin nativo de OMZ sin script .zsh).", title=title, border_style="grey39"))
             continue
         
         content = []

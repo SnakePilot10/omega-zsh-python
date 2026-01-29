@@ -7,7 +7,7 @@ import logging
 
 from .screens import DashboardScreen, PluginSelectScreen, ThemeSelectScreen, HeaderSelectScreen, InstallScreen
 from ..core.context import SystemContext
-from ..core.constants import THEMES_OMZ_BUILTIN, THEMES_ROOT, DB_PLUGINS, BIN_PLUGINS, ThemeDef
+from ..core.constants import THEMES_OMZ_BUILTIN, DB_PLUGINS, BIN_PLUGINS, ThemeDef
 from ..core.generator import ConfigGenerator
 from ..core.state import StateManager, AppState
 from ..core.installer import PluginInstaller
@@ -326,9 +326,12 @@ class OmegaApp(App):
 
     def selected_header_cmd(self) -> str:
         h = self.selected_header
-        if h == "fastfetch": return "fastfetch"
-        if h == "cow": return 'fortune | cowsay | lolcat'
-        if h == "none": return ""
+        if h == "fastfetch":
+            return "fastfetch"
+        if h == "cow":
+            return 'fortune | cowsay | lolcat'
+        if h == "none":
+            return ""
         if h == "figlet_custom":
             # Usar el generador seguro que escapa los caracteres
             return FigletManager().generate_safe_command(self.header_text, self.header_font)
