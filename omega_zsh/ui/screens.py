@@ -8,7 +8,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.align import Align
 from rich.text import Text
-from ..core.constants import DB_PLUGINS, DB_HEADERS
+from ..core.constants import DB_HEADERS
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
 

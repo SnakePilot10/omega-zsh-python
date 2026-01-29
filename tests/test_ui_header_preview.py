@@ -25,7 +25,7 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
         mock_run.return_value = mock_result
         
         app = MockApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             screen = HeaderSelectScreen("fastfetch")
             app.push_screen(screen)
             
@@ -48,7 +48,7 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
         mock_run.return_value = mock_result
         
         app = MockApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             screen = HeaderSelectScreen("cow")
             app.push_screen(screen)
             

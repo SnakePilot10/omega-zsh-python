@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import time
-import shutil
 import platform
 import psutil
 import subprocess
@@ -12,7 +11,6 @@ from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 from rich import box
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from datetime import datetime
