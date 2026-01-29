@@ -1,5 +1,5 @@
 
-import pytest
+
 from unittest.mock import MagicMock, patch, PropertyMock
 from omega_zsh.ui.app import OmegaApp
 from textual.widgets import TabbedContent

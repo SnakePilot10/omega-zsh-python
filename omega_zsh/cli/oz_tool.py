@@ -46,7 +46,8 @@ def get_system_stats():
     }
 
 def get_active_plugins():
-    if not ZSHRC.exists(): return []
+    if not ZSHRC.exists():
+        return []
     content = ZSHRC.read_text(errors="ignore")
     match = re.search(r'^plugins=\((.*?)\)', content, re.MULTILINE | re.DOTALL)
     if match:

@@ -1,6 +1,5 @@
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from omega_zsh.cli.oz_tool import get_active_plugins, inspect_plugin
 
 def test_get_active_plugins_empty(tmp_path):

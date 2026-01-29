@@ -1,7 +1,6 @@
 import pytest
-import os
 from unittest.mock import patch, MagicMock
-from pathlib import Path
+
 from omega_zsh.core.context import SystemContext
 
 @pytest.fixture(autouse=True)

@@ -1,6 +1,6 @@
 import pytest
 import json
-from pathlib import Path
+
 from omega_zsh.core.state import StateManager, AppState
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-import pytest
+
 from unittest.mock import MagicMock, patch
 from omega_zsh.ui.screens import ThemeSelectScreen
 from omega_zsh.core.constants import ThemeDef

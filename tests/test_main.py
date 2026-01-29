@@ -1,6 +1,4 @@
-import sys
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from omega_zsh.__main__ import main, handle_exception
 
 def test_main_success():

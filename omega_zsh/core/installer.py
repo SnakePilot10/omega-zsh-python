@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import List, Callable, Optional, Dict
+from typing import List, Callable
 from .constants import BIN_PLUGINS, EXTERNAL_URLS
 
 class PluginInstaller:

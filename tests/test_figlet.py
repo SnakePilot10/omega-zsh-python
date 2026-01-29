@@ -1,5 +1,5 @@
 import pytest
-from pathlib import Path
+
 from omega_zsh.core.figlet import FigletManager
 
 @pytest.fixture

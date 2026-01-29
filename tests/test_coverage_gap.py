@@ -5,6 +5,7 @@ from omega_zsh.core.generator import ConfigGenerator
 from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.core.state import StateManager
 from omega_zsh.platforms.base import BasePlatform
+from omega_zsh.cli.oz_tool import main as oz_main
 
 def test_generator_error_handling(tmp_path):
     """Cubre líneas de error en generator.py."""
@@ -80,7 +81,6 @@ def test_base_platform_run_cmd_internal(mock_popen):
     assert success is True
     on_progress.assert_called_with("Línea 1")
 
-from omega_zsh.cli.oz_tool import main as oz_main
 @patch("sys.argv", ["oz", "--help"])
 @patch("omega_zsh.cli.oz_tool.console.print")
 def test_oz_tool_help(mock_print):

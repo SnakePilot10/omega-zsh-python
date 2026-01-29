@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 class ConfigGenerator:
     def __init__(self, templates_dir: Path):

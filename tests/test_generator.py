@@ -1,6 +1,5 @@
 import pytest
-import shutil
-import sys
+
 from pathlib import Path
 from omega_zsh.core.generator import ConfigGenerator
 import omega_zsh

@@ -1,9 +1,7 @@
 
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from pathlib import Path
+from unittest.mock import MagicMock, patch
 from omega_zsh.ui.app import OmegaApp
-from omega_zsh.core.constants import ThemeDef
 
 @pytest.fixture
 def mock_app():
@@ -103,7 +101,6 @@ def test_action_config_themes_discovery(mock_path, mock_app):
         mock_home = MagicMock()
         mock_app.context.home = mock_home
         
-        mock_omz_dir = MagicMock()
         mock_omz_themes_dir = MagicMock()
         mock_omz_themes_dir.exists.return_value = True
         mock_omz_themes_dir.glob.return_value = [theme2]

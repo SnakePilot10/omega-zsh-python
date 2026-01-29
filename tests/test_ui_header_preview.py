@@ -1,9 +1,8 @@
 import unittest
+import asyncio
 from unittest.mock import MagicMock, patch
 from omega_zsh.ui.screens import HeaderSelectScreen
 from textual.app import App
-from rich.text import Text
-import shutil
 
 class MockApp(App):
     def __init__(self):
@@ -30,8 +29,8 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
             screen = HeaderSelectScreen("fastfetch")
             app.push_screen(screen)
             
-            # Wait for events to settle (mount, update_preview)
-            await pilot.pause()
+            # Wait a bit instead of full pause to avoid timeouts on slow envs
+            await asyncio.sleep(0.1)
             
             mock_run.assert_called()
             # Verify the command called
@@ -53,7 +52,7 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
             screen = HeaderSelectScreen("cow")
             app.push_screen(screen)
             
-            await pilot.pause()
+            await asyncio.sleep(0.1)
             
             mock_run.assert_called()
             cmd = mock_run.call_args[0][0]

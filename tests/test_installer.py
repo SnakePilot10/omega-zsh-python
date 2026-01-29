@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
-from pathlib import Path
+from unittest.mock import MagicMock
 from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.platforms.base import BasePlatform
 from omega_zsh.core.constants import BIN_PLUGINS, EXTERNAL_URLS
@@ -24,7 +23,8 @@ def test_ensure_omz_clones(installer):
     installer._git_clone = MagicMock()
     
     # Callback dummy
-    cb = lambda x: None
+    def cb(x):
+        pass
     
     installer.ensure_omz(cb)
     
@@ -41,7 +41,8 @@ def test_install_plugin_external(installer):
     EXTERNAL_URLS[plugin_id] = "https://github.com/foo/bar.git"
     
     installer._git_clone = MagicMock()
-    cb = lambda x: None
+    def cb(x):
+        pass
     
     installer.install_all([plugin_id], cb)
     
@@ -58,7 +59,8 @@ def test_install_plugin_binary(installer):
         BIN_PLUGINS.append(plugin_id)
         
     installer.platform.install_package = MagicMock()
-    cb = lambda x: None
+    def cb(x):
+        pass
     
     installer.install_all([plugin_id], cb)
     

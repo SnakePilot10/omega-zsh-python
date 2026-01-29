@@ -1,5 +1,4 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from omega_zsh.platforms.termux import TermuxPlatform
 from omega_zsh.platforms.debian import DebianPlatform
 

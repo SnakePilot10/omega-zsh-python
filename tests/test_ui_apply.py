@@ -1,8 +1,7 @@
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from omega_zsh.ui.app import OmegaApp
-from omega_zsh.core.constants import ThemeDef
 
 @pytest.fixture
 def mock_app():
