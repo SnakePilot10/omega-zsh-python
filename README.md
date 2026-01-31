@@ -46,7 +46,12 @@ Configurar un entorno de terminal profesional (`zsh` + `git` + plugins + temas) 
 ### Requisitos Previos
 *   **OS:** Android (Termux), Debian/Ubuntu, Arch Linux, Fedora, Alpine.
 *   **Python:** 3.10+.
-*   **Internet:** Para dependencias.
+*   **Dependencias del Sistema:** El instalador gestionará automáticamente:
+    *   `zsh` (Shell)
+    *   `python3` (Core)
+    *   `fzf` (Búsqueda difusa)
+    *   `zoxide` (Navegación inteligente)
+    *   `lolcat`, `figlet`, `cowsay`, `fastfetch` (Estética)
 
 ### Bootstrap Automático
 ```bash
@@ -56,9 +61,17 @@ chmod +x install.sh
 ./install.sh
 ```
 
+El script se encargará de todo: instalar paquetes, configurar permisos, crear el entorno virtual y cambiar tu shell a Zsh automáticamente.
+
 ---
 
 ## 🎮 Guía de Uso
+
+### 0. Herramientas Integradas
+Gracias a la instalación automatizada, ahora dispones de superpoderes en tu terminal:
+*   **`z` (Zoxide):** Salta a directorios usados frecuentemente sin escribir la ruta completa (ej: `z pro` -> `cd ~/projects`).
+*   **`Ctrl+R` (FZF):** Busca en tu historial de comandos de forma interactiva e instantánea.
+*   **`Ctrl+T` (FZF):** Busca archivos rápidamente.
 
 ### 1. Interfaz Gráfica de Terminal (TUI)
 Ejecuta `omega` para entrar al panel de control visual.

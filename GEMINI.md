@@ -85,3 +85,8 @@ pytest --cov=omega_zsh
 - **CI Fixes:** Updated `ci.yml` to install dependencies correctly via `pip install ".[dev]"`.
 - **Test Coverage:** Significantly increased test coverage (~60%) by adding tests for `__main__.py`, `SystemContext`, and edge cases in `tests/test_coverage_gap.py`.
 - **License:** Updated license definition in `pyproject.toml` to comply with PEP 621 standards.
+
+## Latest Updates (Installer & UX)
+- **Installer Overhaul:** Fixed critical bugs in `install.sh` regarding `apt-get` argument handling and shell detection.
+- **Auto-Switch:** The installer now intelligently detects the real user (even under `sudo`) and automatically `exec`s into `zsh` upon completion, providing an instant transition.
+- **Dependencies:** Added `fzf`, `zoxide`, and `lolcat` to the core package list for Debian/Ubuntu, Arch, Fedora, and Alpine, ensuring a "batteries-included" experience.
