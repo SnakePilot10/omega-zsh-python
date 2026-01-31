@@ -31,7 +31,7 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
             app.push_screen(screen)
 
             # Wait a bit instead of full pause to avoid timeouts on slow envs
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
 
             mock_run.assert_called()
             # Verify the command called
@@ -53,7 +53,7 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
             screen = HeaderSelectScreen("cow")
             app.push_screen(screen)
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
 
             mock_run.assert_called()
             cmd = mock_run.call_args[0][0]
