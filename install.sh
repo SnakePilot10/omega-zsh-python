@@ -19,16 +19,16 @@ echo -e "${BLUE}>> Detectando entorno del sistema...${NC}"
 if [ -d "/data/data/com.termux" ]; then
     echo -e "${GREEN}>> Entorno detectado: Android (Termux)${NC}"
     PKG_MANAGER="pkg install -y"
-    PACKAGES="python zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide eza"
+    PACKAGES="python zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide eza debianutils"
 elif [ -f "/etc/debian_version" ]; then
     echo -e "${GREEN}>> Entorno detectado: Debian/Ubuntu${NC}"
     PRE_INSTALL_CMD="sudo apt-get update"
     PKG_MANAGER="sudo apt-get install -y"
-    PACKAGES="python3 python3-venv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza"
+    PACKAGES="python3 python3-venv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza debianutils"
 elif [ -f "/etc/arch-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Arch Linux${NC}"
     PKG_MANAGER="sudo pacman -Sy --noconfirm --needed"
-    PACKAGES="python zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza"
+    PACKAGES="python zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza which"
 elif [ -f "/etc/alpine-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Alpine Linux${NC}"
     PRE_INSTALL_CMD="sudo apk update"
@@ -112,64 +112,82 @@ if [ $? -ne 0 ]; then
 fi
 
 # --- 5. CREAR ENLACES SIMBÓLICOS PARA ACCESO GLOBAL ---
-echo -e "${BLUE}>> Creando enlaces simbólicos en /usr/local/bin para 'omega' y 'oz'...${NC}"
+echo -e "${BLUE}>> Creando enlaces simbólicos para 'omega' y 'oz'...${NC}"
+
+# Definir directorio de destino para binarios
 if [ -w "/usr/local/bin" ]; then
-    ln -sf "$VENV_DIR/bin/omega" "/usr/local/bin/omega"
-    ln -sf "$VENV_DIR/bin/oz" "/usr/local/bin/oz"
+    BIN_DEST="/usr/local/bin"
+    SUDO_CMD=""
+elif command -v sudo &> /dev/null && sudo -n true 2>/dev/null; then
+    BIN_DEST="/usr/local/bin"
+    SUDO_CMD="sudo"
 else
-    echo -e "${BLUE}Se necesita permiso de administrador para crear los enlaces.${NC}"
-    sudo ln -sf "$VENV_DIR/bin/omega" "/usr/local/bin/omega"
-    sudo ln -sf "$VENV_DIR/bin/oz" "/usr/local/bin/oz"
+    # Fallback para usuarios sin root (como Termux estándar)
+    BIN_DEST="$HOME/.local/bin"
+    mkdir -p "$BIN_DEST"
+    SUDO_CMD=""
+    
+    # Asegurarse de que el directorio esté en el PATH
+    if [[ ":$PATH:" != *":$BIN_DEST:"* ]]; then
+        echo -e "${BLUE}>> Agregando $BIN_DEST a tu PATH temporalmente...${NC}"
+        export PATH="$BIN_DEST:$PATH"
+    fi
 fi
 
+echo -e "${BLUE}>> Instalando binarios en $BIN_DEST...${NC}"
+$SUDO_CMD ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega"
+$SUDO_CMD ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz"
+
 if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falló la creación de enlaces simbólicos. Puede que necesites ejecutar el instalador con sudo.${NC}"
-    exit 1
+    echo -e "${RED}❌ Falló la creación de enlaces simbólicos.${NC}"
+    echo -e "Intentando copia directa como último recurso..."
+    cp "$VENV_DIR/bin/omega" "$BIN_DEST/omega" 2>/dev/null || true
+    cp "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || true
 fi
 
 # --- 6. FINALIZACIÓN ---
 echo -e "${GREEN}>> ✅ ¡Instalación completada!${NC}"
-echo -e "Ahora puedes ejecutar ${BLUE}'omega'${NC} para lanzar la interfaz gráfica o ${BLUE}'oz'${NC} para usar la CLI desde cualquier terminal."
+echo -e "Ahora puedes ejecutar ${BLUE}'omega'${NC} o ${BLUE}'oz'${NC}."
 
 # --- 7. CONFIGURAR ZSH COMO SHELL PREDETERMINADA ---
 REAL_USER="${SUDO_USER:-$(whoami)}"
 
-# Obtener la home del usuario real (necesario si corremos con sudo)
+# Obtener la home del usuario real
 if [ "$REAL_USER" = "root" ]; then
     REAL_HOME="/root"
+elif [ -d "/data/data/com.termux" ]; then
+    REAL_HOME="/data/data/com.termux/files/home"
 else
     if [ "$(uname)" = "Linux" ]; then
-         REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+         REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6 2>/dev/null || echo "$HOME")
     else
-         # Fallback para macOS/BSD si fuera necesario
-         REAL_HOME="/home/$REAL_USER"
+         REAL_HOME="$HOME"
     fi
 fi
 
 if command -v zsh &> /dev/null; then
-    CURRENT_SHELL=$(getent passwd "$REAL_USER" | cut -d: -f7)
     ZSH_PATH=$(which zsh)
-
-    if [ "$CURRENT_SHELL" != "$ZSH_PATH" ]; then
-        echo -e "${BLUE}>> Configurando Zsh como shell predeterminada para el usuario '$REAL_USER'...${NC}"
-        
-        # Intentar cambiar la shell. Si ya somos root/sudo, no pedirá pass. Si no, chsh pedirá pass.
-        if [ "$(id -u)" -eq 0 ]; then
-             chsh -s "$ZSH_PATH" "$REAL_USER"
-        else
-             # Si no somos root, intentamos directo (pedirá pass)
-             # Si falla, sugerimos el comando manual.
-             if ! chsh -s "$ZSH_PATH"; then
-                 echo -e "${RED}⚠️  No se pudo cambiar la shell automáticamente. Ejecuta: chsh -s $(which zsh)${NC}"
-             fi
-        fi
-        
-        echo -e "${GREEN}✅ Shell predeterminada actualizada.${NC}"
+    
+    # En Termux no se usa chsh de la misma manera o no es necesario si ya se usa proot/login
+    if [ -d "/data/data/com.termux" ]; then
+        echo -e "${GREEN}>> Entorno Termux detectado. Asegúrate de que tu terminal inicie con zsh.${NC}"
     else
-        echo -e "${GREEN}>> Zsh ya es la shell predeterminada para $REAL_USER.${NC}"
+        CURRENT_SHELL=$(getent passwd "$REAL_USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
+        if [ "$CURRENT_SHELL" != "$ZSH_PATH" ]; then
+            echo -e "${BLUE}>> Intentando configurar Zsh como shell predeterminada...${NC}"
+            if command -v chsh &> /dev/null; then
+                if [ "$(id -u)" -eq 0 ]; then
+                     chsh -s "$ZSH_PATH" "$REAL_USER"
+                elif command -v sudo &> /dev/null; then
+                     sudo chsh -s "$ZSH_PATH" "$REAL_USER"
+                else
+                     chsh -s "$ZSH_PATH" || echo -e "${RED}⚠️  Ejecuta: chsh -s $ZSH_PATH manualmente.${NC}"
+                fi
+            fi
+        fi
     fi
 else
-    echo -e "${RED}❌ Zsh no está instalado, no se puede establecer como shell predeterminada.${NC}"
+    echo -e "${RED}❌ Zsh no está instalado.${NC}"
 fi
 
 # --- 8. VERIFICAR CONFIGURACIÓN INICIAL ---
