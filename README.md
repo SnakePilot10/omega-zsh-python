@@ -61,6 +61,12 @@ chmod +x install.sh
 ./install.sh
 ```
 
+**Inteligencia del Instalador:**
+*   **Detección de Entorno:** Identifica automáticamente si estás en Termux (Android), Debian, Arch, Fedora o Alpine.
+*   **Soporte Non-Root:** Si no tienes permisos de administrador, los binarios (`omega`, `oz`) se instalan automáticamente en `~/.local/bin`.
+*   **Gestión de Dependencias:** Instala automáticamente paquetes críticos como `zsh`, `python3`, `fzf`, `zoxide` y la herramienta de localización `which` (`debianutils`).
+*   **Configuración Automática:** Configura Zsh como tu shell predeterminada de forma segura, respetando las particularidades de Termux.
+
 El script se encargará de todo: instalar paquetes, configurar permisos, crear el entorno virtual y cambiar tu shell a Zsh automáticamente.
 
 ---
