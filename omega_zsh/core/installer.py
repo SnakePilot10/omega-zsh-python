@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Callable
 from .constants import BIN_PLUGINS, EXTERNAL_URLS
 
+
 class PluginInstaller:
     """
     Gestiona la instalación de plugins, temas y paquetes del sistema.
@@ -41,19 +42,19 @@ class PluginInstaller:
             if plugin_id in BIN_PLUGINS:
                 on_progress(f"Instalando paquete binario: {plugin_id}")
                 self.platform.install_package(plugin_id, on_progress=on_progress)
-            
+
             # 2. ¿Es un plugin externo de Git?
             elif plugin_id in EXTERNAL_URLS:
                 url = EXTERNAL_URLS[plugin_id]
                 target_path = self.custom_dir / "plugins" / plugin_id
-                
+
                 if not target_path.exists():
                     on_progress(f"Clonando plugin Git: {plugin_id}")
                     self._git_clone(url, target_path, on_progress)
                 else:
                     on_progress(f"Plugin Git ya existe: {plugin_id}")
 
-            # 3. ¿Es un plugin nativo de OMZ? 
+            # 3. ¿Es un plugin nativo de OMZ?
             # No requiere instalación física, solo estar en la lista del .zshrc
             else:
                 on_progress(f"Activando plugin nativo: {plugin_id}")
@@ -73,7 +74,7 @@ class PluginInstaller:
                 ["git", "clone", "--depth", "1", url, str(target)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
             )
             if process.stdout:
                 for line in process.stdout:
@@ -92,4 +93,6 @@ class PluginInstaller:
         omz_dir = self.home / ".oh-my-zsh"
         if not omz_dir.exists():
             on_progress("Oh My Zsh no encontrado. Clonando...")
-            self._git_clone("https://github.com/ohmyzsh/ohmyzsh.git", omz_dir, on_progress)
+            self._git_clone(
+                "https://github.com/ohmyzsh/ohmyzsh.git", omz_dir, on_progress
+            )

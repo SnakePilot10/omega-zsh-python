@@ -33,7 +33,7 @@ class SystemContext:
     def _detect_android_context(self):
         """Detección específica para entornos Android/Termux."""
         self.distro_id = "android"
-        
+
         # Detectar si es GSI (Generic System Image)
         # Usamos getprop para buscar huellas comunes de GSI
         try:
@@ -41,11 +41,15 @@ class SystemContext:
             # Esta es una heurística básica
             build_flavor = self._run_cmd("getprop ro.build.flavor")
             product_name = self._run_cmd("getprop ro.product.name")
-            
-            if "aosp" in build_flavor.lower() or "gsi" in product_name.lower() or "treble" in product_name.lower():
+
+            if (
+                "aosp" in build_flavor.lower()
+                or "gsi" in product_name.lower()
+                or "treble" in product_name.lower()
+            ):
                 self.is_gsi = True
         except Exception:
-            pass # Si falla getprop, asumimos no GSI o no tenemos acceso
+            pass  # Si falla getprop, asumimos no GSI o no tenemos acceso
 
         # Determinar gestor de paquetes en Termux
         if self.is_termux:
@@ -69,7 +73,7 @@ class SystemContext:
                         if "=" in line:
                             k, v = line.strip().split("=", 1)
                             data[k] = v.strip('"')
-                    
+
                     self.distro_id = data.get("ID", "linux").lower()
                     self.distro_version = data.get("VERSION_ID", "")
             except Exception:
@@ -105,6 +109,7 @@ class SystemContext:
     def _command_exists(self, cmd: str) -> bool:
         """Verifica si un comando existe en el PATH."""
         from shutil import which
+
         return which(cmd) is not None
 
     def _run_cmd(self, cmd: str) -> str:
@@ -118,5 +123,7 @@ class SystemContext:
             return ""
 
     def __repr__(self):
-        return (f"<SystemContext os={self.os_type} distro={self.distro_id} "
-                f"pkg={self.package_manager_type} termux={self.is_termux} gsi={self.is_gsi}>")
+        return (
+            f"<SystemContext os={self.os_type} distro={self.distro_id} "
+            f"pkg={self.package_manager_type} termux={self.is_termux} gsi={self.is_gsi}>"
+        )

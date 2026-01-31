@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
+
 @dataclass
 class PluginDef:
     id: str
@@ -8,16 +9,19 @@ class PluginDef:
     category: str
     url: Optional[str] = None
 
+
 @dataclass
 class ThemeDef:
     id: str
     desc: str
     path: Optional[str] = None
 
+
 @dataclass
 class HeaderDef:
     id: str
     desc: str
+
 
 # --- EXTERNAL REPOS (GIT) ---
 EXTERNAL_URLS: Dict[str, str] = {
@@ -38,26 +42,80 @@ EXTERNAL_URLS: Dict[str, str] = {
 
 # --- BINARY TOOLS (SYSTEM PACKAGES) ---
 BIN_PLUGINS: List[str] = [
-    "zoxide", "eza", "bat", "yazi", "fd", "ripgrep", "duf", "ncdu", "procs", 
-    "jq", "httpie", "neofetch", "tldr", "lazygit", "glow", "chafa", "nano", 
-    "lolcat", "fastfetch", "figlet", "fortune", "cowsay", "nala",
+    "zoxide",
+    "eza",
+    "bat",
+    "yazi",
+    "fd",
+    "ripgrep",
+    "duf",
+    "ncdu",
+    "procs",
+    "jq",
+    "httpie",
+    "neofetch",
+    "tldr",
+    "lazygit",
+    "glow",
+    "chafa",
+    "nano",
+    "lolcat",
+    "fastfetch",
+    "figlet",
+    "fortune",
+    "cowsay",
+    "nala",
 ]
 
 # --- ALL PLUGINS LIST (UI DATA) ---
 DB_PLUGINS: List[PluginDef] = [
-    PluginDef("zsh-autosuggestions", "Predice lo que escribes (Must Have)", "CORE", EXTERNAL_URLS["zsh-autosuggestions"]),
-    PluginDef("zsh-syntax-highlighting", "Colores en tiempo real", "CORE", EXTERNAL_URLS["zsh-syntax-highlighting"]),
-    PluginDef("fzf-tab", "Menú autocompletado visual", "CORE", EXTERNAL_URLS["fzf-tab"]),
-    PluginDef("zsh-completions", "Más definiciones de tabulación", "CORE", EXTERNAL_URLS["zsh-completions"]),
+    PluginDef(
+        "zsh-autosuggestions",
+        "Predice lo que escribes (Must Have)",
+        "CORE",
+        EXTERNAL_URLS["zsh-autosuggestions"],
+    ),
+    PluginDef(
+        "zsh-syntax-highlighting",
+        "Colores en tiempo real",
+        "CORE",
+        EXTERNAL_URLS["zsh-syntax-highlighting"],
+    ),
+    PluginDef(
+        "fzf-tab", "Menú autocompletado visual", "CORE", EXTERNAL_URLS["fzf-tab"]
+    ),
+    PluginDef(
+        "zsh-completions",
+        "Más definiciones de tabulación",
+        "CORE",
+        EXTERNAL_URLS["zsh-completions"],
+    ),
     PluginDef("command-not-found", "Sugiere paquetes faltantes", "SYS"),
-    PluginDef("zsh-history-substring-search", "Busca historial con Flecha Arriba", "NAV", EXTERNAL_URLS["zsh-history-substring-search"]),
-    PluginDef("zsh-autopair", "Cierra paréntesis/comillas auto", "UX", EXTERNAL_URLS["zsh-autopair"]),
+    PluginDef(
+        "zsh-history-substring-search",
+        "Busca historial con Flecha Arriba",
+        "NAV",
+        EXTERNAL_URLS["zsh-history-substring-search"],
+    ),
+    PluginDef(
+        "zsh-autopair",
+        "Cierra paréntesis/comillas auto",
+        "UX",
+        EXTERNAL_URLS["zsh-autopair"],
+    ),
     PluginDef("magic-enter", "Enter en vacío hace 'ls'", "UX"),
     PluginDef("fancy-ctrl-z", "Ctrl-Z minimiza y restaura", "UX"),
     PluginDef("k", "ls con esteroides y stats de git", "UI", EXTERNAL_URLS["k"]),
     PluginDef("per-directory-history", "Historial único por carpeta", "NAV"),
-    PluginDef("zsh-navigation-tools", "Interfaz visual (n-history, etc)", "UI", EXTERNAL_URLS["zsh-navigation-tools"]),
-    PluginDef("alias-tips", "Te recuerda usar tus alias", "EDU", EXTERNAL_URLS["alias-tips"]),
+    PluginDef(
+        "zsh-navigation-tools",
+        "Interfaz visual (n-history, etc)",
+        "UI",
+        EXTERNAL_URLS["zsh-navigation-tools"],
+    ),
+    PluginDef(
+        "alias-tips", "Te recuerda usar tus alias", "EDU", EXTERNAL_URLS["alias-tips"]
+    ),
     PluginDef("zoxide", "El 'cd' inteligente (z)", "NAV"),
     PluginDef("eza", "El 'ls' moderno con iconos", "UI"),
     PluginDef("bat", "El 'cat' con alas y colores", "UI"),

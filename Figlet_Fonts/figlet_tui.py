@@ -9,23 +9,26 @@ from textual import on
 
 # --- CAPA DE LÓGICA (BACKEND) ---
 
+
 class FigletManager:
     """Encargada de la lógica de negocio: gestión de fuentes y renderizado."""
-    
+
     def __init__(self):
         self.figlet_path = shutil.which("figlet")
         if not self.figlet_path:
-            raise FileNotFoundError("No se encontró el ejecutable 'figlet'. Instálalo con 'pkg install figlet'")
-        
+            raise FileNotFoundError(
+                "No se encontró el ejecutable 'figlet'. Instálalo con 'pkg install figlet'"
+            )
+
         # Detectar directorio de fuentes
         prefix = os.environ.get("PREFIX", "/usr")
         self.fonts_dir = os.path.join(prefix, "share", "figlet")
-    
+
     def get_fonts(self) -> list[str]:
         """Devuelve una lista ordenada de nombres de fuentes disponibles."""
         if not os.path.exists(self.fonts_dir):
             return []
-        
+
         patron = os.path.join(self.fonts_dir, "*.flf")
         archivos = glob.glob(patron)
         nombres = [os.path.splitext(os.path.basename(f))[0] for f in archivos]
@@ -46,7 +49,7 @@ class FigletManager:
                 [self.figlet_path, "-f", font, "-w", str(width), "-c", text],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             return result.stdout
         except subprocess.CalledProcessError:
@@ -54,11 +57,13 @@ class FigletManager:
         except Exception as e:
             return f"Error inesperado: {e}"
 
+
 # --- CAPA DE INTERFAZ (FRONTEND) ---
+
 
 class FigletApp(App):
     """Aplicación TUI para visualizar fuentes Figlet."""
-    
+
     CSS = """
     Screen {
         layout: vertical;
@@ -107,11 +112,11 @@ class FigletApp(App):
         super().__init__()
         self.manager = FigletManager()
         self.fuentes_reales = self.manager.get_fonts()
-        
+
         # Mapeado seguro para evitar errores con nombres de fuentes raros
         self.mapa_fuentes = {}
         self.items_lista = []
-        
+
         for idx, nombre_real in enumerate(self.fuentes_reales):
             id_seguro = f"font_id_{idx}"
             self.mapa_fuentes[id_seguro] = nombre_real
@@ -125,18 +130,12 @@ class FigletApp(App):
         yield Header()
         yield Container(
             Input(placeholder="Escribe aquí...", id="text-input", value="Termux Ninja"),
-            id="input-container"
+            id="input-container",
         )
         yield Container(
-            Container(
-                ListView(*self.items_lista, id="font-list"),
-                id="sidebar"
-            ),
-            Container(
-                Static("", id="art-output"),
-                id="preview-area"
-            ),
-            id="main-container"
+            Container(ListView(*self.items_lista, id="font-list"), id="sidebar"),
+            Container(Static("", id="art-output"), id="preview-area"),
+            id="main-container",
         )
         yield Footer()
 
@@ -164,22 +163,22 @@ class FigletApp(App):
 
     def update_preview(self) -> None:
         contenedor = self.query_one("#preview-area")
-        
+
         # Obtenemos el ancho real del contenedor en la pantalla
         # Si es 0 (aún no cargó), usamos 40 como fallback seguro para móvil
         ancho_disponible = contenedor.size.width if contenedor.size.width > 0 else 40
-        
+
         # Restamos un pequeño margen para bordes (padding)
         ancho_seguro = max(10, ancho_disponible - 4)
 
         texto = self.query_one("#text-input").value
-        
+
         # Renderizamos pasando el ancho detectado
         arte = self.manager.render(texto, self.current_font, width=ancho_seguro)
-        
+
         self.query_one("#art-output").update(arte)
+
 
 if __name__ == "__main__":
     app = FigletApp()
     app.run()
-

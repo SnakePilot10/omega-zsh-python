@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import subprocess
 from typing import List, Callable, Optional
 
+
 class BasePlatform(ABC):
     @abstractmethod
     def update_repos(self) -> bool:
@@ -9,11 +10,15 @@ class BasePlatform(ABC):
         pass
 
     @abstractmethod
-    def install_package(self, package_name: str, on_progress: Optional[Callable[[str], None]] = None) -> bool:
+    def install_package(
+        self, package_name: str, on_progress: Optional[Callable[[str], None]] = None
+    ) -> bool:
         """Instala un paquete usando el gestor de paquetes nativo."""
         pass
 
-    def _run_command(self, cmd: List[str], on_progress: Optional[Callable[[str], None]] = None) -> bool:
+    def _run_command(
+        self, cmd: List[str], on_progress: Optional[Callable[[str], None]] = None
+    ) -> bool:
         """Ejecuta un comando y captura la salida línea por línea."""
         try:
             process = subprocess.Popen(
@@ -22,14 +27,14 @@ class BasePlatform(ABC):
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
-                universal_newlines=True
+                universal_newlines=True,
             )
 
             if process.stdout:
                 for line in process.stdout:
                     if on_progress:
                         on_progress(line.strip())
-            
+
             return process.wait() == 0
         except Exception as e:
             if on_progress:
