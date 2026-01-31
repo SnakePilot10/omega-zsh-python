@@ -23,18 +23,23 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
             call_log.append(args)
             return mock_result
 
-        with patch("omega_zsh.ui.screens.shutil.which", return_value="/usr/bin/fastfetch"), \
-             patch("omega_zsh.ui.screens.subprocess.run", side_effect=fake_run):
-            
+        with (
+            patch(
+                "omega_zsh.ui.screens.shutil.which", return_value="/usr/bin/fastfetch"
+            ),
+            patch("omega_zsh.ui.screens.subprocess.run", side_effect=fake_run),
+        ):
             app = MockApp()
             async with app.run_test():
                 screen = HeaderSelectScreen("fastfetch")
                 app.push_screen(screen)
                 await asyncio.sleep(0.5)
-                
+
             if not call_log:
-                 raise AssertionError("subprocess.run was not called (captured via side_effect)")
-            
+                raise AssertionError(
+                    "subprocess.run was not called (captured via side_effect)"
+                )
+
             assert call_log[0][0][0] == "fastfetch"
 
     async def test_header_preview_cow(self):
@@ -48,9 +53,12 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
             return mock_result
 
         # Setup: fortune and cowsay exist
-        with patch("omega_zsh.ui.screens.shutil.which", side_effect=lambda x: "/bin/" + x), \
-             patch("omega_zsh.ui.screens.subprocess.run", side_effect=fake_run):
-
+        with (
+            patch(
+                "omega_zsh.ui.screens.shutil.which", side_effect=lambda x: "/bin/" + x
+            ),
+            patch("omega_zsh.ui.screens.subprocess.run", side_effect=fake_run),
+        ):
             app = MockApp()
             async with app.run_test():
                 screen = HeaderSelectScreen("cow")
@@ -58,8 +66,10 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
                 await asyncio.sleep(0.5)
 
             if not call_log:
-                 raise AssertionError("subprocess.run was not called (captured via side_effect)")
-            
+                raise AssertionError(
+                    "subprocess.run was not called (captured via side_effect)"
+                )
+
             cmd = call_log[0][0]
             # Should use shell since it's a pipe
             assert cmd[0] == "sh"
