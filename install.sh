@@ -19,25 +19,25 @@ echo -e "${BLUE}>> Detectando entorno del sistema...${NC}"
 if [ -d "/data/data/com.termux" ]; then
     echo -e "${GREEN}>> Entorno detectado: Android (Termux)${NC}"
     PKG_MANAGER="pkg install -y"
-    PACKAGES="python zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide"
+    PACKAGES="python zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide eza"
 elif [ -f "/etc/debian_version" ]; then
     echo -e "${GREEN}>> Entorno detectado: Debian/Ubuntu${NC}"
     PRE_INSTALL_CMD="sudo apt-get update"
     PKG_MANAGER="sudo apt-get install -y"
-    PACKAGES="python3 python3-venv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat"
+    PACKAGES="python3 python3-venv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza"
 elif [ -f "/etc/arch-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Arch Linux${NC}"
     PKG_MANAGER="sudo pacman -Sy --noconfirm --needed"
-    PACKAGES="python zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat"
+    PACKAGES="python zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza"
 elif [ -f "/etc/alpine-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Alpine Linux${NC}"
     PRE_INSTALL_CMD="sudo apk update"
     PKG_MANAGER="sudo apk add"
-    PACKAGES="python3 py3-venv zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide lolcat"
+    PACKAGES="python3 py3-venv zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide lolcat eza"
 elif [ -f "/etc/fedora-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Fedora${NC}"
     PKG_MANAGER="sudo dnf install -y"
-    PACKAGES="python3 python3-virtualenv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat"
+    PACKAGES="python3 python3-virtualenv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza"
 else
     echo -e "${RED}⚠️  No se pudo detectar la distro automáticamente.${NC}"
     echo "Se asumirá que las dependencias (zsh, python3, etc.) ya están instaladas."
