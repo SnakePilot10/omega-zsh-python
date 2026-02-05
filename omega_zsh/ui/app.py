@@ -207,6 +207,10 @@ class OmegaApp(App):
                 p for p in self.selected_plugins if p not in BIN_PLUGINS
             ]
 
+            # Asegurar que los temas estén instalados
+            self._ensure_theme_installed(self.selected_theme)
+            self._ensure_theme_installed(self.selected_root_theme)
+
             gen_context = {
                 "version": "2.0.0",
                 "is_termux": self.context.is_termux,
@@ -291,8 +295,9 @@ class OmegaApp(App):
             installer.install_all(self.selected_plugins, screen.write_log)
 
             # 5. Instalar/Enlazar Tema
-            screen.write_log(f"\n--- CONFIGURANDO TEMA: {self.selected_theme} ---")
-            self._install_theme(self.selected_theme, screen)
+            screen.write_log(f"\n--- CONFIGURANDO TEMAS: {self.selected_theme} y {self.selected_root_theme} ---")
+            self._ensure_theme_installed(self.selected_theme, screen.write_log)
+            self._ensure_theme_installed(self.selected_root_theme, screen.write_log)
 
             # 6. Generar Configuración Final
             screen.write_log("\n--- GENERANDO .zshrc ---")
@@ -345,31 +350,41 @@ class OmegaApp(App):
             screen.write_log(f"\n[bold red]ERROR CRÍTICO: {e}[/]")
             screen.show_finish()
 
-    def _install_theme(self, theme_name: str, screen: InstallScreen):
+    def _ensure_theme_installed(self, theme_name: str, log_fn=None):
+        """Asegura que el tema seleccionado esté disponible en OMZ custom."""
+        if log_fn is None:
+            def log_fn(msg):
+                logging.info(msg)
+
         import shutil
 
-        builtin_ids = [t.id for t in THEMES_OMZ_BUILTIN]
-        if theme_name in builtin_ids:
+        # 1. Chequear si es un tema estándar de Oh My Zsh
+        omz_standard_themes = self.context.home / ".oh-my-zsh/themes"
+        if (omz_standard_themes / f"{theme_name}.zsh-theme").exists():
             return
 
-        assets_dir = Path(__file__).parent.parent / "assets/themes"
         omz_custom_themes = self.context.home / ".oh-my-zsh/custom/themes"
+        target_file = omz_custom_themes / f"{theme_name}.zsh-theme"
 
-        theme_file = f"{theme_name}.zsh-theme"
-        src = assets_dir / theme_file
-        dst = omz_custom_themes / theme_file
+        # 2. Localizar el origen en assets
+        assets_dir = Path(__file__).parent.parent / "assets/themes"
+        source_file = assets_dir / f"{theme_name}.zsh-theme"
 
-        if src.exists():
+        # 3. Si es un tema de Omega (está en assets), lo instalamos/actualizamos
+        if source_file.exists():
             try:
                 omz_custom_themes.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src, dst)
-                screen.write_log(f"Tema enlazado: {theme_name}")
+                # Forzamos la copia si es de Omega para asegurar que esté actualizado
+                shutil.copy2(source_file, target_file)
+                log_fn(f"Tema Omega actualizado: {theme_name}")
             except Exception as e:
-                screen.write_log(f"Error copiando tema: {e}")
+                log_fn(f"Error instalando tema {theme_name}: {e}")
         else:
-            screen.write_log(
-                f"Advertencia: No se encontró el archivo del tema {theme_file}"
-            )
+            # Si no está en assets y no es estándar, solo avisamos si no existe en custom
+            if not target_file.exists():
+                log_fn(
+                    f"Advertencia: Tema '{theme_name}' no encontrado en assets ni en librerías estándar."
+                )
 
     def selected_header_cmd(self) -> str:
         h = self.selected_header

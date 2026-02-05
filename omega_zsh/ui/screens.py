@@ -90,7 +90,8 @@ class DashboardScreen(Static):
         shortcuts.add_row("P", "Plugins Manager")
         shortcuts.add_row("T", "Theme Selector")
         shortcuts.add_row("H", "Header Style")
-        shortcuts.add_row("I", "INSTALL / APPLY")
+        shortcuts.add_row("A", "APPLY (Quick)")
+        shortcuts.add_row("I", "FULL INSTALL")
         shortcuts.add_row("Q", "Quit")
 
         # Main Layout
@@ -164,11 +165,19 @@ class PluginSelectScreen(Screen):
     def action_pop_screen(self) -> None:
         self.app.pop_screen()
 
+    def action_apply_changes(self) -> None:
+        """Llamar a la acción de aplicar cambios de la aplicación."""
+        if hasattr(self.app, "action_apply_changes"):
+            self.app.action_apply_changes()
+
 
 class ThemeSelectScreen(Screen):
     """Pantalla para seleccionar el tema de usuario con previsualización."""
 
-    BINDINGS = [("escape", "pop_screen", "Volver")]
+    BINDINGS = [
+        ("escape", "pop_screen", "Volver"),
+        ("a", "apply_changes", "Apply Changes"),
+    ]
 
     CSS = """
     #theme-sidebar {
@@ -254,6 +263,14 @@ class ThemeSelectScreen(Screen):
         # Generar preview inicial si hay un tema seleccionado
         if self.current_theme:
             self.generate_preview(self.current_theme)
+
+    def action_pop_screen(self) -> None:
+        self.app.pop_screen()
+
+    def action_apply_changes(self) -> None:
+        """Llamar a la acción de aplicar cambios de la aplicación."""
+        if hasattr(self.app, "action_apply_changes"):
+            self.app.action_apply_changes()
 
     @on(RadioSet.Changed, "#theme-radios")
     def on_theme_changed(self, event: RadioSet.Changed) -> None:
