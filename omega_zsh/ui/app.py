@@ -212,7 +212,7 @@ class OmegaApp(App):
             self._ensure_theme_installed(self.selected_root_theme)
 
             gen_context = {
-                "version": "2.0.0",
+                "version": "2.2.0",
                 "is_termux": self.context.is_termux,
                 "omz_dir": str(self.context.home / ".oh-my-zsh"),
                 "user_theme": self.selected_theme,
@@ -311,7 +311,7 @@ class OmegaApp(App):
             ]
 
             gen_context = {
-                "version": "2.0.0",
+                "version": "2.2.0",
                 "is_termux": self.context.is_termux,
                 "omz_dir": str(self.context.home / ".oh-my-zsh"),
                 "user_theme": self.selected_theme,
