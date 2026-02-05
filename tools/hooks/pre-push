@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Hook de Omega-ZSH para evitar subir código roto
+echo "🚀 Validando cambios antes del push..."
+
+# Navegar a la raíz del proyecto
+# (El hook se ejecuta desde la raíz del repo)
+
+# Activar el entorno virtual
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+else
+    echo "❌ Error: No se encontró el entorno virtual (.venv)"
+    exit 1
+fi
+
+# Ejecutar los tests
+echo "🧪 Ejecutando pytest..."
+pytest -q
+TEST_EXIT_CODE=$?
+
+if [ $TEST_EXIT_CODE -ne 0 ]; then
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ ERROR: Los tests fallaron. El push ha sido cancelado."
+    echo "💡 Revisa los errores arriba y arréglalos antes de subir."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    exit 1
+fi
+
+echo "✅ Todos los tests pasaron. Subiendo a GitHub..."
+exit 0
