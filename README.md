@@ -99,7 +99,7 @@ Herramienta de navaja suiza para el día a día.
 *   `oz bench`: **Hyperdrive Benchmark**. Mide y diagnostica la velocidad de inicio.
 *   `oz stats`: **Telemetría**. Sugiere alias basados en tus comandos más usados.
 *   **`oz themes`**: Lista TODOS los temas instalados (Omega, Oh My Zsh Standard y Custom).
-*   `oz plugins`: Inspector de código de plugins activos.
+*   **`oz plugins`**: Inspector inteligente de arsenal activo. Explica detalladamente tanto plugins de Zsh como herramientas binarias (`eza`, `bat`, `yazi`, etc.) basándose en el estado real de la aplicación y una base de conocimientos optimizada.
 *   `oz update`: Actualiza el núcleo de Omega-ZSH.
 
 ---

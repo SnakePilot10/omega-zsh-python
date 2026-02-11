@@ -18,14 +18,23 @@ Omega-ZSH is a sophisticated Zsh configuration manager designed for Linux and An
 - **Safe Configuration:** Uses atomic writes and backups to prevent data loss.
 - **3-Layer Architecture:** Separates core config, structured personal config, and manual custom overrides.
 
+## 🧠 Mandato de Desarrollo Crítico
+**IMPORTANTE:** Antes de realizar cualquier modificación en este repositorio, el agente **DEBE realizar un análisis exhaustivo y multicanal** de la herramienta. Esto incluye, pero no se limita a:
+1.  Examinar `core/constants.py` para entender qué plugins y herramientas "conoce" el sistema.
+2.  Analizar `core/state.py` y el archivo `~/.omega-zsh/state.json` para entender el estado activo del usuario.
+3.  Revisar la plantilla `assets/templates/.zshrc.j2` para comprender cómo se inyectan las configuraciones.
+**No se deben realizar cambios basados en suposiciones sobre el funcionamiento de Zsh sin verificar la lógica de orquestación de Omega.**
+
 ## Directory Structure
 - **`omega_zsh/`**: Core application source code.
     - **`core/`**: Business logic, state management, and installation routines.
+        - `plugins_db.py`: Gestor inteligente de descripciones con soporte para JSON y fallbacks.
     - **`platforms/`**: OS-specific implementations (e.g., `termux.py`, `debian.py`).
     - **`ui/`**: TUI implementation using the Textual framework.
         - `app.py`: Main App class, Action handlers (`apply_changes`, `install`).
         - `screens.py`: UI Screens (`ThemeSelectScreen` with split preview layout).
-    - **`assets/`**: Contains templates (`.zshrc.j2`) and theme definitions.
+    - **`assets/`**: Contiene plantillas (`.zshrc.j2`), temas y metadatos.
+        - `plugins.json`: Base de conocimiento centralizada con descripciones amigables en español.
 - **`install.sh`**: Universal bootstrap script for setting up the environment.
 - **`requirements.txt`**: Python dependencies (`textual`, `jinja2`).
 - **`.github/workflows/`**: CI/CD Pipelines.
