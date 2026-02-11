@@ -141,10 +141,10 @@ def benchmark_shell():
     # Clasificación
     if avg_ms < 150:
         color, rating = "green", "GOD TIER (Instantáneo)"
-        advice = "[green]¡Tu terminal vuela! No toques nada."[/]"
+        advice = "[green]¡Tu terminal vuela! No toques nada.[/]"
     elif avg_ms < 400:
         color, rating = "yellow", "ACEPTABLE (Estándar)"
-        advice = "[yellow]Está bien, pero podrías mejorar desactivando plugins visuales pesados."[/]"
+        advice = "[yellow]Está bien, pero podrías mejorar desactivando plugins visuales pesados.[/]"
     else:
         color, rating = "red", "LENTO (Lag detectado)"
         advice = "[bold red]DETECTADO CUELLO DE BOTELLA:[/][red]\n1. Revisa si cargas [bold]NVM, RVM o Conda[/] al inicio. Usa carga perezosa (lazy load).\n2. El plugin [bold]zsh-syntax-highlighting[/] es pesado. Intenta desactivarlo temporalmente.\n3. El tema actual podría ser complejo. Prueba uno 'Minimalista'.\n4. Comandos pesados (como `brew update` o `apt update`) en el .zshrc frenan el inicio.\n[/]"
@@ -321,11 +321,11 @@ def show_plugins_detail():
         info = inspect_plugin(item_id)
         
         if info["is_binary"]:
-            title = f"[bold yellow]🛠️  {item_id}[/]"]"
+            title = f"[bold yellow]🛠️  {item_id}[/]"
             border = "yellow"
             footer = "[italic grey]Herramienta del sistema gestionada por Omega[/]"
         else:
-            title = f"[bold cyan]📦 {item_id}[/]"]"
+            title = f"[bold cyan]📦 {item_id}[/]"
             border = "cyan"
             footer = ""
 
