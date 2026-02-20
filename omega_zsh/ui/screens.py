@@ -1,6 +1,7 @@
 from textual.app import ComposeResult
 from textual import on, events
 from textual.screen import Screen
+from textual.reactive import reactive
 from textual.widgets import (
     Header,
     Footer,
@@ -14,8 +15,9 @@ from textual.widgets import (
     Input,
     ListView,
     ListItem,
+    ProgressBar,
 )
-from textual.containers import Vertical, Horizontal
+from textual.containers import Vertical, Horizontal, VerticalScroll
 from textual.widgets.selection_list import Selection
 from rich.table import Table
 from rich.panel import Panel
@@ -35,90 +37,61 @@ import re
 
 
 class DashboardScreen(Static):
-    """Pantalla principal con el resumen de configuración."""
-
-    def on_mount(self) -> None:
-        self.update_stats()
-
-    def update_stats(self) -> None:
-        """Actualiza las estadísticas del sistema en tiempo real."""
-        try:
-            mem = psutil.virtual_memory()
-            disk = psutil.disk_usage("/")
-
-            # Obtener uptime
-            try:
-                uptime = datetime.fromtimestamp(psutil.boot_time()).strftime("%H:%M")
-            except Exception:
-                uptime = "N/A"
-
-            # Actualizar widgets si existen (en una versión más compleja, usaríamos Reactive)
-            # Por ahora, como es Static y render se llama una vez, nos aseguramos
-            # de que los datos estén disponibles para el renderizado inicial.
-            self.stats = {
-                "mem": f"{mem.percent}%",
-                "disk": f"{disk.percent}%",
-                "uptime": uptime,
-            }
-        except Exception as e:
-            logging.error(f"Error actualizando estadísticas: {e}")
-            self.stats = {"mem": "N/A", "disk": "N/A", "uptime": "N/A"}
+    """Pantalla principal con estética Neon Retro Informativa."""
 
     def render(self) -> Panel:
         ctx = SystemContext()
-        # Asegurarse de que tenemos stats
-        if not hasattr(self, "stats"):
-            self.update_stats()
+        
+        # System Information Table
+        info_table = Table.grid(padding=1)
+        info_table.add_column(style="bold cyan")
+        info_table.add_column(style="white")
 
-        # System Info Panel
-        sys_info = Table.grid(padding=1)
-        sys_info.add_column(style="bold cyan")
-        sys_info.add_column(style="white")
+        info_table.add_row("ARCH NODE:", ctx.os_type.upper())
+        info_table.add_row("DISTRO OS:", f"[bold magenta]{ctx.distro_id.title()}[/]")
+        info_table.add_row("PKM ENGINE:", ctx.package_manager_type)
+        info_table.add_row("TERMUX ENV:", "[green]ONLINE[/]" if ctx.is_termux else "[red]OFFLINE[/]")
+        info_table.add_row("ZSH LAYER:", "[bold blue]OH-MY-ZSH READY[/]")
 
-        sys_info.add_row("OS Type:", ctx.os_type.upper())
-        sys_info.add_row("Distro:", ctx.distro_id.title())
-        sys_info.add_row("Package Mgr:", ctx.package_manager_type)
-        sys_info.add_row("Termux:", "✅ Yes" if ctx.is_termux else "❌ No")
-        sys_info.add_row("RAM Usage:", self.stats.get("mem", "N/A"))
-        sys_info.add_row("Disk Usage:", self.stats.get("disk", "N/A"))
-        sys_info.add_row("Uptime:", self.stats.get("uptime", "N/A"))
+        # Action Shortcuts Table
+        actions_table = Table.grid(padding=1)
+        actions_table.add_column(style="bold magenta", width=5)
+        actions_table.add_column(style="cyan")
+        
+        actions_table.add_row("[P]", "PLUGINS")
+        actions_table.add_row("[T]", "THEMES")
+        actions_table.add_row("[H]", "HEADER")
+        actions_table.add_row("[A]", "APPLY")
+        actions_table.add_row("[I]", "INSTALL")
 
-        # Shortcuts Panel
-        shortcuts = Table.grid(padding=1)
-        shortcuts.add_column(style="bold yellow")
-        shortcuts.add_column(style="white")
-        shortcuts.add_row("P", "Plugins Manager")
-        shortcuts.add_row("T", "Theme Selector")
-        shortcuts.add_row("H", "Header Style")
-        shortcuts.add_row("A", "APPLY (Quick)")
-        shortcuts.add_row("I", "FULL INSTALL")
-        shortcuts.add_row("Q", "Quit")
+        # Layout Assembly
+        main_grid = Table.grid(expand=True)
+        main_grid.add_column(ratio=1)
+        main_grid.add_column(ratio=1)
 
-        # Main Layout
-        grid = Table.grid(expand=True)
-        grid.add_column(ratio=1)
-        grid.add_column(ratio=1)
-
-        grid.add_row(
-            Panel(sys_info, title="[bold blue]System Status[/]", border_style="blue"),
-            Panel(
-                shortcuts, title="[bold yellow]Quick Actions[/]", border_style="yellow"
-            ),
+        main_grid.add_row(
+            Panel(info_table, title="[bold #39ff14]CORE_METRICS[/]", border_style="#00ffff", padding=(1, 2)),
+            Panel(actions_table, title="[bold #ff00ff]NEURAL_LINKS[/]", border_style="#ff00ff", padding=(1, 2))
         )
 
-        welcome_msg = Text.from_markup(
-            f"\n[bold magenta]Welcome to Omega-ZSH v2.0.0[/]\n"
-            f"Detected User: [bold]{os.environ.get('USER', 'user')}[/]\n"
-            f"Home: {ctx.home}\n",
-            justify="center",
+        header_art = Text.from_markup(
+            f"\n[bold magenta]▄▀▀▄ █▀▀▄ █▀▀▀ █▀▀▀ ▄▀▀▄   ▀▀█▀▀ ▄▀▀▀ █  █[/]\n"
+            f"[bold magenta]█  █ █  █ █▀▀  █ ▀▄ █▄▄█     █   ▀▀▀▄ █▀▀█[/]\n"
+            f"[bold cyan] ▀▀  ▀  ▀ ▀▀▀▀ ▀▀▀▀ █  ▀     █   ▀▀▀  ▀  ▀[/]\n"
+            f"\n[dim white]ELITE COMMAND & CONTROL CENTER[/] | [bold #39ff14]ENTROPY VERSION 2.2.0[/]\n",
+            justify="center"
         )
 
-        final_layout = Table.grid(expand=True)
-        final_layout.add_row(Align.center(welcome_msg))
-        final_layout.add_row(grid)
+        final_content = Table.grid(expand=True)
+        final_content.add_row(Align.center(header_art))
+        final_content.add_row(main_grid)
 
         return Panel(
-            final_layout, title="[bold green]Dashboard[/]", border_style="green"
+            final_content,
+            title="[bold #ff00ff]◄ COMMAND DASHBOARD ►[/]",
+            border_style="#00ffff",
+            subtitle="[dim]BY JANUS & TESAVEK[/]",
+            padding=(1, 2)
         )
 
 

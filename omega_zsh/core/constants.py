@@ -44,7 +44,6 @@ EXTERNAL_URLS: Dict[str, str] = {
 BIN_PLUGINS: List[str] = [
     "zoxide",
     "eza",
-    "bat",
     "yazi",
     "fd",
     "ripgrep",
@@ -64,7 +63,6 @@ BIN_PLUGINS: List[str] = [
     "figlet",
     "fortune",
     "cowsay",
-    "nala",
 ]
 
 # --- ALL PLUGINS LIST (UI DATA) ---
@@ -118,7 +116,6 @@ DB_PLUGINS: List[PluginDef] = [
     ),
     PluginDef("zoxide", "El 'cd' inteligente (z)", "NAV"),
     PluginDef("eza", "El 'ls' moderno con iconos", "UI"),
-    PluginDef("bat", "El 'cat' con alas y colores", "UI"),
     PluginDef("yazi", "Gestor de archivos TUI rápido", "NAV"),
     PluginDef("fzf", "Buscador difuso universal", "NAV"),
     PluginDef("fd", "Alternativa rápida a 'find'", "UTIL"),
@@ -126,7 +123,6 @@ DB_PLUGINS: List[PluginDef] = [
     PluginDef("duf", "Uso de disco visual (df)", "SYS"),
     PluginDef("ncdu", "Analizador de espacio interactivo", "SYS"),
     PluginDef("procs", "Monitor de procesos visual (ps)", "SYS"),
-    PluginDef("nala", "Frontend moderno para APT", "SYS"),
     PluginDef("tldr", "Manuales (man) simplificados", "DOC"),
     PluginDef("lazygit", "Interfaz visual para Git", "DEV"),
     PluginDef("glow", "Lector de Markdown en terminal", "DOC"),

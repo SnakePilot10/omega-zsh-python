@@ -1,57 +1,43 @@
-# 🐍 Omega-ZSH (Python Edition)
+# 👾 Omega-ZSH (Neon Retro Elite Edition) ⚡️
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Android%20(Termux)-green?style=for-the-badge)](https://termux.dev/)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
-[![CI/CD](https://github.com/SnakePilot10/omega-zsh-python/actions/workflows/ci.yml/badge.svg)](https://github.com/SnakePilot10/omega-zsh-python/actions)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-ff00ff?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Platform](https://img.shields.io/badge/Platform-Android%20(Termux)%20%7C%20Linux-00ffff?style=for-the-badge)](https://termux.dev/)
+[![Edition](https://img.shields.io/badge/Edition-Elite%20Neon-39ff14?style=for-the-badge)](https://github.com/SnakePilot10/omega-zsh-python)
 
-> **Orquestador de entorno Shell de alto rendimiento.**
-> Automatiza, gestiona y embellece tu experiencia en Zsh mediante una arquitectura moderna basada en Python y TUI (Textual).
+> **Centro de Comando y Control de Entropía Digital.**
+> Automatiza, gestiona y domina tu shell Zsh mediante una arquitectura Neon Retro de alta fidelidad basada en Python y Textual.
 
 ---
 
 ## 📑 Tabla de Contenidos
-1. [Objetivo del Proyecto](#-objetivo-del-proyecto)
-2. [Arquitectura y Métricas](#-arquitectura-y-métricas)
+1. [Visión Neon Retro](#-visión-neon-retro)
+2. [Arquitectura de Mando](#-arquitectura-de-mando)
 3. [Instalación](#-instalación)
-4. [Guía de Uso](#-guía-de-uso)
+4. [Arsenal CLI (oz)](#-arsenal-cli-oz)
 5. [Gestión de Plugins](#-gestión-de-plugins)
-6. [Temas y Personalización](#-temas-y-personalización)
-7. [Contribución](#-contribución)
+6. [Temas God Tier](#-temas-god-tier)
 
 ---
 
-## 🎯 Objetivo del Proyecto
+## 🎨 Visión Neon Retro
 
-Configurar un entorno de terminal profesional (`zsh` + `git` + plugins + temas) suele implicar editar manualmente archivos `.zshrc` frágiles y gestionar dependencias dispares.
+Omega-ZSH v2.2.0 rompe con la estética aburrida de las terminales convencionales. Hemos inyectado una paleta **Cyber-Neon** (Cian, Magenta y Lima) en cada rincón de la interfaz.
 
-**Omega-ZSH** actúa como un **gestor de estado** que asegura que tu entorno sea idéntico, rápido y funcional, ya sea en un servidor Ubuntu, una workstation Arch Linux o un teléfono Android con Termux.
+*   **Dashboard de Elite:** Un panel visual estático de alta densidad que emula los mainframes de infiltración de los 80.
+*   **Interfaz Unificada:** Tanto la TUI (`omega`) como el CLI (`oz`) comparten el mismo ADN visual.
+*   **Estabilidad Total:** Optimizado para Android 14+, manejando las restricciones de sistema con elegancia y estilo.
 
 ---
 
-## 📐 Arquitectura y Métricas
+## 📐 Arquitectura de Mando
 
-*   **Core (Inmutable):** El archivo `~/.zshrc` es generado por Omega. Garantiza la carga correcta de módulos.
-*   **Userland (Mutable):** Archivos específicos (`personal.zsh`, `custom.zsh`) donde reside la lógica del usuario.
-*   **Escritura Atómica:** Toda modificación se realiza primero en un archivo temporal. **Riesgo de corrupción: 0%.**
-
-### Métricas de Rendimiento
-*   **Boot Time:** Optimizado para cargar en `< 200ms` mediante carga diferida.
-*   **Overhead:** El gestor (Python) solo corre bajo demanda. El shell es Zsh nativo puro.
+*   **Core Inmutable:** Generación de `.zshrc` mediante el motor Jinja2. **Riesgo de corrupción: 0%.**
+*   **Blindaje Android:** Manejo inteligente de permisos de `/proc/stat`. Si el sistema bloquea los sensores, Omega se adapta sin colapsar.
+*   **Sincronización de Alta Densidad:** Gestión fluida de más de 30 plugins simultáneos sin degradar el rendimiento.
 
 ---
 
 ## 🚀 Instalación
-
-### Requisitos Previos
-*   **OS:** Android (Termux), Debian/Ubuntu, Arch Linux, Fedora, Alpine.
-*   **Python:** 3.10+.
-*   **Dependencias del Sistema:** El instalador gestionará automáticamente:
-    *   `zsh` (Shell)
-    *   `python3` (Core)
-    *   `fzf` (Búsqueda difusa)
-    *   `zoxide` (Navegación inteligente)
-    *   `lolcat`, `figlet`, `cowsay`, `fastfetch` (Estética)
 
 ### Bootstrap Automático
 ```bash
@@ -61,102 +47,45 @@ chmod +x install.sh
 ./install.sh
 ```
 
-**Inteligencia del Instalador:**
-*   **Detección de Entorno:** Identifica automáticamente si estás en Termux (Android), Debian, Arch, Fedora o Alpine.
-*   **Soporte Non-Root:** Si no tienes permisos de administrador, los binarios (`omega`, `oz`) se instalan automáticamente en `~/.local/bin`.
-*   **Gestión de Dependencias:** Instala automáticamente paquetes críticos como `zsh`, `python3`, `fzf`, `zoxide` y la herramienta de localización `which` (`debianutils`).
-*   **Configuración Automática:** Configura Zsh como tu shell predeterminada de forma segura, respetando las particularidades de Termux.
-
-El script se encargará de todo: instalar paquetes, configurar permisos, crear el entorno virtual y cambiar tu shell a Zsh automáticamente.
+**El instalador purgará automáticamente herramientas obsoletas como `bat` y `nala`**, asegurando un entorno ligero y moderno basado en `eza`, `zoxide` y `yazi`.
 
 ---
 
-## 🎮 Guía de Uso
+## 🕹️ Arsenal CLI (`oz`)
 
-### 0. Herramientas Integradas
-Gracias a la instalación automatizada, ahora dispones de superpoderes en tu terminal:
-*   **`z` (Zoxide):** Salta a directorios usados frecuentemente sin escribir la ruta completa (ej: `z pro` -> `cd ~/projects`).
-*   **`Ctrl+R` (FZF):** Busca en tu historial de comandos de forma interactiva e instantánea.
-*   **`Ctrl+T` (FZF):** Busca archivos rápidamente.
+La herramienta `oz` es tu navaja suiza de nanosegundos. Ahora con alias ultrarrápidos:
 
-### 1. Interfaz Gráfica de Terminal (TUI)
-Ejecuta `omega` para entrar al panel de control visual.
-
-#### Novedades v2.2.0:
-*   **🎨 Live Preview Real:**
-    *   **Temas:** Al navegar por la lista, verás a la derecha una **previsualización real** de cómo luce el prompt (`zsh` renderiza el tema en una sandbox aislada).
-    *   **Headers:** Previsualización instantánea de `fastfetch`, `cowsay` o banners `figlet`.
-*   **⚡ Navegación Fluida:** Muévete con las flechas del teclado y la previsualización se actualizará al instante (sin necesidad de Enter).
-*   **🚀 Quick Apply (`A`):**
-    *   Presiona `A` para aplicar cambios de configuración (temas, alias) al instante.
-    *   Usa `I` (Full Install) solo cuando necesites descargar nuevos plugins.
-*   **🛠️ Dashboard:** Presiona `D` en cualquier momento para cerrar ventanas y volver al inicio.
-
-### 2. CLI de Alta Velocidad (`oz`)
-Herramienta de navaja suiza para el día a día.
-
-*   `oz banner`: Estado del sistema (CPU, RAM, Disco).
-*   `oz bench`: **Hyperdrive Benchmark**. Mide y diagnostica la velocidad de inicio.
-*   `oz stats`: **Telemetría**. Sugiere alias basados en tus comandos más usados.
-*   **`oz themes`**: Lista TODOS los temas instalados (Omega, Oh My Zsh Standard y Custom).
-*   **`oz plugins`**: Inspector inteligente de arsenal activo. Explica detalladamente tanto plugins de Zsh como herramientas binarias (`eza`, `bat`, `yazi`, etc.) basándose en el estado real de la aplicación y una base de conocimientos optimizada.
-*   `oz update`: Actualiza el núcleo de Omega-ZSH.
+*   **`oz b` (Banner):** Telemetría esencial (RAM, Disco, Uptime) con blindaje de seguridad.
+*   **`oz v` (Velocidad):** **Hyperdrive Benchmark**. Mide la latencia de arranque con precisión de nanosegundos y ofrece un **Diagnóstico de Entropía** inteligente.
+*   **`oz p` (Plugins):** **Manual de Operaciones**. Detalla cada módulo activo, sus alias críticos y "Tips de Elite" para dominar tus herramientas.
+*   **`oz u` (Update):** Sincronización inmediata con el núcleo del protocolo Janus.
+*   **`oz t` (Themes):** Explorador visual de la librería completa de temas.
+*   **`oz s` (Stats):** Analizador de patrones de uso y sugerencia automática de alias.
 
 ---
 
-## 🎨 Temas y Personalización
+## 📦 Gestión de Plugins
 
-### Integración Total
-Omega-ZSH ahora detecta y gestiona temas de tres fuentes:
-1.  **Omega God Tier:** Temas exclusivos de alta estética (Matrix, Cyberpunk, Nosferatu, etc.).
-2.  **Standard OMZ:** La librería clásica de Oh My Zsh (robbyrussell, agnoster, etc.).
-3.  **User Custom:** Tus propios temas en `~/.oh-my-zsh/custom/themes`.
+Omega-ZSH gestiona una carga masiva de más de 30 módulos divididos en:
+1.  **Plugins OMZ:** `zsh-autosuggestions`, `syntax-highlighting`, `fzf-tab`, `k`, etc.
+2.  **Binarios Modernos:** `eza` (ls), `zoxide` (cd), `yazi` (file manager), `fzf`, `ripgrep`, `fd`.
 
-### Colección "God Tier"
-Temas diseñados con conectores estructurales únicos (`▛`, `╓`, `┏`):
-*   **Matrix (The Construct):** Flujo de datos binarios.
-*   **Futurista (Night City HUD):** Interfaz Cyberpunk de alta densidad.
-*   **Gótico (Nosferatu):** Estética vampírica con rojo sangre.
-*   **Espacial (Interstellar):** UI de nave estelar.
-*   **Elegante (Royal Gold):** Lujo Art Deco.
-*   **Retro (Pip-Boy):** Fósforo verde estilo Fallout.
+**Sincronización Real:** Lo que seleccionas en la TUI es lo que se carga físicamente. Hemos eliminado los plugins fantasmas y los errores de "not found".
 
 ---
 
 ## 🤝 Contribución
 
-El proyecto cuenta con un pipeline de CI/CD robusto que asegura la calidad del código.
-
-### Configuración del Entorno de Desarrollo
-Para contribuir, configura tu entorno localmente:
-
 ```bash
-# Crear entorno virtual
+# Entorno de Desarrollo Elite
 python -m venv .venv
 source .venv/bin/activate
-
-# Instalar dependencias en modo editable + herramientas de desarrollo
 pip install -e ".[dev]"
+
+# Calidad de Código
+pytest --cov=omega_zsh  # Test de Integridad
+ruff check .            # Auditoría de Estilo
 ```
 
-### Comandos de Calidad
-Antes de enviar un Pull Request, asegúrate de que todo esté en orden:
-
-*   **Tests:** Ejecuta la suite de pruebas con reporte de cobertura.
-    ```bash
-    pytest --cov=omega_zsh
-    ```
-*   **Linting:** Verifica el estilo y busca errores con `ruff`.
-    ```bash
-    ruff check .
-    ruff format --check .
-    ```
-
-### CI/CD
-Cada push a `main` activa automáticamente:
-*   Linting con Ruff.
-*   Tests en múltiples versiones de Python (3.10, 3.11, 3.12).
-*   Generación de releases automática al crear tags (`v*`).
-
 ---
-Copyright © 2026 SnakePilot10. Licencia MIT.
+Copyright © 2026 SnakePilot10. By | Janus & Tesavek⚡️👾.

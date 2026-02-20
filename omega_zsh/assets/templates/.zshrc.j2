@@ -38,10 +38,6 @@ alias ll="eza -lh --icons --group-directories-first"
 alias la="eza -lah --icons --group-directories-first"
 {% endif %}
 
-{% if 'bat' in active_tools %}
-alias cat="bat"
-{% endif %}
-
 # --- DEFAULT EDITOR ---
 export EDITOR='nano'
 export VISUAL='nano'
@@ -74,17 +70,6 @@ elif command -v tsu > /dev/null 2>&1; then
     alias sudo='tsu'
 fi
 
-# Nala Wrapper
-pkg() {
-    if command -v nala >/dev/null 2>&1; then
-        case "$1" in
-            install|update|upgrade) nala "$@";;
-            *) command pkg "$@";; 
-        esac
-    else
-        command pkg "$@"
-    fi
-}
 {% endif %}
 
 # --- Header ---

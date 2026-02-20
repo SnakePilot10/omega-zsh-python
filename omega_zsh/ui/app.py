@@ -27,10 +27,62 @@ class OmegaApp(App):
     SUBTITLE = "Elite Python Edition"
     CSS = """
     Screen {
-        background: #1e2127;
+        background: #0d0221;
+        color: #00ffff;
+    }
+    Header {
+        background: #ff00ff;
+        color: white;
+        text-style: bold;
+    }
+    Footer {
+        background: #0d0221;
+        color: #39ff14;
     }
     TabbedContent {
         height: 1fr;
+    }
+    TabPane {
+        padding: 1 2;
+        background: #0d0221;
+    }
+    Tabs {
+        background: #1a0a33;
+        color: #00ffff;
+    }
+    Tabs:focus {
+        color: #ff00ff;
+    }
+    Button {
+        background: #1a0a33;
+        border: tall #00ffff;
+        color: #00ffff;
+    }
+    Button:hover {
+        background: #ff00ff;
+        color: white;
+    }
+    Input {
+        background: #0d0221;
+        border: double #ff00ff;
+        color: #39ff14;
+    }
+    SelectionList {
+        border: heavy #00ffff;
+        background: #0d0221;
+    }
+    RadioButton {
+        color: #00ffff;
+    }
+    RadioButton.-selected {
+        color: #ff00ff;
+        text-style: bold;
+    }
+    .stat-card {
+        border: double #00ffff;
+        padding: 1;
+        margin: 1;
+        background: #1a0a33;
     }
     """
 
