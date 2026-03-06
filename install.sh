@@ -85,9 +85,31 @@ echo -e "${GREEN}>> Dependencias críticas verificadas con éxito.${NC}"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
 
-# Si el directorio .venv existe pero está incompleto (p.ej. sin pip), se elimina para forzar su recreación.
-if [ -d "$VENV_DIR" ] && [ ! -f "$VENV_DIR/bin/pip" ]; then
-    echo -e "${BLUE}>> Entorno virtual (.venv) detectado pero está incompleto. Se recreará.${NC}"
+# Detección inteligente de entornos virtuales rotos o de versiones diferentes
+SHOULD_RECREATE=false
+
+if [ -d "$VENV_DIR" ]; then
+    # Caso 1: Falta el binario de pip
+    if [ ! -f "$VENV_DIR/bin/pip" ]; then
+        echo -e "${BLUE}>> Entorno virtual (.venv) incompleto (falta pip). Se recreará.${NC}"
+        SHOULD_RECREATE=true
+    # Caso 2: El entorno es de una versión de Python diferente a la del sistema
+    else
+        VENV_PY_VER=$("$VENV_DIR/bin/python" --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
+        SYS_PY_VER=$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
+        
+        if [ "$VENV_PY_VER" != "$SYS_PY_VER" ]; then
+            echo -e "${BLUE}>> Versión de Python cambió ($VENV_PY_VER -> $SYS_PY_VER). Recreando entorno...${NC}"
+            SHOULD_RECREATE=true
+        # Caso 3: El entorno está corrupto (ej: ModuleNotFoundError en pip)
+        elif ! "$VENV_DIR/bin/pip" --version &> /dev/null; then
+            echo -e "${BLUE}>> Entorno virtual (.venv) detectado como CORRUPTO. Se recreará.${NC}"
+            SHOULD_RECREATE=true
+        fi
+    fi
+fi
+
+if [ "$SHOULD_RECREATE" = true ]; then
     rm -rf "$VENV_DIR"
 fi
 
