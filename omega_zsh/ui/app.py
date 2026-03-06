@@ -2,6 +2,7 @@ import logging
 import shutil
 import threading
 from pathlib import Path
+from typing import Callable
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -260,13 +261,13 @@ class OmegaApp(App):
             self.notify("La instalación fue cancelada o falló.", severity="warning")
 
     # --- Worker de Instalación ---
-    def run_installation(self, on_message: callable) -> None:
+    def run_installation(self, on_message: Callable) -> None:
         """Ejecuta el proceso de instalación en un hilo secundario."""
         threading.Thread(
             target=self._installation_worker, args=(on_message,), daemon=True
         ).start()
 
-    def _installation_worker(self, on_message: callable) -> None:
+    def _installation_worker(self, on_message: Callable) -> None:
         try:
             # 1. Asegurar directorios
             on_message("Preparando directorios del sistema...")
