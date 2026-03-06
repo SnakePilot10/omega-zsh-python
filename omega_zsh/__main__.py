@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import sys
 import logging
+import sys
 import traceback
 from pathlib import Path
 
@@ -16,6 +16,7 @@ logging.basicConfig(
 )
 
 
+
 def handle_exception(exc_type, exc_value, exc_traceback):
     """Captura global de excepciones no manejadas."""
     if issubclass(exc_type, KeyboardInterrupt):
@@ -28,6 +29,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
 
 sys.excepthook = handle_exception
+
 
 
 def main():

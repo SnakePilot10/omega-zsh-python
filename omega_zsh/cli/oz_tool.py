@@ -27,6 +27,7 @@ except ImportError:
 
 console = Console()
 
+
 # --- CONFIGURACIÓN ---
 HOME = Path.home()
 ZSHRC = HOME / ".zshrc"
@@ -42,6 +43,8 @@ PROJECT_THEMES = PROJECT_ROOT / "omega_zsh/assets/themes"
 OMEGA_CONFIG_DIR = HOME / ".omega-zsh"
 state_manager = StateManager(OMEGA_CONFIG_DIR) if StateManager else None
 
+
+
 def _get_ram_usage():
     """Obtiene el uso de RAM leyendo /proc/meminfo de forma nativa."""
     try:
@@ -52,17 +55,18 @@ def _get_ram_usage():
             parts = line.split(':')
             if len(parts) == 2:
                 mem[parts[0].strip()] = int(parts[1].split()[0].strip())
-        
+
         total = mem.get('MemTotal', 1)
         free = mem.get('MemFree', 0)
         buffers = mem.get('Buffers', 0)
         cached = mem.get('Cached', 0)
-        
+
         used = total - free - buffers - cached
         percent = (used / total) * 100
         return f"{int(percent)}%"
     except:
         return "N/A"
+
 
 def _get_disk_usage(path='/'):
     """Obtiene el uso de disco usando os.statvfs."""
@@ -76,6 +80,7 @@ def _get_disk_usage(path='/'):
     except:
         return "N/A"
 
+
 def _get_uptime_simple():
     """Obtiene el uptime leyendo /proc/uptime."""
     try:
@@ -86,6 +91,7 @@ def _get_uptime_simple():
             return f"{hours}h {minutes}m"
     except:
         return "N/A"
+
 
 def get_system_stats():
     """Obtiene estadísticas básicas del sistema con blindaje de permisos (Sin psutil)."""
@@ -99,6 +105,7 @@ def get_system_stats():
     except Exception as e:
         return {"os": "Unknown", "mem_usage": "N/A", "disk_usage": "N/A", "uptime": "N/A"}
 
+
 def get_omega_active_items():
     """Lee el estado oficial de Omega para saber qué está activado (Plugins + Binarios)."""
     if not state_manager:
@@ -107,9 +114,10 @@ def get_omega_active_items():
         content = ZSHRC.read_text(errors="ignore")
         match = re.search(r'^plugins=\((.*?)\)', content, re.MULTILINE | re.DOTALL)
         return match.group(1).split() if match else []
-    
+
     state = state_manager.load()
     return state.selected_plugins
+
 
 def inspect_plugin(plugin_name):
     """Obtiene la info del plugin/herramienta priorizando el JSON amigable."""
@@ -117,14 +125,14 @@ def inspect_plugin(plugin_name):
     paths = [
         CUSTOM_PLUGINS / plugin_name / f"{plugin_name}.plugin.zsh",
         STANDARD_PLUGINS / plugin_name / f"{plugin_name}.plugin.zsh",
-        CUSTOM_PLUGINS / plugin_name / f"{plugin_name}.zsh", 
+        CUSTOM_PLUGINS / plugin_name / f"{plugin_name}.zsh",
         STANDARD_PLUGINS / plugin_name / f"{plugin_name}.zsh"
     ]
     plugin_path = next((p for p in paths if p.exists()), None)
-    
+
     # Obtener descripción desde nuestro JSON
     description = get_description(plugin_name)
-    
+
     # Fallback a la descripción corta de constants.py si el JSON no la tiene
     if "Sin descripción" in description or description == "Plugin de Oh My Zsh (sin descripción documentada en la base de datos).":
         for p_def in DB_PLUGINS:
@@ -135,10 +143,10 @@ def inspect_plugin(plugin_name):
     # Si no tiene script .zsh, es una herramienta binaria
     if not plugin_path:
         return {
-            "found": False, 
+            "found": False,
             "is_binary": True,
-            "description": description, 
-            "aliases": [], 
+            "description": description,
+            "aliases": [],
             "functions": []
         }
 
@@ -149,9 +157,9 @@ def inspect_plugin(plugin_name):
         functions += re.findall(r"^([\w-]+)\(\)\s*\{", content, re.MULTILINE)
     except:
         aliases, functions = [], []
-    
+
     return {
-        "found": True, 
+        "found": True,
         "is_binary": False,
         "path": str(plugin_path),
         "description": description,
@@ -160,16 +168,18 @@ def inspect_plugin(plugin_name):
     }
 
 # --- BENCHMARK CON DIAGNÓSTICO INTELIGENTE NEON ---
+
+
 def benchmark_shell():
     """Mide la latencia con precisión y ofrece un diagnóstico inteligente basado en plugins activos."""
     console.print("[bold #00ffff]🚀 INICIANDO ANÁLISIS DE HIPERVELOCIDAD (Hyperdrive)...[/]")
 
     times = []
     active_items = get_omega_active_items()
-    
+
     with Progress(
-        SpinnerColumn(style="bold #ff00ff"), 
-        TextColumn("[progress.description]{task.description}"), 
+        SpinnerColumn(style="bold #ff00ff"),
+        TextColumn("[progress.description]{task.description}"),
         transient=True
     ) as progress:
         task = progress.add_task("[bold cyan]Calculando entropía del arranque...", total=5)
@@ -180,7 +190,7 @@ def benchmark_shell():
             progress.advance(task)
 
     avg_ms = (sum(times) / len(times)) * 1000
-    
+
     # Identificar posibles culpables (Heavy Hitters)
     heavy_hitters = {
         "zsh-syntax-highlighting": "Resaltado de sintaxis (Alto impacto en CPU)",
@@ -189,9 +199,9 @@ def benchmark_shell():
         "fastfetch": "Header de información (Llamada a binario externo)",
         "figlet_custom": "Generador de Banner (Procesamiento de fuentes ASCII)",
     }
-    
+
     detected_heavy = [heavy_hitters[p] for p in active_items if p in heavy_hitters]
-    
+
     # Lógica de Diagnóstico
     if avg_ms < 150:
         color, rating = "#39ff14", "⚡ DIOS DIGITAL (Instantáneo)"
@@ -205,18 +215,18 @@ def benchmark_shell():
         # Casos de baja calificación (>400ms)
         color = "yellow" if avg_ms < 800 else "#ff00ff"
         rating = "⚠️ SOBRECARGA" if avg_ms < 800 else "🔥 COLAPSO CRÍTICO"
-        
+
         advice = f"[{color}]SE HA DETECTADO LAG EN EL ARRANQUE DEL SHELL.[/] [white]Tu terminal tarda demasiado en estar lista para la acción.[/]"
-        
+
         steps = [
             "Ejecuta [bold cyan]zsh -i -c 'zprof'[/] para ver exactamente qué función está frenando el inicio.",
             "Desactiva plugins pesados en la TUI (oz) que no uses frecuentemente.",
             "Evita comandos pesados como [bold magenta]'apt update'[/] o [bold magenta]'check-for-updates'[/] dentro de tu .zshrc."
         ]
-        
+
         if "fastfetch" in active_items or "figlet_custom" in active_items:
             steps.append("Tu [bold yellow]Header visual[/] está consumiendo tiempo de CPU. Prueba el modo 'none' para velocidad pura.")
-        
+
         if detected_heavy:
             steps.append(f"Culpables detectados en tu lista activa:\n  - " + "\n  - ".join(detected_heavy))
 
@@ -224,12 +234,12 @@ def benchmark_shell():
     res_panel = Table.grid(expand=True)
     res_panel.add_row(f"\n[bold white]LATENCIA DE ARRANQUE:[/]\n[bold {color} size=30]{avg_ms:.2f} ms[/]\n")
     res_panel.add_row(f"[dim white]Calificación de Entropía:[/] [bold {color}]{rating}[/]\n")
-    
+
     # Solo mostrar pasos si hay algo que mejorar
     if steps:
         steps_text = "\n".join([f"  [bold #ff00ff]»[/] {s}" for s in steps])
         res_panel.add_row(Panel(steps_text, title="[bold white]PASOS PARA OPTIMIZAR[/]", border_style=color, padding=(1, 2)))
-    
+
     res_panel.add_row(f"\n[italic {color}]{advice}[/]")
 
     console.print(Panel(
@@ -240,6 +250,8 @@ def benchmark_shell():
     ))
 
 # --- STATS CON SUGERENCIAS DE ALIAS ---
+
+
 def analyze_history():
     """Analiza historial y sugiere ALIAS útiles."""
     hist_file = HOME / ".zsh_history"
@@ -251,16 +263,16 @@ def analyze_history():
     try:
         content = hist_file.read_text(errors="ignore")
         cmds = re.findall(r"^: \d+:\d+;(.*?)(?:\s|$)", content, re.MULTILINE) or content.splitlines()
-        
+
         counter = Counter(cmds)
         top_10 = counter.most_common(10)
-        
+
         table = Table(title="TUS COMANDOS MÁS USADOS", box=box.SIMPLE)
         table.add_column("#", justify="right", style="cyan")
         table.add_column("Comando", style="green")
         table.add_column("Veces", style="yellow")
         table.add_column("Sugerencia", style="magenta italic")
-        
+
         aliases_suggestion = []
 
         for idx, (cmd, count) in enumerate(top_10, 1):
@@ -270,11 +282,11 @@ def analyze_history():
                 alias_name = "".join([w[0] for w in cmd.split() if w])
                 suggestion = f"alias {alias_name}='{cmd}'"
                 aliases_suggestion.append(f"[green]alias {alias_name}='{cmd}'[/]")
-            
+
             table.add_row(str(idx), cmd, str(count), suggestion if suggestion else "-")
-            
+
         console.print(table)
-        
+
         if aliases_suggestion:
             console.print(Panel(
                 "[white]Se detectaron comandos largos frecuentes. Copia esto en tu [bold]custom.zsh[/]:[/]\n\n" + "\n".join(aliases_suggestion),
@@ -287,17 +299,19 @@ def analyze_history():
         console.print(f"[red]Error: {e}[/]")
 
 # --- LISTAR TODOS LOS TEMAS ---
+
+
 def list_themes():
     """Lista ABSOLUTAMENTE TODOS los temas disponibles."""
     console.print("[bold cyan]🎨 Escaneando librería de temas...[/]")
-    
+
     found_themes = {} # nombre -> origen
 
     # 1. Temas Omega (God Tier)
     if PROJECT_THEMES.exists():
         for t in PROJECT_THEMES.glob("*.zsh-theme"):
             found_themes[t.stem] = "[bold magenta]Omega God Tier[/]"
-    
+
     # 2. Temas Custom Usuario
     if CUSTOM_THEMES.exists():
         for t in CUSTOM_THEMES.glob("*.zsh-theme"):
@@ -316,20 +330,22 @@ def list_themes():
     table = Table(title=f"ARSENAL COMPLETO ({len(sorted_themes)} temas)", box=box.ROUNDED)
     table.add_column("Nombre del Tema", style="bold green")
     table.add_column("Origen / Colección", style="white")
-    
+
     for name, origin in sorted_themes:
         table.add_row(name, origin)
-        
+
     console.print(table)
     console.print("[yellow]Para usar uno:[/]")
     console.print("    Edita ~/.zshrc y cambia ZSH_THEME='nombre'")
 
 # --- ACTUALIZADOR ---
+
+
 def self_update():
     """Actualiza el código fuente de Omega-ZSH."""
     console.print("[bold cyan]🔄 Actualizando Sistema Omega-ZSH...[/]")
     console.print("[italic grey]Esto descarga las últimas mejoras, temas God Tier y correcciones del repositorio oficial.[/]\n")
-    
+
     repo_dir = PROJECT_ROOT
     if not (repo_dir / ".git").exists():
         console.print("[red]Error: No se detectó un repositorio git. ¿Instalaste manualmente?[/]")
@@ -346,9 +362,10 @@ def self_update():
                 console.print("[bold yellow]⚠ Cambios detectados. Se recomienda reiniciar la terminal o ejecutar ./install.sh[/]")
         else:
             console.print(f"[red]Error en git pull: {res.stderr}[/]")
-            
+
     except Exception as e:
         console.print(f"[bold red]❌ Error crítico: {e}[/]")
+
 
 def show_help():
     """Muestra la ayuda con estética Neon."""
@@ -360,15 +377,16 @@ def show_help():
     table.add_column("COMANDO", style="bold #39ff14")
     table.add_column("ALIAS", style="bold yellow")
     table.add_column("DESCRIPCIÓN", style="cyan")
-    
+
     table.add_row("oz banner", "oz b", "Muestra telemetría del sistema")
     table.add_row("oz plugins", "oz p", "Manual detallado de tus herramientas")
     table.add_row("oz bench", "oz v", "Prueba de velocidad de arranque (Hiperdrive)")
     table.add_row("oz stats", "oz s", "Análisis de historial y sugerencia de alias")
     table.add_row("oz themes", "oz t", "Explorador de la librería de temas")
     table.add_row("oz update", "oz u", "Sincroniza Omega con el repositorio central")
-    
+
     console.print(table)
+
 
 def main():
     if len(sys.argv) > 1:
@@ -393,6 +411,7 @@ def main():
     else:
         show_help()
 
+
 def show_plugins_detail():
     """Detalla todos los plugins y herramientas activas con estética Neon Retro y utilidad máxima."""
     active_items = get_omega_active_items()
@@ -401,10 +420,10 @@ def show_plugins_detail():
         return
 
     console.print(f"\n[bold magenta]█▓▒░ MANUAL DE OPERACIONES OMEGA ({len(active_items)} módulos) ░▒▓█[/]\n")
-    
+
     for item_id in active_items:
         info = inspect_plugin(item_id)
-        
+
         # Estética diferenciada
         if info["is_binary"]:
             title = f"[bold #39ff14]󱓞 HERRAMIENTA BINARIA: {item_id.upper()}[/]"
@@ -418,13 +437,13 @@ def show_plugins_detail():
         # Construir contenido de alta fidelidad
         content = []
         content.append(f"{type_tag} [bold cyan]{info['description']}[/]")
-        
+
         if info["aliases"]:
             # Mostrar solo los alias más útiles/comunes
             useful_aliases = info["aliases"][:10]
             content.append(f"\n[bold white]⌨️ ALIAS CRÍTICOS:[/]")
             content.append(f"  [#00ffff]" + ", ".join(useful_aliases) + ("..." if len(info['aliases'])>10 else "") + "[/]")
-        
+
         if info["functions"]:
             useful_funcs = info["functions"][:5]
             content.append(f"\n[bold white]⚙️ FUNCIONES DISPONIBLES:[/]")
@@ -441,17 +460,18 @@ def show_plugins_detail():
             "lazygit": "Simplemente escribe [bold green]lg[/] para gestionar tus repositorios visualmente.",
             "tldr": "Escribe [bold green]tldr <comando>[/] para ver ejemplos de uso rápidos.",
         }
-        
+
         if item_id in tips:
             content.append(f"\n[bold yellow]💡 TIP DE ELITE:[/] [italic white]{tips[item_id]}[/]")
 
         console.print(Panel(
-            "\n".join(content), 
-            title=title, 
+            "\n".join(content),
+            title=title,
             border_style=border,
             title_align="left",
             padding=(1, 2)
         ))
+
 
 def show_banner():
     stats = get_system_stats()
@@ -462,8 +482,8 @@ def show_banner():
         f"[bold yellow]UPTIME:[/]  [white]{stats['uptime']}[/]"
     )
     console.print(Panel(
-        banner_content, 
-        title="[bold #ff00ff]◄ STATUS OMEGA ►[/]", 
+        banner_content,
+        title="[bold #ff00ff]◄ STATUS OMEGA ►[/]",
         border_style="#00ffff",
         subtitle="[dim white]Entropy Engine Active[/]"
     ))

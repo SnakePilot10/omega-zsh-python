@@ -24,6 +24,7 @@ from .screens import (
 )
 
 
+
 class OmegaApp(App):
     TITLE = "Omega-ZSH"
     SUBTITLE = "Elite Python Edition"
@@ -309,6 +310,7 @@ class OmegaApp(App):
         screen = self.get_screen("InstallScreen")
         if screen:
             screen.on_installation_finished(success)
+
 
 
 def main():

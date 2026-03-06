@@ -36,6 +36,7 @@ from ..core.context import SystemContext
 from ..core.figlet import FigletManager
 
 
+
 class DashboardScreen(Static):
     """Pantalla principal con estética Neon Retro Informativa."""
 
@@ -107,6 +108,8 @@ class DashboardScreen(Static):
 
 
 # --- PANTALLA DE SELECCIÓN DE PLUGINS ---
+
+
 class PluginSelectScreen(Vertical):
     """Interfaz para activar/desactivar plugins y herramientas binarias."""
 
@@ -136,6 +139,8 @@ class PluginSelectScreen(Vertical):
 
 
 # --- PANTALLA DE SELECCIÓN DE TEMAS ---
+
+
 class ThemeSelectScreen(Horizontal):
     """Interfaz dividida para elegir temas con previsualización en vivo."""
 
@@ -225,6 +230,8 @@ class ThemeSelectScreen(Horizontal):
 
 
 # --- PANTALLA DE CONFIGURACIÓN DE HEADER ---
+
+
 class HeaderSelectScreen(Vertical):
     """Configuración estética del Banner de bienvenida."""
 
@@ -331,6 +338,8 @@ class HeaderSelectScreen(Vertical):
 
 
 # --- PANTALLA DE INSTALACIÓN (MODAL-LIKE) ---
+
+
 class InstallScreen(Screen):
     """Pantalla de progreso de instalación."""
 
