@@ -15,6 +15,7 @@ logging.basicConfig(
     filemode="w",
 )
 
+
 def handle_exception(exc_type, exc_value, exc_traceback):
     """Captura global de excepciones no manejadas."""
     if issubclass(exc_type, KeyboardInterrupt):
@@ -25,7 +26,9 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     sys.__stderr__.write(f"\n[FATAL ERROR] Revisa {LOG_FILE} para detalles.\n")
     sys.__stderr__.write("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
+
 sys.excepthook = handle_exception
+
 
 def main():
     # Si hay argumentos (ej: oz stats), delegar a la herramienta CLI oz_tool.py
@@ -33,6 +36,7 @@ def main():
         logging.info(f"Delegando comando CLI: {sys.argv[1:]}")
         try:
             from omega_zsh.cli.oz_tool import main as cli_main
+
             cli_main()
             return
         except Exception as e:
@@ -44,6 +48,7 @@ def main():
     logging.info("Iniciando Interfaz Visual (TUI)...")
     try:
         from omega_zsh.ui.app import OmegaApp
+
         app = OmegaApp()
         app.run()
     except ImportError as e:
@@ -54,6 +59,7 @@ def main():
         logging.critical(f"Error en TUI: {e}", exc_info=True)
         print(f"Error al iniciar la interfaz visual. Revisa {LOG_FILE}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
