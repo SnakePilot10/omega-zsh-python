@@ -21,6 +21,8 @@ jobs:
       - name: Run Ruff Check
         run: ruff check .
       - name: Run Ruff Format Check
+        run: ruff format --diff .
+      - name: Verify Ruff Format
         run: ruff format --check .
 
   test:
