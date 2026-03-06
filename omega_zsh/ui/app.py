@@ -1,25 +1,27 @@
-from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, TabbedContent, TabPane
-from textual.binding import Binding
-from pathlib import Path
-import threading
 import logging
+import shutil
+import threading
+from pathlib import Path
 
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.widgets import Footer, Header, TabbedContent, TabPane
+
+from ..core.constants import BIN_PLUGINS, DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeDef
+from ..core.context import SystemContext
+from ..core.figlet import FigletManager
+from ..core.generator import ConfigGenerator
+from ..core.installer import PluginInstaller
+from ..core.state import AppState, StateManager
+from ..platforms.debian import DebianPlatform
+from ..platforms.termux import TermuxPlatform
 from .screens import (
     DashboardScreen,
-    PluginSelectScreen,
-    ThemeSelectScreen,
     HeaderSelectScreen,
     InstallScreen,
+    PluginSelectScreen,
+    ThemeSelectScreen,
 )
-from ..core.context import SystemContext
-from ..core.constants import THEMES_OMZ_BUILTIN, DB_PLUGINS, BIN_PLUGINS, ThemeDef
-from ..core.generator import ConfigGenerator
-from ..core.state import StateManager, AppState
-from ..core.installer import PluginInstaller
-from ..core.figlet import FigletManager
-from ..platforms.termux import TermuxPlatform
-from ..platforms.debian import DebianPlatform
 
 
 class OmegaApp(App):
@@ -48,411 +50,271 @@ class OmegaApp(App):
     }
     Tabs {
         background: #1a0a33;
-        color: #00ffff;
+        border: none;
     }
-    Tabs:focus {
-        color: #ff00ff;
-    }
-    Button {
-        background: #1a0a33;
-        border: tall #00ffff;
-        color: #00ffff;
-    }
-    Button:hover {
+    Tabs > Underline {
         background: #ff00ff;
-        color: white;
     }
-    Input {
-        background: #0d0221;
-        border: double #ff00ff;
+    Tab {
+        color: #00ffff;
+    }
+    Tab:hover {
+        background: #2b0b52;
+    }
+    Tab.--active {
+        background: #2b0b52;
         color: #39ff14;
     }
-    SelectionList {
-        border: heavy #00ffff;
-        background: #0d0221;
-    }
-    RadioButton {
-        color: #00ffff;
-    }
-    RadioButton.-selected {
-        color: #ff00ff;
-        text-style: bold;
-    }
-    .stat-card {
+    #preview-area {
+        height: 1fr;
         border: double #00ffff;
-        padding: 1;
-        margin: 1;
-        background: #1a0a33;
+        background: #000000;
+        padding: 1 2;
+        margin: 1 0;
     }
     """
 
     BINDINGS = [
-        Binding("d", "switch_tab('dash')", "Dashboard"),
-        Binding("p", "config_plugins", "Plugins"),
-        Binding("t", "config_themes", "Themes"),
-        Binding("h", "config_header", "Header"),
-        Binding("a", "apply_changes", "APPLY (Quick)", show=True),
-        Binding("i", "start_install", "FULL INSTALL", show=True, priority=True),
-        Binding("q", "quit", "Quit"),
+        Binding("q", "quit", "Exit"),
+        Binding("a", "apply_changes", "Apply (Fast)"),
+        Binding("i", "install_full", "Install (Complete)"),
     ]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         logging.info("Inicializando OmegaApp...")
         self.context = SystemContext()
-        self.generator = ConfigGenerator(
-            Path(__file__).parent.parent / "assets/templates"
-        )
-        self.state_manager = StateManager(self.context.home / ".omega-zsh")
 
-        # Seleccionar plataforma
-        if self.context.is_termux:
-            self.platform = TermuxPlatform(
-                use_nala=(self.context.package_manager_type == "nala")
-            )
+        # Determinar plataforma
+        if self.context.os_type == "android":
+            self.platform = TermuxPlatform()
         else:
-            self.platform = DebianPlatform(
-                use_nala=(self.context.package_manager_type == "nala")
-            )
+            self.platform = DebianPlatform()
 
-        # Cargar Estado Persistente
+        # Configuración
+        self.state_manager = StateManager(self.context.omega_dir)
+
+        # Cargar estado previo
         try:
-            loaded_state = self.state_manager.load()
-            self.selected_plugins = loaded_state.selected_plugins
-            self.selected_theme = loaded_state.selected_theme
-            self.selected_root_theme = loaded_state.selected_root_theme
-            self.selected_header = loaded_state.selected_header
-            self.header_text = loaded_state.header_text
-            self.header_font = loaded_state.header_font
+            self.state = self.state_manager.load()
             logging.info(
-                f"Estado cargado: {len(self.selected_plugins)} plugins seleccionados."
+                f"Estado cargado: {len(self.state.selected_plugins)} plugins, {self.state.selected_theme} tema"
             )
         except Exception as e:
             logging.error(f"Fallo al cargar estado: {e}")
-            self.selected_plugins = []
-            self.selected_theme = "robbyrussell"
-            self.selected_header = "fastfetch"
-            self.selected_root_theme = "root_p10k_red"
-            self.header_text = "Omega"
-            self.header_font = "slant"
+            self.state = AppState()
 
     def compose(self) -> ComposeResult:
         logging.info("Renderizando interfaz principal (compose)")
-        yield Header(show_clock=True)
-        with TabbedContent(initial="dash"):
-            with TabPane("Dashboard", id="dash"):
+        yield Header()
+        with TabbedContent():
+            with TabPane("Dashboard", id="tab-dashboard"):
                 yield DashboardScreen()
+            with TabPane("Plugins", id="tab-plugins"):
+                yield PluginSelectScreen(
+                    all_plugins=DB_PLUGINS,
+                    bin_plugins=BIN_PLUGINS,
+                    selected_plugins=self.state.selected_plugins,
+                )
+            with TabPane("Themes", id="tab-themes"):
+                yield ThemeSelectScreen(
+                    all_themes=self._get_all_themes(),
+                    selected_theme=self.state.selected_theme,
+                )
+            with TabPane("Headers", id="tab-headers"):
+                yield HeaderSelectScreen(
+                    selected_header=self.state.header_type,
+                    header_text=self.state.header_text,
+                    selected_font=self.state.header_font,
+                )
         yield Footer()
 
-    def action_switch_tab(self, tab_id: str) -> None:
-        # Intentar volver a la pantalla principal si hay modales abiertos
-        while len(self.screen_stack) > 1:
-            self.pop_screen()
+    def _get_all_themes(self) -> list[ThemeDef]:
+        """Escanea todos los directorios de temas posibles para construir el catálogo."""
+        omega_themes = []
+        omz_themes = []
+        user_themes = []
 
-        # Ahora buscar el TabbedContent en la pantalla principal
+        # 1. Temas de Omega (Assets locales)
+        omega_dir = self.context.project_root / "omega_zsh" / "assets" / "themes"
+        if omega_dir.exists():
+            for f in omega_dir.glob("*.zsh-theme"):
+                omega_themes.append(ThemeDef(f.stem, "Omega God Tier", str(f)))
+
+        # 2. Temas incorporados de OMZ
+        omz_builtin_dir = self.context.omz_dir / "themes"
+        if omz_builtin_dir.exists():
+            for f in omz_builtin_dir.glob("*.zsh-theme"):
+                omz_themes.append(ThemeDef(f.stem, "Standard OMZ", str(f)))
+
+        # 3. Temas personalizados del usuario
+        user_custom_dir = self.context.omz_dir / "custom" / "themes"
+        if user_custom_dir.exists():
+            for f in user_custom_dir.glob("*.zsh-theme"):
+                if f.stem not in THEMES_OMZ_BUILTIN:
+                    user_themes.append(ThemeDef(f.stem, "User Custom", str(f)))
+
+        # 4. Combinar todo en un mapa para unicidad (ID -> ThemeDef)
+        themes_map = {}
+        for t in omz_themes:
+            themes_map[t.id] = t
+        for t in user_themes:
+            themes_map[t.id] = t
+        for t in omega_themes:
+            themes_map[t.id] = t  # Omega tiene prioridad máxima sobre IDs repetidos
+
+        return sorted(themes_map.values(), key=lambda x: x.id.lower())
+
+    # --- Acciones ---
+    def action_switch_tab(self, tab_id: str) -> None:
+        """Cambia programáticamente a un Tab por su ID."""
         try:
             self.query_one(TabbedContent).active = tab_id
         except Exception:
             logging.warning("No se pudo cambiar de tab: TabbedContent no encontrado.")
 
-    # --- MANEJADORES DE ACCIONES ---
-
-    def action_config_plugins(self) -> None:
-        screen = PluginSelectScreen(DB_PLUGINS, self.selected_plugins)
-        self.push_screen(screen)
-
-    def action_config_themes(self) -> None:
-        # 1. Cargar temas dinámicamente de assets (Omega God Tier)
-        custom_themes_path = Path(__file__).parent.parent / "assets/themes"
-        omega_themes = []
-        if custom_themes_path.exists():
-            for f in custom_themes_path.glob("*.zsh-theme"):
-                omega_themes.append(ThemeDef(f.stem, "Omega God Tier", str(f)))
-
-        # 2. Cargar temas estándar de Oh My Zsh
-        omz_themes_path = self.context.home / ".oh-my-zsh/themes"
-        omz_themes = []
-        if omz_themes_path.exists():
-            for f in omz_themes_path.glob("*.zsh-theme"):
-                omz_themes.append(ThemeDef(f.stem, "Standard OMZ", str(f)))
-
-        # 3. Cargar temas custom de usuario (manualmente instalados)
-        user_custom_path = self.context.home / ".oh-my-zsh/custom/themes"
-        user_themes = []
-        if user_custom_path.exists():
-            for f in user_custom_path.rglob("*.zsh-theme"):
-                # Evitar duplicados si ya están en Omega Themes (que se instalan aquí)
-                if not any(t.id == f.stem for t in omega_themes):
-                    user_themes.append(ThemeDef(f.stem, "User Custom", str(f)))
-
-        # 4. Combinar todo en un mapa para unicidad (ID -> ThemeDef)
-        # El orden de inserción importa para conflictos: Omega > User > Standard
-        all_themes_map = {t.id: t for t in omz_themes}
-        all_themes_map.update({t.id: t for t in user_themes})
-        all_themes_map.update({t.id: t for t in omega_themes})
-
-        # 5. Asegurar que los Builtin destacados estén (por si acaso el scan falló o no están instalados aún)
-        # Esto es opcional, pero mantiene la lista "curada" visible.
-        # Sin embargo, si el archivo no existe, seleccionarlo podría dar error.
-        # Asumiremos que el scan es la fuente de verdad.
-
-        all_themes = sorted(all_themes_map.values(), key=lambda x: x.id.lower())
-
-        screen = ThemeSelectScreen(all_themes, self.selected_theme, "Select User Theme")
-        self.push_screen(screen)
-
-    def update_selected_plugins(self, new_plugins: list[str]):
-        """Actualiza la lista de plugins seleccionados y guarda el estado."""
-        self.selected_plugins = new_plugins
-        self._auto_save_state()
-
-    def update_selected_theme(self, new_theme: str):
-        self.selected_theme = new_theme
-        self._auto_save_state()
-        # Notificación eliminada para evitar spam durante navegación
-
-    def action_config_header(self) -> None:
-        """Lanza la pantalla de configuración del header."""
-        screen = HeaderSelectScreen(self.selected_header)
-        self.push_screen(screen)
-
-    def update_header_config(
-        self, header_choice: str, header_text: str, header_font: str
-    ):
-        """Actualiza la configuración del header basado en la elección del usuario."""
-        self.selected_header = header_choice
-        self.header_text = header_text
-        self.header_font = header_font
-        self._auto_save_state()
-        # Notificación eliminada para evitar spam durante navegación
-
-    def _auto_save_state(self):
-        """Guarda el estado actual en disco (Auto-save)."""
+    def save_state(self) -> None:
+        """Sincroniza el estado actual de la UI con el objeto AppState y el archivo JSON."""
         try:
+            # Obtener plugins del widget
+            try:
+                plugin_screen = self.query_one(PluginSelectScreen)
+                selected_plugins = plugin_screen.get_selected()
+            except Exception:
+                selected_plugins = self.state.selected_plugins
+
+            # Obtener tema del widget
+            try:
+                theme_screen = self.query_one(ThemeSelectScreen)
+                selected_theme = theme_screen.get_selected()
+            except Exception:
+                selected_theme = self.state.selected_theme
+
+            # Obtener header del widget
+            try:
+                header_screen = self.query_one(HeaderSelectScreen)
+                h_type, h_text, h_font = header_screen.get_selected()
+            except Exception:
+                h_type, h_text, h_font = (
+                    self.state.header_type,
+                    self.state.header_text,
+                    self.state.header_font,
+                )
+
             current_state = AppState(
-                selected_plugins=self.selected_plugins,
-                selected_theme=self.selected_theme,
-                selected_root_theme=self.selected_root_theme,
-                selected_header=self.selected_header,
-                header_text=self.header_text,
-                header_font=self.header_font,
+                selected_plugins=selected_plugins,
+                selected_theme=selected_theme,
+                header_type=h_type,
+                header_text=h_text,
+                header_font=h_font,
             )
+            self.state = current_state
             self.state_manager.save(current_state)
         except Exception as e:
             logging.warning(f"Fallo al guardar auto-save: {e}")
 
     def action_apply_changes(self) -> None:
-        """Genera los archivos de configuración rápidamente sin reinstalar paquetes."""
-        self.notify("Aplicando cambios...", title="Omega Apply")
-
+        """Genera .zshrc sin reinstalar paquetes. Rápido."""
+        self.save_state()
         try:
-            # 1. Guardar Estado
-            self._auto_save_state()
-
-            # 2. Paths
-            zshrc_path = self.context.home / ".zshrc"
-            personal_path = self.context.home / ".omega-zsh/personal.zsh"
-            custom_path = self.context.home / ".omega-zsh/custom.zsh"
-
-            # 3. Preparar Contexto
-            omz_plugins_list = [
-                p for p in self.selected_plugins if p not in BIN_PLUGINS
-            ]
-
-            # Asegurar que los temas estén instalados
-            self._ensure_theme_installed(self.selected_theme)
-            self._ensure_theme_installed(self.selected_root_theme)
-
-            gen_context = {
-                "version": "2.2.0",
-                "is_termux": self.context.is_termux,
-                "omz_dir": str(self.context.home / ".oh-my-zsh"),
-                "user_theme": self.selected_theme,
-                "root_theme": self.selected_root_theme,
-                "plugins": omz_plugins_list,
-                "active_tools": self.selected_plugins,
-                "personal_zsh": str(personal_path),
-                "custom_zsh": str(custom_path),
-                "header_cmd": self.selected_header_cmd(),
-            }
-
-            # 4. Generar Archivos
-            self.generator.generate_personal_config(
-                personal_path,
-                {
-                    "extra_paths": [
-                        "/usr/local/bin",
-                        "$HOME/.cargo/bin",
-                        "$HOME/.local/bin",
-                    ],
-                    "aliases": {"lg": "lazygit", "upd": "omega-update"},
-                },
+            generator = ConfigGenerator(
+                self.context.project_root / "omega_zsh" / "assets" / "templates"
             )
 
-            if self.generator.generate_zshrc(zshrc_path, gen_context):
-                self.generator.create_default_custom_zsh(custom_path)
-                self.notify(
-                    "¡Cambios Aplicados! Ejecuta 'source ~/.zshrc'",
-                    title="Éxito",
-                    severity="information",
-                    timeout=5,
+            # Generar Header Figlet si es necesario
+            header_cmd = ""
+            if self.state.header_type == "figlet":
+                header_cmd = FigletManager().generate_safe_command(
+                    self.state.header_text, self.state.header_font
                 )
-            else:
-                self.notify("Error generando .zshrc", title="Error", severity="error")
+            elif self.state.header_type == "fastfetch":
+                header_cmd = "fastfetch"
 
+            context_data = {
+                "theme": self.state.selected_theme,
+                "plugins": self.state.selected_plugins,
+                "header_cmd": header_cmd,
+                "project_root": str(self.context.project_root),
+                "omega_dir": str(self.context.omega_dir),
+            }
+
+            if generator.generate_zshrc(self.context.zshrc_path, context_data):
+                self.notify("Configuración actualizada con éxito (A).", severity="information")
+                # Cerrar app tras éxito para que el usuario pueda probar el shell
+                self.exit()
         except Exception as e:
             logging.error(f"Fallo en Apply: {e}", exc_info=True)
-            self.notify(f"Error: {e}", title="Fallo Crítico", severity="error")
+            self.notify(f"Error al aplicar: {e}", severity="error")
 
-    # --- PROCESO DE INSTALACIÓN ---
+    def action_install_full(self) -> None:
+        """Inicia el flujo de instalación completa (paquetes + config)."""
+        self.save_state()
+        self.push_screen(InstallScreen(), callback=self._handle_install_finished)
 
-    def action_start_install(self) -> None:
-        install_screen = InstallScreen()
-        self.push_screen(install_screen)
-        # Hilo daemon para no bloquear la UI
+    def _handle_install_finished(self, success: bool) -> None:
+        if success:
+            # Una vez instalados los paquetes, aplicar la config
+            self.action_apply_changes()
+        else:
+            self.notify("La instalación fue cancelada o falló.", severity="warning")
+
+    # --- Worker de Instalación ---
+    def run_installation(self, on_message: callable) -> None:
+        """Ejecuta el proceso de instalación en un hilo secundario."""
         threading.Thread(
-            target=self.run_installation, args=(install_screen,), daemon=True
+            target=self._installation_worker, args=(on_message,), daemon=True
         ).start()
 
-    def run_installation(self, screen: InstallScreen):
+    def _installation_worker(self, on_message: callable) -> None:
         try:
-            screen.write_log(">>> INICIANDO INSTALADOR OMEGA...")
+            # 1. Asegurar directorios
+            on_message("Preparando directorios del sistema...")
+            self.context.omega_dir.mkdir(parents=True, exist_ok=True)
 
-            # 1. Guardar Estado
+            # 2. Instalar binarios faltantes
+            installer = PluginInstaller(self.platform)
             current_state = AppState(
-                selected_plugins=self.selected_plugins,
-                selected_theme=self.selected_theme,
-                selected_root_theme=self.selected_root_theme,
-                selected_header=self.selected_header,
-                header_text=self.header_text,
-                header_font=self.header_font,
-            )
-            self.state_manager.save(current_state)
-            screen.write_log("Configuración guardada en ~/.omega-zsh/state.json")
-
-            # 2. Inicializar Instalador
-            installer = PluginInstaller(self.platform, self.context.home)
-            installer.ensure_omz(screen.write_log)
-
-            screen.write_log("Actualizando Repositorios...")
-            self.platform.update_repos()
-
-            # 3. Herramientas Base
-            for tool in self.platform.get_essential_tools():
-                screen.write_log(f"Verificando: {tool}")
-                self.platform.install_package(tool, on_progress=screen.write_log)
-
-            # 4. Instalar Plugins (Binarios o Git)
-            screen.write_log("\n--- INSTALANDO PLUGINS SELECCIONADOS ---")
-            installer.install_all(self.selected_plugins, screen.write_log)
-
-            # 5. Instalar/Enlazar Tema
-            screen.write_log(f"\n--- CONFIGURANDO TEMAS: {self.selected_theme} y {self.selected_root_theme} ---")
-            self._ensure_theme_installed(self.selected_theme, screen.write_log)
-            self._ensure_theme_installed(self.selected_root_theme, screen.write_log)
-
-            # 6. Generar Configuración Final
-            screen.write_log("\n--- GENERANDO .zshrc ---")
-            zshrc_path = self.context.home / ".zshrc"
-            personal_path = self.context.home / ".omega-zsh/personal.zsh"
-            custom_path = self.context.home / ".omega-zsh/custom.zsh"
-
-            # Filtrar binarios del array de plugins de OMZ
-            omz_plugins_list = [
-                p for p in self.selected_plugins if p not in BIN_PLUGINS
-            ]
-
-            gen_context = {
-                "version": "2.2.0",
-                "is_termux": self.context.is_termux,
-                "omz_dir": str(self.context.home / ".oh-my-zsh"),
-                "user_theme": self.selected_theme,
-                "root_theme": self.selected_root_theme,
-                "plugins": omz_plugins_list,
-                "active_tools": self.selected_plugins,
-                "personal_zsh": str(personal_path),
-                "custom_zsh": str(custom_path),
-                "header_cmd": self.selected_header_cmd(),
-            }
-
-            self.generator.generate_personal_config(
-                personal_path,
-                {
-                    "extra_paths": [
-                        "/usr/local/bin",
-                        "$HOME/.cargo/bin",
-                        "$HOME/.local/bin",
-                    ],
-                    "aliases": {"lg": "lazygit", "upd": "omega-update"},
-                },
+                selected_plugins=self.state.selected_plugins,
+                selected_theme=self.state.selected_theme,
             )
 
-            if self.generator.generate_zshrc(zshrc_path, gen_context):
-                screen.write_log("✅ .zshrc generado exitosamente.")
-                self.generator.create_default_custom_zsh(custom_path)
+            missing = installer.get_missing_binaries(current_state.selected_plugins)
+            if missing:
+                for plugin in missing:
+                    on_message(f"Instalando binario: {plugin}...")
+                    if installer.install_binary(plugin):
+                        on_message(f"✅ {plugin} instalado correctamente.")
+                    else:
+                        on_message(f"❌ Error al instalar {plugin}.")
 
-            screen.write_log("\n[bold green]¡INSTALACIÓN COMPLETADA![/]")
-            screen.write_log(
-                "[bold yellow]⚠ IMPORTANTE: Reinicia tu terminal o ejecuta 'source ~/.zshrc' para ver los cambios.[/]"
-            )
-            screen.show_finish()
+            # 3. Descargar plugins ZSH faltantes
+            zsh_missing = installer.get_missing_zsh_plugins(current_state.selected_plugins)
+            if zsh_missing:
+                for plugin in zsh_missing:
+                    on_message(f"Descargando plugin Zsh: {plugin}...")
+                    if installer.download_zsh_plugin(plugin):
+                        on_message(f"✅ {plugin} descargado.")
+                    else:
+                        on_message(f"❌ Error al descargar {plugin}.")
+
+            on_message("Finalizando instalación...")
+            self.call_from_thread(self._installation_complete, True)
 
         except Exception as e:
             logging.error(f"Error en hilo de instalación: {e}", exc_info=True)
-            screen.write_log(f"\n[bold red]ERROR CRÍTICO: {e}[/]")
-            screen.show_finish()
+            on_message(f"ERROR FATAL: {e}")
+            self.call_from_thread(self._installation_complete, False)
 
-    def _ensure_theme_installed(self, theme_name: str, log_fn=None):
-        """Asegura que el tema seleccionado esté disponible en OMZ custom."""
-        if log_fn is None:
-            def log_fn(msg):
-                logging.info(msg)
+    def _installation_complete(self, success: bool) -> None:
+        screen = self.get_screen("InstallScreen")
+        if screen:
+            screen.on_installation_finished(success)
 
-        import shutil
 
-        # 1. Chequear si es un tema estándar de Oh My Zsh
-        omz_standard_themes = self.context.home / ".oh-my-zsh/themes"
-        if (omz_standard_themes / f"{theme_name}.zsh-theme").exists():
-            return
+def main():
+    app = OmegaApp()
+    app.run()
 
-        omz_custom_themes = self.context.home / ".oh-my-zsh/custom/themes"
-        target_file = omz_custom_themes / f"{theme_name}.zsh-theme"
 
-        # 2. Localizar el origen en assets
-        assets_dir = Path(__file__).parent.parent / "assets/themes"
-        source_file = assets_dir / f"{theme_name}.zsh-theme"
-
-        # 3. Si es un tema de Omega (está en assets), lo instalamos/actualizamos
-        if source_file.exists():
-            try:
-                omz_custom_themes.mkdir(parents=True, exist_ok=True)
-                # Forzamos la copia si es de Omega para asegurar que esté actualizado
-                shutil.copy2(source_file, target_file)
-                log_fn(f"Tema Omega actualizado: {theme_name}")
-            except Exception as e:
-                log_fn(f"Error instalando tema {theme_name}: {e}")
-        else:
-            # Si no está en assets y no es estándar, solo avisamos si no existe en custom
-            if not target_file.exists():
-                log_fn(
-                    f"Advertencia: Tema '{theme_name}' no encontrado en assets ni en librerías estándar."
-                )
-
-    def selected_header_cmd(self) -> str:
-        h = self.selected_header
-        if h == "fastfetch":
-            return "fastfetch"
-        if h == "cow":
-            return "fortune | cowsay | lolcat"
-        if h == "none":
-            return ""
-        if h == "figlet_custom":
-            # Usar el generador seguro que escapa los caracteres
-            return FigletManager().generate_safe_command(
-                self.header_text, self.header_font
-            )
-        return "fastfetch"
-
-    def on_button_pressed(self, event):
-        if event.button.id == "finish-btn":
-            self.exit()
+if __name__ == "__main__":
+    main()
