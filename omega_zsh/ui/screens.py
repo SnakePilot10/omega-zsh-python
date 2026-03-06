@@ -3,16 +3,13 @@ import os
 import re
 import shutil
 import subprocess
-from datetime import datetime
 
-from rich.align import Align
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from textual import events, on
+from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.reactive import reactive
+from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import (
     Button,
@@ -34,7 +31,6 @@ from textual.widgets.selection_list import Selection
 from ..core.constants import DB_HEADERS
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
-
 
 
 class DashboardScreen(Static):
@@ -108,8 +104,6 @@ class DashboardScreen(Static):
 
 
 # --- PANTALLA DE SELECCIÓN DE PLUGINS ---
-
-
 class PluginSelectScreen(Vertical):
     """Interfaz para activar/desactivar plugins y herramientas binarias."""
 
@@ -139,8 +133,6 @@ class PluginSelectScreen(Vertical):
 
 
 # --- PANTALLA DE SELECCIÓN DE TEMAS ---
-
-
 class ThemeSelectScreen(Horizontal):
     """Interfaz dividida para elegir temas con previsualización en vivo."""
 
@@ -230,8 +222,6 @@ class ThemeSelectScreen(Horizontal):
 
 
 # --- PANTALLA DE CONFIGURACIÓN DE HEADER ---
-
-
 class HeaderSelectScreen(Vertical):
     """Configuración estética del Banner de bienvenida."""
 
@@ -338,8 +328,6 @@ class HeaderSelectScreen(Vertical):
 
 
 # --- PANTALLA DE INSTALACIÓN (MODAL-LIKE) ---
-
-
 class InstallScreen(Screen):
     """Pantalla de progreso de instalación."""
 

@@ -1,5 +1,4 @@
 import logging
-import shutil
 import threading
 from pathlib import Path
 from typing import Callable
@@ -23,7 +22,6 @@ from .screens import (
     PluginSelectScreen,
     ThemeSelectScreen,
 )
-
 
 
 class OmegaApp(App):
@@ -311,7 +309,6 @@ class OmegaApp(App):
         screen = self.get_screen("InstallScreen")
         if screen:
             screen.on_installation_finished(success)
-
 
 
 def main():
