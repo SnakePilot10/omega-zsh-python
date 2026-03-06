@@ -221,7 +221,7 @@ class ThemeSelectScreen(Horizontal):
 
     def _sanitize_id(self, text: str) -> str:
         """Sanitiza un string para que sea un ID válido de Textual."""
-        return re.sub(r"[^a-zA-Z0-0_-\"]", "_", text)
+        return re.sub(r"[^a-zA-Z0-9_-]", "_", text)
 
 
 # --- PANTALLA DE CONFIGURACIÓN DE HEADER ---
