@@ -29,7 +29,7 @@ from ..core.figlet import FigletManager
 
 import os
 import shutil
-import psutil
+# import psutil (Removido para compatibilidad con Android)
 import subprocess
 from datetime import datetime
 import logging

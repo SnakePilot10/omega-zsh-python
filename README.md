@@ -74,6 +74,12 @@ Omega-ZSH gestiona una carga masiva de más de 30 módulos divididos en:
 
 ---
 
+## 🪵 Mantenimiento y Migraciones
+
+- **2026-03-05 (Python 3.13):** Migración estructural tras la actualización del sistema en Termux. Se actualizaron los shebangs de los binarios, se reinstalaron dependencias en el nuevo `venv` y se corrigieron las rutas de fuentes de `figlet` en `.zshrc`.
+
+---
+
 ## 🤝 Contribución
 
 ```bash

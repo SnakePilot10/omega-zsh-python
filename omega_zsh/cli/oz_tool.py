@@ -5,7 +5,7 @@ import sys
 import time
 import shutil
 import platform
-import psutil
+# import psutil (Removido para compatibilidad con Android)
 import subprocess
 from collections import Counter
 from pathlib import Path
@@ -47,25 +47,59 @@ PROJECT_THEMES = PROJECT_ROOT / "omega_zsh/assets/themes"
 OMEGA_CONFIG_DIR = HOME / ".omega-zsh"
 state_manager = StateManager(OMEGA_CONFIG_DIR) if StateManager else None
 
-def get_system_stats():
-    """Obtiene estadísticas básicas del sistema con blindaje de permisos."""
+def _get_ram_usage():
+    """Obtiene el uso de RAM leyendo /proc/meminfo de forma nativa."""
     try:
-        mem = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
-        try:
-            boot_time = psutil.boot_time()
-            uptime_seconds = datetime.now().timestamp() - boot_time
+        with open('/proc/meminfo', 'r') as f:
+            lines = f.readlines()
+        mem = {}
+        for line in lines:
+            parts = line.split(':')
+            if len(parts) == 2:
+                mem[parts[0].strip()] = int(parts[1].split()[0].strip())
+        
+        total = mem.get('MemTotal', 1)
+        free = mem.get('MemFree', 0)
+        buffers = mem.get('Buffers', 0)
+        cached = mem.get('Cached', 0)
+        
+        used = total - free - buffers - cached
+        percent = (used / total) * 100
+        return f"{int(percent)}%"
+    except:
+        return "N/A"
+
+def _get_disk_usage(path='/'):
+    """Obtiene el uso de disco usando os.statvfs."""
+    try:
+        st = os.statvfs(path)
+        total = st.f_blocks * st.f_frsize
+        free = st.f_bavail * st.f_frsize
+        used = total - free
+        percent = (used / total) * 100
+        return f"{int(percent)}%"
+    except:
+        return "N/A"
+
+def _get_uptime_simple():
+    """Obtiene el uptime leyendo /proc/uptime."""
+    try:
+        with open('/proc/uptime', 'r') as f:
+            uptime_seconds = float(f.readline().split()[0])
             hours, remainder = divmod(int(uptime_seconds), 3600)
             minutes, _ = divmod(remainder, 60)
-            uptime = f"{hours}h {minutes}m"
-        except:
-            uptime = "N/A"
-        
+            return f"{hours}h {minutes}m"
+    except:
+        return "N/A"
+
+def get_system_stats():
+    """Obtiene estadísticas básicas del sistema con blindaje de permisos (Sin psutil)."""
+    try:
         return {
             "os": "Android/Termux",
-            "mem_usage": f"{mem.percent}%",
-            "disk_usage": f"{disk.percent}%",
-            "uptime": uptime
+            "mem_usage": _get_ram_usage(),
+            "disk_usage": _get_disk_usage(),
+            "uptime": _get_uptime_simple()
         }
     except Exception as e:
         return {"os": "Unknown", "mem_usage": "N/A", "disk_usage": "N/A", "uptime": "N/A"}
