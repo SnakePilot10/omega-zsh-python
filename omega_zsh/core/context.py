@@ -1,8 +1,9 @@
 import os
 import platform
-import subprocess
 import shlex
+import subprocess
 from pathlib import Path
+from shutil import which
 
 
 class SystemContext:
@@ -108,8 +109,6 @@ class SystemContext:
 
     def _command_exists(self, cmd: str) -> bool:
         """Verifica si un comando existe en el PATH."""
-        from shutil import which
-
         return which(cmd) is not None
 
     def _run_cmd(self, cmd: str) -> str:

@@ -1,12 +1,13 @@
 from pathlib import Path
 from unittest.mock import patch
-from omega_zsh.cli.oz_tool import get_active_plugins, inspect_plugin
+
+from omega_zsh.cli.oz_tool import get_omega_active_items, inspect_plugin
 
 
 def test_get_active_plugins_empty(tmp_path):
     """Verifica que devuelve lista vacía si no hay .zshrc"""
     with patch("omega_zsh.cli.oz_tool.ZSHRC", tmp_path / "nonexistent"):
-        plugins = get_active_plugins()
+        plugins = get_omega_active_items()
         assert plugins == []
 
 
@@ -16,7 +17,7 @@ def test_get_active_plugins_parse(tmp_path):
     zshrc.write_text("plugins=(git python docker\n  zsh-autosuggestions)")
 
     with patch("omega_zsh.cli.oz_tool.ZSHRC", zshrc):
-        plugins = get_active_plugins()
+        plugins = get_omega_active_items()
         assert "git" in plugins
         assert "python" in plugins
         assert "zsh-autosuggestions" in plugins
@@ -39,8 +40,7 @@ def test_inspect_plugin_parsing(tmp_path):
     plugin_dir.mkdir()
     plugin_file = plugin_dir / "myplugin.plugin.zsh"
     plugin_file.write_text(
-        "\nalias gst='git status'\nalias gp='git push'\nfunction myfunc() { echo 1 }\nother_func() { echo 2 }\n    "
-    )
+        "\nalias gst='git status'\nalias gp='git push'\nfunction myfunc() { echo 1 }\nother_func() { echo 2 }\n    ")
 
     # Simulamos que lo encuentra en CUSTOM_PLUGINS
     with (

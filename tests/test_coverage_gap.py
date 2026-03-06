@@ -1,10 +1,12 @@
+import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+from omega_zsh.cli.oz_tool import main as oz_main
 from omega_zsh.core.generator import ConfigGenerator
 from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.core.state import StateManager
 from omega_zsh.platforms.base import BasePlatform
-from omega_zsh.cli.oz_tool import main as oz_main
 
 
 def test_generator_error_handling(tmp_path):
@@ -19,9 +21,7 @@ def test_generator_error_handling(tmp_path):
             mock_tmpl.render.side_effect = Exception("Template Error")
             mock_get.return_value = mock_tmpl
 
-            res = gen.generate_personal_config(
-                tmp_path / "personal.zsh", {"theme": "test"}
-            )
+            res = gen.generate_personal_config(tmp_path / "personal.zsh", {"theme": "test"})
             assert res is False
 
 
@@ -107,3 +107,4 @@ def test_oz_tool_help(mock_print):
     """Cubre el punto de entrada de oz_tool."""
     oz_main()
     mock_print.assert_called()
+

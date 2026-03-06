@@ -1,4 +1,5 @@
-from typing import List, Callable, Optional
+from typing import Callable, List, Optional
+
 from .base import BasePlatform
 
 

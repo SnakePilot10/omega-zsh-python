@@ -1,7 +1,9 @@
+import getpass
 import os
 from pathlib import Path
+from typing import Any, Dict
+
 from jinja2 import Environment, FileSystemLoader
-from typing import Dict, Any
 
 
 class ConfigGenerator:
@@ -26,9 +28,7 @@ class ConfigGenerator:
             print(f"Error generando .zshrc: {e}")
             return False
 
-    def generate_personal_config(
-        self, output_path: Path, context: Dict[str, Any]
-    ) -> bool:
+    def generate_personal_config(self, output_path: Path, context: Dict[str, Any]) -> bool:
         """Genera el archivo personal.zsh de forma segura."""
         try:
             # Si el archivo ya existe, no lo sobreescribimos por defecto
@@ -38,8 +38,6 @@ class ConfigGenerator:
 
             template = self.env.get_template("personal.zsh.j2")
             # Valores por defecto si no vienen en el contexto
-            import getpass
-
             default_ctx = {
                 "extra_paths": [],
                 "env_vars": {},

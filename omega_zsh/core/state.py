@@ -1,7 +1,8 @@
 import json
+import logging
 import re
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
 from typing import List
 
 
@@ -78,8 +79,6 @@ class StateManager:
                 state.selected_header = "cow"
 
         except Exception as e:
-            import logging
-
             logging.warning(f"No se pudo importar configuración de .zshrc: {e}")
 
         return state

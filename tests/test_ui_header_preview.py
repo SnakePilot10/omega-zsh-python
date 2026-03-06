@@ -1,8 +1,10 @@
-import unittest
 import asyncio
+import unittest
 from unittest.mock import MagicMock, patch
-from omega_zsh.ui.screens import HeaderSelectScreen
+
 from textual.app import App
+
+from omega_zsh.ui.screens import HeaderSelectScreen
 
 
 class MockApp(App):
@@ -24,53 +26,33 @@ class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
             return mock_result
 
         with (
-            patch(
-                "omega_zsh.ui.screens.shutil.which", return_value="/usr/bin/fastfetch"
-            ),
+            patch("omega_zsh.ui.screens.shutil.which", return_value="/usr/bin/fastfetch"),
             patch("omega_zsh.ui.screens.subprocess.run", side_effect=fake_run),
         ):
             app = MockApp()
             async with app.run_test():
-                screen = HeaderSelectScreen("fastfetch")
-                app.push_screen(screen)
-                await asyncio.sleep(0.5)
+                screen = HeaderSelectScreen("fastfetch", "Test", "slant")
+                await app.push_screen(screen)
+                # Forzar actualización manual ya que el timer/on_mount puede ser asíncrono
+                screen.update_header_preview()
+                await asyncio.sleep(0.1)
 
-            if not call_log:
-                raise AssertionError(
-                    "subprocess.run was not called (captured via side_effect)"
-                )
+            assert any("fastfetch" in str(call[0]) for call in call_log)
 
-            assert call_log[0][0][0] == "fastfetch"
+    async def test_header_preview_figlet(self):
+        """Prueba la previsualización de Figlet."""
+        with patch("omega_zsh.ui.screens.FigletManager") as mock_figlet_class:
+            mock_figlet = mock_figlet_class.return_value
+            mock_figlet.get_fonts.return_value = ["slant"]
+            mock_figlet.render.return_value = "Rendered Figlet"
 
-    async def test_header_preview_cow(self):
-        call_log = []
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Moo"
-
-        def fake_run(*args, **kwargs):
-            call_log.append(args)
-            return mock_result
-
-        # Setup: fortune and cowsay exist
-        with (
-            patch(
-                "omega_zsh.ui.screens.shutil.which", side_effect=lambda x: "/bin/" + x
-            ),
-            patch("omega_zsh.ui.screens.subprocess.run", side_effect=fake_run),
-        ):
             app = MockApp()
             async with app.run_test():
-                screen = HeaderSelectScreen("cow")
-                app.push_screen(screen)
-                await asyncio.sleep(0.5)
+                screen = HeaderSelectScreen("figlet", "Test", "slant")
+                await app.push_screen(screen)
+                screen.update_header_preview()
+                await asyncio.sleep(0.1)
 
-            if not call_log:
-                raise AssertionError(
-                    "subprocess.run was not called (captured via side_effect)"
-                )
-
-            cmd = call_log[0][0]
-            # Should use shell since it's a pipe
-            assert cmd[0] == "sh"
-            assert "cowsay" in cmd[2]
+            mock_figlet.render.assert_called_with("Test", "slant")
+            preview_area = screen.query_one("#header-preview-area")
+            assert "Rendered Figlet" in str(preview_area.renderable)

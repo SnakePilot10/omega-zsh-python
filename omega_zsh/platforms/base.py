@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
 import subprocess
-from typing import List, Callable, Optional
+from abc import ABC, abstractmethod
+from typing import Callable, List, Optional
 
 
 class BasePlatform(ABC):
