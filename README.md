@@ -47,13 +47,13 @@ chmod +x install.sh
 ./install.sh
 ```
 
-**El instalador purgará automáticamente herramientas obsoletas como `bat` y `nala`**, asegurando un entorno ligero y moderno basado en `eza`, `zoxide` y `yazi`.
+**Auto-Sanación Inteligente:** El instalador ahora detecta automáticamente si tu entorno virtual (`.venv`) está roto, incompleto o si la versión de Python del sistema ha cambiado (ej. de 3.12 a 3.13), recreándolo de forma transparente para evitar errores de `ModuleNotFoundError`.
 
 ---
 
 ## 🕹️ Arsenal CLI (`oz`)
 
-La herramienta `oz` es tu navaja suiza de nanosegundos. Ahora con alias ultrarrápidos:
+La herramienta `oz` es tu navaja suiza de nanosegundos. Ahora con alias ultrarrápidos y **Delegación Inteligente**: Si usas un subcomando (`stats`, `bench`, `update`), Omega lo ejecutará instantáneamente sin cargar la interfaz gráfica.
 
 *   **`oz b` (Banner):** Telemetría esencial (RAM, Disco, Uptime) con blindaje de seguridad.
 *   **`oz v` (Velocidad):** **Hyperdrive Benchmark**. Mide la latencia de arranque con precisión de nanosegundos y ofrece un **Diagnóstico de Entropía** inteligente.
@@ -76,6 +76,7 @@ Omega-ZSH gestiona una carga masiva de más de 30 módulos divididos en:
 
 ## 🪵 Mantenimiento y Migraciones
 
+- **2026-03-06 (Auto-Sanación y Fix de CLI):** Se implementó una lógica de "Bridge" en `__main__.py` para separar la ejecución de CLI y TUI, solucionando bloqueos en terminales no interactivas. Se añadió detección de corrupción en `install.sh` y se saneó el 100% del código bajo las reglas de **Ruff**.
 - **2026-03-05 (Python 3.13):** Migración estructural tras la actualización del sistema en Termux. Se actualizaron los shebangs de los binarios, se reinstalaron dependencias en el nuevo `venv` y se corrigieron las rutas de fuentes de `figlet` en `.zshrc`.
 
 ---
