@@ -4,19 +4,14 @@ import re
 import sys
 import time
 import shutil
-import platform
-# import psutil (Removido para compatibilidad con Android)
 import subprocess
 from collections import Counter
 from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.layout import Layout
-from rich.text import Text
 from rich import box
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from datetime import datetime
 
 try:
     from omega_zsh.core.plugins_db import get_description
@@ -168,8 +163,7 @@ def inspect_plugin(plugin_name):
 def benchmark_shell():
     """Mide la latencia con precisión y ofrece un diagnóstico inteligente basado en plugins activos."""
     console.print("[bold #00ffff]🚀 INICIANDO ANÁLISIS DE HIPERVELOCIDAD (Hyperdrive)...[/]")
-    
-    import time
+
     times = []
     active_items = get_omega_active_items()
     

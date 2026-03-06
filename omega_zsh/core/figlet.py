@@ -1,9 +1,8 @@
+import logging
+import os
+import shlex
 import shutil
 import subprocess
-import os
-
-import logging
-import shlex
 from pathlib import Path
 from typing import Dict, List
 
