@@ -5,16 +5,15 @@ import traceback
 from pathlib import Path
 
 # --- CONFIGURACIÓN DE LOGGING ---
-# Requisito: Enviar errores a archivo, Nivel INFO, Formato con Timestamp
-LOG_FILE = Path(__file__).parent / "omega_crash.log"
+# Ubicación del log en la raíz del proyecto para visibilidad
+LOG_FILE = Path(__file__).parent.parent / "omega_crash.log"
 
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    filemode="w",  # 'w' para reiniciar el log en cada ejecución y no llenarlo de basura antigua
+    filemode="w",
 )
-
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     """Captura global de excepciones no manejadas."""
@@ -22,49 +21,39 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
 
-    # Registrar el error completo en el archivo
-    logging.critical(
-        "Excepción No Controlada (Crash):",
-        exc_info=(exc_type, exc_value, exc_traceback),
-    )
+    logging.critical("Excepción No Controlada:", exc_info=(exc_type, exc_value, exc_traceback))
+    sys.__stderr__.write(f"\n[FATAL ERROR] Revisa {LOG_FILE} para detalles.\n")
+    sys.__stderr__.write("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
-    # Mostrar también en stderr para feedback visual inmediato
-    sys.__stderr__.write(
-        "\n[FATAL ERROR] Se ha generado un reporte en omega_crash.log\n"
-    )
-    sys.__stderr__.write(
-        "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-    )
-
-
-# Enganchar el manejador global
 sys.excepthook = handle_exception
 
-
 def main():
-    logging.info("=== Iniciando Sesión de Omega-ZSH ===")
+    # Si hay argumentos (ej: oz stats), delegar a la herramienta CLI oz_tool.py
+    if len(sys.argv) > 1:
+        logging.info(f"Delegando comando CLI: {sys.argv[1:]}")
+        try:
+            from omega_zsh.cli.oz_tool import main as cli_main
+            cli_main()
+            return
+        except Exception as e:
+            logging.error(f"Error en delegación CLI: {e}", exc_info=True)
+            print(f"Error ejecutando comando CLI: {e}")
+            sys.exit(1)
 
+    # Si no hay argumentos, lanzar la interfaz visual (TUI)
+    logging.info("Iniciando Interfaz Visual (TUI)...")
     try:
-        # Importación diferida dentro del try/except para capturar errores de dependencia
-        logging.info("Cargando módulos de UI...")
         from omega_zsh.ui.app import OmegaApp
-
-        logging.info("Inicializando aplicación...")
         app = OmegaApp()
-
-        logging.info("Lanzando Loop Principal (TUI)...")
         app.run()
-
-        logging.info("Aplicación cerrada correctamente.")
-
     except ImportError as e:
         logging.critical(f"Error de Dependencia: {e}", exc_info=True)
-        print(f"Error crítico: Faltan dependencias. Revisa omega_crash.log. ({e})")
+        print(f"Error: Faltan dependencias para la UI. ({e})")
         sys.exit(1)
     except Exception as e:
-        logging.critical(f"Error en Runtime: {e}", exc_info=True)
+        logging.critical(f"Error en TUI: {e}", exc_info=True)
+        print(f"Error al iniciar la interfaz visual. Revisa {LOG_FILE}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
