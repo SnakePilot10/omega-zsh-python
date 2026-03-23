@@ -123,17 +123,15 @@ if [ ! -d "$VENV_DIR" ]; then
     fi
 fi
 
-# --- 4. INSTALACIÓN DE LA APLICACIÓN Y DEPENDENCIAS ---
+# --- 5. INSTALACIÓN DE LA APLICACIÓN Y DEPENDENCIAS ---
 echo -e "${BLUE}>> Instalando la aplicación y sus dependencias...${NC}"
 "$VENV_DIR/bin/pip" install --upgrade pip --quiet
-"$VENV_DIR/bin/pip" install "$PROJECT_DIR" --quiet
-
-if [ $? -ne 0 ]; then
+"$VENV_DIR/bin/pip" install "$PROJECT_DIR" --quiet || {
     echo -e "${RED}❌ Falló la instalación de Omega-ZSH.${NC}"
     exit 1
-fi
+}
 
-# --- 5. CREAR ENLACES SIMBÓLICOS PARA ACCESO GLOBAL ---
+# --- 6. CREAR ENLACES SIMBÓLICOS PARA ACCESO GLOBAL ---
 echo -e "${BLUE}>> Creando enlaces simbólicos para 'omega' y 'oz'...${NC}"
 
 # Definir directorio de destino para binarios
@@ -167,11 +165,11 @@ if [ $? -ne 0 ]; then
     cp "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || true
 fi
 
-# --- 6. FINALIZACIÓN ---
+# --- 7. FINALIZACIÓN ---
 echo -e "${GREEN}>> ✅ ¡Instalación completada!${NC}"
 echo -e "Ahora puedes ejecutar ${BLUE}'omega'${NC} o ${BLUE}'oz'${NC}."
 
-# --- 7. CONFIGURAR ZSH COMO SHELL PREDETERMINADA ---
+# --- 8. CONFIGURAR ZSH COMO SHELL PREDETERMINADA ---
 REAL_USER="${SUDO_USER:-$(whoami)}"
 
 # Obtener la home del usuario real
@@ -212,14 +210,14 @@ else
     echo -e "${RED}❌ Zsh no está instalado.${NC}"
 fi
 
-# --- 8. VERIFICAR CONFIGURACIÓN INICIAL ---
+# --- 9. VERIFICAR CONFIGURACIÓN INICIAL ---
 # Si no existe .zshrc, sugerir correr omega
 if [ ! -f "$REAL_HOME/.zshrc" ]; then
     echo -e "${BLUE}>> AVISO: No se detectó un archivo .zshrc.${NC}"
     echo -e "   Para generar tu configuración, ejecuta: ${GREEN}omega${NC}"
 fi
 
-# --- 9. FINALIZACIÓN Y LANZAMIENTO ---
+# --- 10. FINALIZACIÓN Y LANZAMIENTO ---
 # Si estamos en una terminal (stdout es TTY), lanzamos zsh ahora mismo.
 if [ -t 1 ]; then
     echo -e "${BLUE}>> Cambiando a Zsh...${NC}"
