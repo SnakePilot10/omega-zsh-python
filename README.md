@@ -1,4 +1,4 @@
-# ⚡ OMEGA-ZSH // Python Edition
+# OMEGA-ZSH
 
 [![Python](https://img.shields.io/badge/Python-3.13%2B-ff006e?style=for-the-badge&logo=python)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Termux_%7C_Linux-00f5ff?style=for-the-badge)](https://termux.dev/)
@@ -142,7 +142,7 @@ Los temas God Tier se almacenan en `omega_zsh/assets/themes/` y se enlazan autom
 | `monokai_block` | Monokai — Powerline |
 | `nord_block` | Nord — Powerline |
 | `rose_pine_block` | Rosé Pine — Powerline |
-| `samsung_powerline` | Samsung Blue/Red — Powerline (OMP port) |
+| `samsung_powerline` | Samsung Blue/Red — Powerline |
 | `solarized_block` | Solarized — Powerline |
 | `tokyo_block` | Tokyo Night — Powerline |
 
@@ -175,4 +175,4 @@ ruff check .             # Linting
 ```
 
 ---
-Copyright © 2026 SnakePilot10 · Janus & Tesavek ⚡
+Copyright © 2026 SnakePilot10
