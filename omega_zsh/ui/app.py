@@ -246,12 +246,35 @@ class OmegaApp(App):
             elif self.state.selected_header == "fastfetch":
                 header_cmd = "fastfetch"
 
+            # Separar plugins OMZ reales de herramientas binarias
+            from ..core.constants import BIN_PLUGINS
+            bin_set = set(BIN_PLUGINS)
+            omz_plugins = [p for p in self.state.selected_plugins if p not in bin_set]
+            active_tools = [p for p in self.state.selected_plugins if p in bin_set]
+
+            # Crear symlinks para temas Omega en custom/themes
+            import shutil as _shutil
+            custom_themes = self.context.omz_dir / "custom" / "themes"
+            custom_themes.mkdir(parents=True, exist_ok=True)
+            omega_themes_dir = self.context.project_root / "omega_zsh" / "assets" / "themes"
+            if omega_themes_dir.exists():
+                for tf in omega_themes_dir.glob("*.zsh-theme"):
+                    link = custom_themes / tf.name
+                    if not link.exists():
+                        link.symlink_to(tf)
+
             context_data = {
-                "theme": self.state.selected_theme,
-                "plugins": self.state.selected_plugins,
+                "version": "2.2.0",
+                "omz_dir": str(self.context.omz_dir),
+                "user_theme": self.state.selected_theme,
+                "root_theme": self.state.selected_root_theme,
+                "plugins": omz_plugins,
                 "header_cmd": header_cmd,
-                "project_root": str(self.context.project_root),
-                "omega_dir": str(self.context.omega_dir),
+                "is_termux": self.context.is_termux,
+                "active_tools": active_tools,
+                "default_user": "",
+                "personal_zsh": str(self.context.omega_dir / "personal.zsh"),
+                "custom_zsh": str(self.context.home / ".zshrc.custom"),
             }
 
             if generator.generate_zshrc(self.context.zshrc_path, context_data):

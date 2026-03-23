@@ -207,9 +207,11 @@ class ThemeSelectScreen(Horizontal):
             omz_dir = os.environ.get('ZSH', str(Path.home() / '.oh-my-zsh'))
             omz_lib = f'{omz_dir}/lib'
             cmd = (
-                f'export ZSH="{omz_dir}" && '
+                f'[[ -f ~/.cargo/env ]] && source ~/.cargo/env 2>/dev/null; export ZSH="{omz_dir}" && '
+                f'fpath=("{omz_dir}/functions" "{omz_dir}/completions" $fpath) && '
                 f'autoload -U colors && colors && '
                 f'autoload -Uz vcs_info && '
+                f'autoload -U compinit && '
                 f'for _f in {omz_lib}/git.zsh {omz_lib}/theme-and-appearance.zsh'
                 f' {omz_lib}/functions.zsh; do [[ -f $_f ]] && source $_f; done && '
                 f'source {theme.path} && '
@@ -219,16 +221,18 @@ class ThemeSelectScreen(Horizontal):
                 [zsh_bin, "-c", cmd], capture_output=True, text=True, timeout=1.5
             )
 
-            if result.returncode == 0:
-                # Rich maneja ANSI automáticamente con Text.from_ansi
+            # Mostrar stdout si existe, independiente del returncode
+            # (los temas OMZ suelen generar warnings no fatales)
+            if result.stdout.strip():
                 try:
                     ansi_text = Text.from_ansi(result.stdout)
                     preview_box.update(ansi_text)
                 except Exception as e:
                     preview_box.update(Text(f"Error parsing ANSI: {e}", style="red"))
+            elif result.stderr:
+                preview_box.update(Text(f"Preview Error:\n{result.stderr}", style="dim red"))
             else:
-                err_msg = result.stderr or "Unknown error"
-                preview_box.update(Text(f"Preview Error:\n{err_msg}", style="dim red"))
+                preview_box.update(Text("Preview vacío (tema sin PROMPT definido)", style="dim"))
         except subprocess.TimeoutExpired:
             preview_box.update(Text("Preview timed out (Theme too slow?)", style="orange"))
         except Exception as e:
