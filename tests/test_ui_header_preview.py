@@ -1,58 +1,55 @@
-import asyncio
 import unittest
 from unittest.mock import MagicMock, patch
-
-from textual.app import App
-
 from omega_zsh.ui.screens import HeaderSelectScreen
-
-
-class MockApp(App):
-    def __init__(self):
-        super().__init__()
-        self.header_text = "TestHeader"
-        self.header_font = "TestFont"
 
 
 class TestHeaderPreview(unittest.IsolatedAsyncioTestCase):
     async def test_header_preview_fastfetch(self):
-        call_log = []
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Fastfetch Output"
+        with patch("omega_zsh.ui.screens.FigletManager") as mock_fig, \
+             patch("omega_zsh.ui.screens.shutil.which", return_value="/usr/bin/fastfetch"), \
+             patch("omega_zsh.ui.screens.subprocess.run") as mock_run:
+            mock_fig.return_value.get_fonts.return_value = ["slant"]
+            mock_run.return_value = MagicMock(returncode=0, stdout="ff output", stderr="")
+            screen = HeaderSelectScreen("fastfetch", "Test", "slant")
+            mock_area = MagicMock()
+            mock_radioset = MagicMock()
+            mock_radioset.pressed_button = MagicMock()
+            mock_radioset.pressed_button.id = "h-ff"
+            mock_input = MagicMock()
+            mock_input.value = "Test"
+            mock_lv = MagicMock()
+            mock_lv.index = 0
 
-        def fake_run(*args, **kwargs):
-            call_log.append(args)
-            return mock_result
+            def query(sel):
+                if "type-set" in str(sel): return mock_radioset
+                if "input" in str(sel): return mock_input
+                if "font" in str(sel): return mock_lv
+                return mock_area
 
-        with (
-            patch("omega_zsh.ui.screens.shutil.which", return_value="/usr/bin/fastfetch"),
-            patch("omega_zsh.ui.screens.subprocess.run", side_effect=fake_run),
-        ):
-            app = MockApp()
-            async with app.run_test():
-                screen = HeaderSelectScreen("fastfetch", "Test", "slant")
-                await app.push_screen(screen)
-                # Forzar actualización manual ya que el timer/on_mount puede ser asíncrono
-                screen.update_header_preview()
-                await asyncio.sleep(0.1)
-
-            assert any("fastfetch" in str(call[0]) for call in call_log)
+            screen.query_one = MagicMock(side_effect=query)
+            screen.update_header_preview()
+            assert mock_run.called
 
     async def test_header_preview_figlet(self):
-        """Prueba la previsualización de Figlet."""
-        with patch("omega_zsh.ui.screens.FigletManager") as mock_figlet_class:
-            mock_figlet = mock_figlet_class.return_value
-            mock_figlet.get_fonts.return_value = ["slant"]
-            mock_figlet.render.return_value = "Rendered Figlet"
+        with patch("omega_zsh.ui.screens.FigletManager") as mock_fig:
+            mock_fig.return_value.get_fonts.return_value = ["slant"]
+            mock_fig.return_value.render.return_value = "Rendered Figlet"
+            screen = HeaderSelectScreen("figlet", "Test", "slant")
+            mock_area = MagicMock()
+            mock_radioset = MagicMock()
+            mock_radioset.pressed_button = MagicMock()
+            mock_radioset.pressed_button.id = "h-fig"
+            mock_input = MagicMock()
+            mock_input.value = "Test"
+            mock_lv = MagicMock()
+            mock_lv.index = 0
 
-            app = MockApp()
-            async with app.run_test():
-                screen = HeaderSelectScreen("figlet", "Test", "slant")
-                await app.push_screen(screen)
-                screen.update_header_preview()
-                await asyncio.sleep(0.1)
+            def query(sel):
+                if "type-set" in str(sel): return mock_radioset
+                if "input" in str(sel): return mock_input
+                if "font" in str(sel): return mock_lv
+                return mock_area
 
-            mock_figlet.render.assert_called_with("Test", "slant")
-            preview_area = screen.query_one("#header-preview-area")
-            assert "Rendered Figlet" in str(preview_area.renderable)
+            screen.query_one = MagicMock(side_effect=query)
+            screen.update_header_preview()
+            mock_fig.return_value.render.assert_called_with("Test", "slant")

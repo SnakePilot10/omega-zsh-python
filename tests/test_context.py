@@ -29,7 +29,7 @@ def test_detect_termux(mock_check, mock_split, mock_platform):
     with (
         patch.dict("os.environ", env, clear=True),
         patch(
-            "shutil.which",
+            "omega_zsh.core.context.which",
             side_effect=lambda x: "/usr/bin/nala" if x == "nala" else None,
         ),
     ):
@@ -132,7 +132,7 @@ def test_detect_fallback(mock_platform):
         patch("pathlib.Path.exists", return_value=False),
     ):
         with patch(
-            "shutil.which", side_effect=lambda x: "/usr/bin/apk" if x == "apk" else None
+            "omega_zsh.core.context.which", side_effect=lambda x: "/usr/bin/apk" if x == "apk" else None
         ):
             ctx = SystemContext()
             assert ctx.package_manager_type == "apk"

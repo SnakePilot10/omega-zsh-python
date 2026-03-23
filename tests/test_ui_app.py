@@ -1,67 +1,38 @@
 from unittest.mock import MagicMock, patch
-
-import pytest
-
 from omega_zsh.ui.app import OmegaApp
 
 
-@pytest.fixture
-def mock_app():
-    """Fixture to create a mock OmegaApp instance."""
-    with patch("omega_zsh.ui.app.SystemContext"):
-        with patch("omega_zsh.ui.app.StateManager"):
-            app = OmegaApp()
-            # Mock internal components to avoid side effects
-            app.context = MagicMock()
-            app.state_manager = MagicMock()
-            app.push_screen = MagicMock()
-            return app
+def test_get_all_themes_discovery():
+    with patch("omega_zsh.ui.app.SystemContext"), \
+         patch("omega_zsh.ui.app.StateManager"):
+        app = OmegaApp()
+        app.context = MagicMock()
 
+        t1 = MagicMock(); t1.stem = "omega_theme"
+        omega_dir = MagicMock(); omega_dir.exists.return_value = True
+        omega_dir.glob.return_value = [t1]
 
-def test_get_all_themes_discovery(mock_app):
-    """Test that _get_all_themes discovers and merges themes correctly from multiple sources."""
+        t2 = MagicMock(); t2.stem = "robbyrussell"
+        omz_themes_dir = MagicMock(); omz_themes_dir.exists.return_value = True
+        omz_themes_dir.glob.return_value = [t2]
 
-    # 1. Setup Omega Themes
-    mock_omega_dir = MagicMock()
-    mock_omega_dir.exists.return_value = True
-    theme1 = MagicMock()
-    theme1.stem = "omega_theme"
-    mock_omega_dir.glob.return_value = [theme1]
+        t3 = MagicMock(); t3.stem = "my_custom"
+        custom_dir = MagicMock(); custom_dir.exists.return_value = True
+        custom_dir.glob.return_value = [t3]
 
-    # 2. Setup OMZ Themes
-    mock_omz_dir = MagicMock()
-    mock_omz_dir.exists.return_value = True
-    theme2 = MagicMock()
-    theme2.stem = "robbyrussell"
-    mock_omz_dir.glob.return_value = [theme2]
+        custom_mock = MagicMock()
+        custom_mock.__truediv__ = MagicMock(return_value=custom_dir)
 
-    # 3. Setup User Custom Themes
-    mock_user_dir = MagicMock()
-    mock_user_dir.exists.return_value = True
-    theme3 = MagicMock()
-    theme3.stem = "my_custom"
-    mock_user_dir.glob.return_value = [theme3]
+        def omz_div(x):
+            if x == "themes": return omz_themes_dir
+            if x == "custom": return custom_mock
+            return MagicMock()
 
-    # Configure the app context paths
-    # (self.context.project_root / "omega_zsh" / "assets" / "themes")
-    mock_app.context.project_root.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = (
-        mock_omega_dir
-    )
+        app.context.omz_dir.__truediv__ = MagicMock(side_effect=omz_div)
+        app.context.project_root.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = omega_dir
 
-    # (self.context.omz_dir / "themes")
-    mock_app.context.omz_dir.__truediv__.side_effect = (
-        lambda x: mock_omz_dir
-        if x == "themes"
-        else (mock_user_dir if x == "custom/themes" else MagicMock())
-    )
-
-    # EXECUTE
-    themes = mock_app._get_all_themes()
-
-    # ASSERT
-    theme_ids = [t.id for t in themes]
-    assert "omega_theme" in theme_ids
-    assert "robbyrussell" in theme_ids
-    assert "my_custom" in theme_ids
-    # We expect 3 themes if they don't overlap
-    assert len(themes) >= 3
+        themes = app._get_all_themes()
+        ids = [t.id for t in themes]
+        assert "omega_theme" in ids
+        assert "robbyrussell" in ids
+        assert "my_custom" in ids

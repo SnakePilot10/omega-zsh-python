@@ -1,56 +1,36 @@
 from unittest.mock import MagicMock, patch
-from omega_zsh.ui.screens import ThemeSelectScreen
 from omega_zsh.core.constants import ThemeDef
-from textual.widgets import RadioButton
+from omega_zsh.ui.screens import ThemeSelectScreen
 
 
-@patch("omega_zsh.ui.screens.Horizontal")
-@patch("omega_zsh.ui.screens.Vertical")
-@patch("omega_zsh.ui.screens.RadioSet")
-def test_theme_select_screen_sanitization(mock_rs, mock_v, mock_h):
-    # Setup mocks to act as context managers
-    for m in [mock_h, mock_v, mock_rs]:
-        m.return_value.__enter__.return_value = MagicMock()
-        m.return_value.__exit__.return_value = None
-
-    # Setup
+def test_theme_ids_are_numeric():
+    """IDs de ListItem son índices numéricos para evitar BadIdentifier."""
     themes = [
-        ThemeDef(id="standard", path="/path/to/standard", desc="Standard"),
-        ThemeDef(id="wezm+", path="/path/to/wezm", desc="Plus Theme"),
-        ThemeDef(id="my_theme", path="/path/to/my_theme", desc="Underscore"),
+        ThemeDef(id="standard",  path="/p/standard",  desc="Standard"),
+        ThemeDef(id="wezm+",     path="/p/wezm",      desc="Plus Theme"),
+        ThemeDef(id="my_theme",  path="/p/my_theme",  desc="Underscore"),
     ]
-    current_theme = "standard"
+    screen = ThemeSelectScreen(themes, "standard")
 
-    screen = ThemeSelectScreen(themes, current_theme)
+    items = []
+    class FakeCtx:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
 
-    # Act: Generate widgets via compose
-    widgets = list(screen.compose())
+    with patch("omega_zsh.ui.screens.Vertical", return_value=FakeCtx()), \
+         patch("omega_zsh.ui.screens.ListView") as mock_lv:
+        mock_lv.return_value = MagicMock()
 
-    # Extract RadioButtons
-    radio_buttons = [w for w in widgets if isinstance(w, RadioButton)]
+        with patch("omega_zsh.ui.screens.ListItem") as mock_li, \
+             patch("omega_zsh.ui.screens.Label"):
+            mock_li.side_effect = lambda *a, **kw: MagicMock(id=kw.get("id"))
+            list(screen.compose())
+            ids = [call.kwargs.get("id") for call in mock_li.call_args_list]
 
-    # Debug info
-    print(f"Found RadioButtons with IDs: {[rb.id for rb in radio_buttons]}")
-
-    # Verification
-    # Map label text to ID
-    rb_map = {rb.label.plain: rb.id for rb in radio_buttons}
-
-    # Debug print
-    print(f"Radio Buttons Map: {rb_map}")
-
-    # 1. Standard
-    # "standard" -> "Standard"
-    assert rb_map["Standard"] == "t-standard"
-
-    # 2. Invalid char (+)
-    # "wezm+" -> clean: "wezm+" -> replace _,- with space -> "wezm+" -> title() -> "Wezm+"
-    # Wait, strictly following logic:
-    # clean_name = theme.id.replace('_', ' ').replace('-', ' ').strip()
-    # "wezm+" -> "wezm+"
-    # title() -> "Wezm+"
-    assert rb_map["Wezm+"] == "t-wezm-"
-
-    # 3. Underscore
-    # "my_theme" -> "my theme" -> "My Theme"
-    assert rb_map["My Theme"] == "t-my-theme"
+    assert "t-0" in ids
+    assert "t-1" in ids
+    assert "t-2" in ids
+    # Verificar que no hay IDs con caracteres inválidos
+    for id_ in ids:
+        if id_:
+            assert "+" not in id_
