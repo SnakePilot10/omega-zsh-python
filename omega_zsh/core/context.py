@@ -41,7 +41,7 @@ class SystemContext:
         self.project_root = Path(__file__).parent.parent.parent
 
         # Directorio de estado persistente de Omega (~/.local/share/omega-zsh)
-        self.omega_dir = self.home / ".local" / "share" / "omega-zsh"
+        self.omega_dir = self.home / ".omega-zsh"
 
         # Directorio de Oh My Zsh (respeta variable de entorno $ZSH si existe)
         self.omz_dir = Path(os.environ.get("ZSH", str(self.home / ".oh-my-zsh")))

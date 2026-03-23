@@ -290,11 +290,14 @@ class HeaderSelectScreen(Vertical):
     def get_selected(self) -> tuple[str, str, str]:
         # Obtener tipo
         h_set = self.query_one("#header-type-set")
-        if h_set.pressed_button.id == "h-ff":
+        btn = h_set.pressed_button
+        if btn is None:
+            h_type = self.selected_header
+        elif btn.id == "h-ff":
             h_type = "fastfetch"
-        elif h_set.pressed_button.id == "h-fig":
+        elif btn.id == "h-fig":
             h_type = "figlet"
-        elif h_set.pressed_button.id == "h-cow":
+        elif btn.id == "h-cow":
             h_type = "cowsay"
         else:
             h_type = "none"
