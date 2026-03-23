@@ -65,6 +65,22 @@ class OmegaApp(App):
         background: #2b0b52;
         color: #39ff14;
     }
+    #header-config-row {
+        height: 14;
+    }
+    #header-type-col {
+        width: 20;
+    }
+    #header-text-col {
+        width: 1fr;
+    }
+    #font-list {
+        height: 9;
+        border: solid #00ffff;
+    }
+    #header-input {
+        margin-bottom: 1;
+    }
     #preview-area {
         height: 1fr;
         border: double #00ffff;
@@ -123,7 +139,7 @@ class OmegaApp(App):
                 )
             with TabPane("Headers", id="tab-headers"):
                 yield HeaderSelectScreen(
-                    selected_header=self.state.header_type,
+                    selected_header=self.state.selected_header,
                     header_text=self.state.header_text,
                     selected_font=self.state.header_font,
                 )
@@ -196,7 +212,7 @@ class OmegaApp(App):
                 h_type, h_text, h_font = header_screen.get_selected()
             except Exception:
                 h_type, h_text, h_font = (
-                    self.state.header_type,
+                    self.state.selected_header,
                     self.state.header_text,
                     self.state.header_font,
                 )
@@ -204,7 +220,7 @@ class OmegaApp(App):
             current_state = AppState(
                 selected_plugins=selected_plugins,
                 selected_theme=selected_theme,
-                header_type=h_type,
+                selected_header=h_type,
                 header_text=h_text,
                 header_font=h_font,
             )
@@ -223,11 +239,11 @@ class OmegaApp(App):
 
             # Generar Header Figlet si es necesario
             header_cmd = ""
-            if self.state.header_type == "figlet":
+            if self.state.selected_header == "figlet":
                 header_cmd = FigletManager().generate_safe_command(
                     self.state.header_text, self.state.header_font
                 )
-            elif self.state.header_type == "fastfetch":
+            elif self.state.selected_header == "fastfetch":
                 header_cmd = "fastfetch"
 
             context_data = {

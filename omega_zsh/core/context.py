@@ -31,6 +31,23 @@ class SystemContext:
         elif self.os_type == "linux":
             self._detect_linux_distro()
 
+        # Rutas del proyecto y del entorno
+        self._detect_paths()
+
+
+    def _detect_paths(self):
+        """Calcula rutas críticas del proyecto y del entorno del usuario."""
+        # Raíz del proyecto: sube desde core/ → omega_zsh/ → project_root/
+        self.project_root = Path(__file__).parent.parent.parent
+
+        # Directorio de estado persistente de Omega (~/.local/share/omega-zsh)
+        self.omega_dir = self.home / ".local" / "share" / "omega-zsh"
+
+        # Directorio de Oh My Zsh (respeta variable de entorno $ZSH si existe)
+        self.omz_dir = Path(os.environ.get("ZSH", str(self.home / ".oh-my-zsh")))
+
+        # Ruta al .zshrc del usuario
+        self.zshrc_path = self.home / ".zshrc"
     def _detect_android_context(self):
         """Detección específica para entornos Android/Termux."""
         self.distro_id = "android"

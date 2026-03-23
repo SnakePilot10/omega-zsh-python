@@ -1,10 +1,10 @@
 import logging
 import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
 
-from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from textual import on
@@ -54,7 +54,10 @@ class DashboardScreen(Static):
             f"[bold #39ff14]DISCO:[/]   [white]{stats['disk_usage']}[/]\n"
             f"[bold yellow]UPTIME:[/]  [white]{stats['uptime']}[/]"
         )
-        yield Panel(telemetry, title="[bold #ff00ff]◄ STATUS OMEGA ►[/]", border_style="#00ffff")
+        yield Static(
+            f"[bold #ff00ff]◄ STATUS OMEGA ►[/]\n{telemetry}",
+            id="dashboard-telemetry"
+        )
 
         # Atajos rápidos
         help_text = (
@@ -62,7 +65,10 @@ class DashboardScreen(Static):
             "• [bold #39ff14]I[/]: Full Installation\n"
             "• [bold #39ff14]Q[/]: Exit"
         )
-        yield Panel(help_text, title="[bold #ff00ff]◄ SHORTCUTS ►[/]", border_style="#00ffff")
+        yield Static(
+            f"[bold #ff00ff]◄ SHORTCUTS ►[/]\n{help_text}",
+            id="dashboard-shortcuts"
+        )
 
     def _get_stats(self):
         """Obtiene estadísticas del sistema sin depender de psutil."""
@@ -124,7 +130,9 @@ class PluginSelectScreen(Vertical):
             options.append(Selection(p.id, p.id, p.id in self.selected_plugins))
 
         for p in self.bin_plugins:
-            options.append(Selection(f"📦 {p.id}", p.id, p.id in self.selected_plugins))
+            # bin_plugins puede ser lista de strings o de PluginDef
+            pid = p if isinstance(p, str) else p.id
+            options.append(Selection(f"📦 {pid}", pid, pid in self.selected_plugins))
 
         yield SelectionList(*options, id="plugin-list")
 
@@ -149,7 +157,7 @@ class ThemeSelectScreen(Horizontal):
             selected_index = 0
             for i, t in enumerate(self.all_themes):
                 # Prefijar ID con 't-' para cumplir reglas de Textual (no empezar con número)
-                items.append(ListItem(Label(f"{t.id} [dim]({t.origin})[/]"), id=f"t-{t.id}"))
+                items.append(ListItem(Label(f"{t.id} [dim]({t.desc})[/]"), id=f"t-{i}"))
                 if t.id == self.selected_theme:
                     selected_index = i
 
@@ -196,7 +204,17 @@ class ThemeSelectScreen(Horizontal):
             # 1. Sourcear el tema
             # 2. Forzar expansión de PROMPT
             # 3. Imprimir el prompt renderizado
-            cmd = f'source {theme.path} && print -P "$PROMPT" && print -P "$RPROMPT"'
+            omz_dir = os.environ.get('ZSH', str(Path.home() / '.oh-my-zsh'))
+            omz_lib = f'{omz_dir}/lib'
+            cmd = (
+                f'export ZSH="{omz_dir}" && '
+                f'autoload -U colors && colors && '
+                f'autoload -Uz vcs_info && '
+                f'for _f in {omz_lib}/git.zsh {omz_lib}/theme-and-appearance.zsh'
+                f' {omz_lib}/functions.zsh; do [[ -f $_f ]] && source $_f; done && '
+                f'source {theme.path} && '
+                f'print -P "$PROMPT" && print -P "$RPROMPT"'
+            )
             result = subprocess.run(
                 [zsh_bin, "-c", cmd], capture_output=True, text=True, timeout=1.5
             )
@@ -242,6 +260,7 @@ class HeaderSelectScreen(Vertical):
                     RadioButton("None", id="h-none", value=(self.selected_header == "none")),
                     RadioButton("Fastfetch", id="h-ff", value=(self.selected_header == "fastfetch")),
                     RadioButton("Figlet", id="h-fig", value=(self.selected_header == "figlet")),
+                    RadioButton("Cowsay", id="h-cow", value=(self.selected_header == "cowsay")),
                     id="header-type-set",
                 )
 
@@ -253,7 +272,7 @@ class HeaderSelectScreen(Vertical):
                 selected_idx = 0
                 items = []
                 for i, f in enumerate(fonts):
-                    items.append(ListItem(Label(f), id=f"font-{f}"))
+                    items.append(ListItem(Label(f), id=f"font-{i}"))
                     if f == self.selected_font:
                         selected_idx = i
 
@@ -271,6 +290,8 @@ class HeaderSelectScreen(Vertical):
             h_type = "fastfetch"
         elif h_set.pressed_button.id == "h-fig":
             h_type = "figlet"
+        elif h_set.pressed_button.id == "h-cow":
+            h_type = "cowsay"
         else:
             h_type = "none"
 
@@ -296,6 +317,23 @@ class HeaderSelectScreen(Vertical):
         if h_type == "figlet":
             art = self.figlet.render(text, font)
             preview_area.update(Text(art))
+            return
+
+        if h_type == "cowsay":
+            import shutil as _shutil
+            cow_bin = _shutil.which("cowsay")
+            if not cow_bin:
+                preview_area.update(Text("cowsay no encontrado. Instala con: pkg install cowsay", style="red"))
+                return
+            try:
+                import subprocess as _sp
+                result = _sp.run([cow_bin, text or "Omega ZSH"], capture_output=True, text=True, timeout=2.0)
+                if result.returncode == 0:
+                    preview_area.update(Text(result.stdout))
+                else:
+                    preview_area.update(Text(f"Error: {result.stderr}", style="red"))
+            except Exception as e:
+                preview_area.update(Text(f"Error: {e}", style="red"))
             return
 
         if h_type == "fastfetch":
