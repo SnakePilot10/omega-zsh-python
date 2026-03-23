@@ -29,41 +29,41 @@ class OmegaApp(App):
     SUBTITLE = "Elite Python Edition"
     CSS = """
     Screen {
-        background: #0d0221;
-        color: #00ffff;
+        background: #020408;
+        color: #00f5ff;
     }
     Header {
-        background: #ff00ff;
+        background: #ff006e;
         color: white;
         text-style: bold;
     }
     Footer {
-        background: #0d0221;
-        color: #39ff14;
+        background: #020408;
+        color: #00ff9f;
     }
     TabbedContent {
         height: 1fr;
     }
     TabPane {
         padding: 1 2;
-        background: #0d0221;
+        background: #020408;
     }
     Tabs {
-        background: #1a0a33;
+        background: #060d14;
         border: none;
     }
     Tabs > Underline {
-        background: #ff00ff;
+        background: #ff006e;
     }
     Tab {
-        color: #00ffff;
+        color: #00f5ff;
     }
     Tab:hover {
-        background: #2b0b52;
+        background: #0d1f2d;
     }
     Tab.--active {
-        background: #2b0b52;
-        color: #39ff14;
+        background: #0d1f2d;
+        color: #00ff9f;
     }
     #header-config-row {
         height: 14;
@@ -76,14 +76,14 @@ class OmegaApp(App):
     }
     #font-list {
         height: 9;
-        border: solid #00ffff;
+        border: solid #00f5ff;
     }
     #header-input {
         margin-bottom: 1;
     }
     #preview-area {
         height: 1fr;
-        border: double #00ffff;
+        border: double #00f5ff;
         background: #000000;
         padding: 1 2;
         margin: 1 0;

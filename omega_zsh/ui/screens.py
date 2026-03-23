@@ -41,32 +41,32 @@ class DashboardScreen(Static):
         stats = self._get_stats()
 
         header_art = Text.from_markup(
-            "[bold #ff00ff]OMEGA[/][bold #00ffff] ZSH[/]\n"
-            "[italic #39ff14]Elite Terminal Experience[/]"
+            "[bold #ff006e]OMEGA[/][bold #00f5ff] ZSH[/]\n"
+            "[italic #00ff9f]Elite Terminal Experience[/]"
         )
 
         yield Static(header_art, id="dashboard-title")
 
         # Telemetría del sistema
         telemetry = (
-            f"[bold #00ffff]SISTEMA:[/] [white]{stats['os']}[/]\n"
-            f"[bold #ff00ff]MEMORIA:[/] [white]{stats['mem_usage']}[/]\n"
-            f"[bold #39ff14]DISCO:[/]   [white]{stats['disk_usage']}[/]\n"
+            f"[bold #00f5ff]SISTEMA:[/] [white]{stats['os']}[/]\n"
+            f"[bold #ff006e]MEMORIA:[/] [white]{stats['mem_usage']}[/]\n"
+            f"[bold #00ff9f]DISCO:[/]   [white]{stats['disk_usage']}[/]\n"
             f"[bold yellow]UPTIME:[/]  [white]{stats['uptime']}[/]"
         )
         yield Static(
-            f"[bold #ff00ff]◄ STATUS OMEGA ►[/]\n{telemetry}",
+            f"[bold #ff006e]◄ STATUS OMEGA ►[/]\n{telemetry}",
             id="dashboard-telemetry"
         )
 
         # Atajos rápidos
         help_text = (
-            "• [bold #39ff14]A[/]: Apply config (Fast)\n"
-            "• [bold #39ff14]I[/]: Full Installation\n"
-            "• [bold #39ff14]Q[/]: Exit"
+            "• [bold #00ff9f]A[/]: Apply config (Fast)\n"
+            "• [bold #00ff9f]I[/]: Full Installation\n"
+            "• [bold #00ff9f]Q[/]: Exit"
         )
         yield Static(
-            f"[bold #ff00ff]◄ SHORTCUTS ►[/]\n{help_text}",
+            f"[bold #ff006e]◄ SHORTCUTS ►[/]\n{help_text}",
             id="dashboard-shortcuts"
         )
 
@@ -120,7 +120,7 @@ class PluginSelectScreen(Vertical):
         self.selected_plugins = selected_plugins  # List[str]
 
     def compose(self) -> ComposeResult:
-        yield Label("[bold #ff00ff]SELECCIÓN DE PLUGINS Y BINARIOS[/]")
+        yield Label("[bold #ff006e]SELECCIÓN DE PLUGINS Y BINARIOS[/]")
         yield Label("[dim]Usa [bold]Espacio[/] para marcar/desmarcar[/]", id="plugin-hint")
 
         # Construir opciones para la lista
@@ -152,7 +152,7 @@ class ThemeSelectScreen(Horizontal):
     def compose(self) -> ComposeResult:
         # Columna Izquierda: Lista
         with Vertical(id="theme-list-container"):
-            yield Label("[bold #ff00ff]TEMAS DISPONIBLES[/]")
+            yield Label("[bold #ff006e]TEMAS DISPONIBLES[/]")
             items = []
             selected_index = 0
             for i, t in enumerate(self.all_themes):
@@ -167,7 +167,7 @@ class ThemeSelectScreen(Horizontal):
 
         # Columna Derecha: Preview
         with Vertical(id="theme-preview-container"):
-            yield Label("[bold #00ffff]PREVISUALIZACIÓN[/]")
+            yield Label("[bold #00f5ff]PREVISUALIZACIÓN[/]")
             yield Static("Select a theme to see preview...", id="theme-preview-box")
 
     def get_selected(self) -> str:
@@ -255,7 +255,7 @@ class HeaderSelectScreen(Vertical):
         self.figlet = FigletManager()
 
     def compose(self) -> ComposeResult:
-        yield Label("[bold #ff00ff]CONFIGURACIÓN DE HEADER[/]")
+        yield Label("[bold #ff006e]CONFIGURACIÓN DE HEADER[/]")
 
         with Horizontal(id="header-config-row"):
             with Vertical(id="header-type-col"):
@@ -284,7 +284,7 @@ class HeaderSelectScreen(Vertical):
                 lv.index = selected_idx
                 yield lv
 
-        yield Label("[bold #00ffff]PREVIEW:[/]")
+        yield Label("[bold #00f5ff]PREVIEW:[/]")
         yield Static("", id="header-preview-area")
 
     def get_selected(self) -> tuple[str, str, str]:
@@ -375,7 +375,7 @@ class InstallScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="install-container"):
-            yield Label("[bold #ff00ff]PROCESO DE INSTALACIÓN OMEGA[/]")
+            yield Label("[bold #ff006e]PROCESO DE INSTALACIÓN OMEGA[/]")
             yield ProgressBar(total=100, show_eta=False, id="install-progress")
             yield Log(id="install-log")
             yield Button("Cancelar", variant="error", id="btn-cancel")
@@ -390,7 +390,7 @@ class InstallScreen(Screen):
 
     def on_installation_finished(self, success: bool) -> None:
         if success:
-            self.query_one(Log).write_line("\n[bold #39ff14]¡INSTALACIÓN COMPLETADA CON ÉXITO![/]")
+            self.query_one(Log).write_line("\n[bold #00ff9f]¡INSTALACIÓN COMPLETADA CON ÉXITO![/]")
             self.query_one(ProgressBar).progress = 100
             self.query_one("#btn-finish").disabled = False
             self.query_one("#btn-cancel").disabled = True

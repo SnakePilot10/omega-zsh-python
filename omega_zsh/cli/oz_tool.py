@@ -141,7 +141,12 @@ def inspect_plugin(plugin_name):
                 break
 
     # Si no tiene script .zsh, es una herramienta binaria
-    if not plugin_path:
+    # Verificar contra lista oficial de binarios
+    try:
+        from omega_zsh.core.constants import BIN_PLUGINS as _BIN
+    except ImportError:
+        _BIN = []
+    if not plugin_path or plugin_name in _BIN:
         return {
             "found": False,
             "is_binary": True,
@@ -172,13 +177,13 @@ def inspect_plugin(plugin_name):
 
 def benchmark_shell():
     """Mide la latencia con precisión y ofrece un diagnóstico inteligente basado en plugins activos."""
-    console.print("[bold #00ffff]🚀 INICIANDO ANÁLISIS DE HIPERVELOCIDAD (Hyperdrive)...[/]")
+    console.print("[bold #00f5ff]🚀 INICIANDO ANÁLISIS DE HIPERVELOCIDAD (Hyperdrive)...[/]")
 
     times = []
     active_items = get_omega_active_items()
 
     with Progress(
-        SpinnerColumn(style="bold #ff00ff"),
+        SpinnerColumn(style="bold #ff006e"),
         TextColumn("[progress.description]{task.description}"),
         transient=True
     ) as progress:
@@ -204,16 +209,16 @@ def benchmark_shell():
 
     # Lógica de Diagnóstico
     if avg_ms < 150:
-        color, rating = "#39ff14", "⚡ DIOS DIGITAL (Instantáneo)"
-        advice = "[#39ff14]Tu sistema es una obra de arte de la optimización.[/]\n[white]No hay cuellos de botella detectados. Mantén tu configuración limpia.[/]"
+        color, rating = "#00ff9f", "⚡ DIOS DIGITAL (Instantáneo)"
+        advice = "[#00ff9f]Tu sistema es una obra de arte de la optimización.[/]\n[white]No hay cuellos de botella detectados. Mantén tu configuración limpia.[/]"
         steps = []
     elif avg_ms < 400:
-        color, rating = "#00ffff", "💎 ELITE CORE (Optimizado)"
-        advice = "[#00ffff]Rendimiento profesional.[/] [white]Tu shell es rápido, pero la carga de plugins visuales añade una latencia mínima.[/]"
+        color, rating = "#00f5ff", "💎 ELITE CORE (Optimizado)"
+        advice = "[#00f5ff]Rendimiento profesional.[/] [white]Tu shell es rápido, pero la carga de plugins visuales añade una latencia mínima.[/]"
         steps = ["Considera usar [bold]zsh-defer[/] para cargar plugins visuales en segundo plano."]
     else:
         # Casos de baja calificación (>400ms)
-        color = "yellow" if avg_ms < 800 else "#ff00ff"
+        color = "#ffe600" if avg_ms < 800 else "#ff006e"
         rating = "⚠️ SOBRECARGA" if avg_ms < 800 else "🔥 COLAPSO CRÍTICO"
 
         advice = f"[{color}]SE HA DETECTADO LAG EN EL ARRANQUE DEL SHELL.[/] [white]Tu terminal tarda demasiado en estar lista para la acción.[/]"
@@ -221,11 +226,11 @@ def benchmark_shell():
         steps = [
             "Ejecuta [bold cyan]zsh -i -c 'zprof'[/] para ver exactamente qué función está frenando el inicio.",
             "Desactiva plugins pesados en la TUI (oz) que no uses frecuentemente.",
-            "Evita comandos pesados como [bold magenta]'apt update'[/] o [bold magenta]'check-for-updates'[/] dentro de tu .zshrc."
+            "Evita comandos pesados como [bold #ff006e]'apt update'[/] o [bold #ff006e]'check-for-updates'[/] dentro de tu .zshrc."
         ]
 
         if "fastfetch" in active_items or "figlet_custom" in active_items:
-            steps.append("Tu [bold yellow]Header visual[/] está consumiendo tiempo de CPU. Prueba el modo 'none' para velocidad pura.")
+            steps.append("Tu [bold #ffe600]Header visual[/] está consumiendo tiempo de CPU. Prueba el modo 'none' para velocidad pura.")
 
         if detected_heavy:
             steps.append(f"Culpables detectados en tu lista activa:\n  - " + "\n  - ".join(detected_heavy))
@@ -237,15 +242,15 @@ def benchmark_shell():
 
     # Solo mostrar pasos si hay algo que mejorar
     if steps:
-        steps_text = "\n".join([f"  [bold #ff00ff]»[/] {s}" for s in steps])
+        steps_text = "\n".join([f"  [bold #ff006e]»[/] {s}" for s in steps])
         res_panel.add_row(Panel(steps_text, title="[bold white]PASOS PARA OPTIMIZAR[/]", border_style=color, padding=(1, 2)))
 
     res_panel.add_row(f"\n[italic {color}]{advice}[/]")
 
     console.print(Panel(
         res_panel,
-        title="[bold #ff00ff]◄ REPORTE TÉCNICO HYPERDRIVE ►[/]",
-        border_style="#00ffff",
+        title="[bold #ff006e]◄ REPORTE TÉCNICO HYPERDRIVE ►[/]",
+        border_style="#00f5ff",
         padding=(1, 2)
     ))
 
@@ -270,8 +275,8 @@ def analyze_history():
         table = Table(title="TUS COMANDOS MÁS USADOS", box=box.SIMPLE)
         table.add_column("#", justify="right", style="cyan")
         table.add_column("Comando", style="green")
-        table.add_column("Veces", style="yellow")
-        table.add_column("Sugerencia", style="magenta italic")
+        table.add_column("Veces", style="#ffe600")
+        table.add_column("Sugerencia", style="#ff006e italic")
 
         aliases_suggestion = []
 
@@ -290,7 +295,7 @@ def analyze_history():
         if aliases_suggestion:
             console.print(Panel(
                 "[white]Se detectaron comandos largos frecuentes. Copia esto en tu [bold]custom.zsh[/]:[/]\n\n" + "\n".join(aliases_suggestion),
-                title="💡 OPTIMIZACIÓN DE FLUJO", border_style="magenta"
+                title="💡 OPTIMIZACIÓN DE FLUJO", border_style="#ff006e"
             ))
         else:
             console.print("[grey]Tu flujo es eficiente. No se detectaron comandos largos repetitivos.[/]")
@@ -310,7 +315,7 @@ def list_themes():
     # 1. Temas Omega (God Tier)
     if PROJECT_THEMES.exists():
         for t in PROJECT_THEMES.glob("*.zsh-theme"):
-            found_themes[t.stem] = "[bold magenta]Omega God Tier[/]"
+            found_themes[t.stem] = "[bold #ff006e]Omega God Tier[/]"
 
     # 2. Temas Custom Usuario
     if CUSTOM_THEMES.exists():
@@ -335,7 +340,7 @@ def list_themes():
         table.add_row(name, origin)
 
     console.print(table)
-    console.print("[yellow]Para usar uno:[/]")
+    console.print("[#ffe600]Para usar uno:[/]")
     console.print("    Edita ~/.zshrc y cambia ZSH_THEME='nombre'")
 
 # --- ACTUALIZADOR ---
@@ -359,7 +364,7 @@ def self_update():
             if "Already up to date" in res.stdout:
                 console.print("[green]✅ Ya tienes la última versión.[/]")
             else:
-                console.print("[bold yellow]⚠ Cambios detectados. Se recomienda reiniciar la terminal o ejecutar ./install.sh[/]")
+                console.print("[bold #ffe600]⚠ Cambios detectados. Se recomienda reiniciar la terminal o ejecutar ./install.sh[/]")
         else:
             console.print(f"[red]Error en git pull: {res.stderr}[/]")
 
@@ -370,12 +375,12 @@ def self_update():
 def show_help():
     """Muestra la ayuda con estética Neon."""
     console.print(Panel(
-        f"[bold #ff00ff]OMEGA CLI (oz)[/] [white]v2.2.0[/]\n[italic cyan]Manual de Comando y Control[/]",
-        border_style="#00ffff"
+        f"[bold #ff006e]OMEGA CLI (oz)[/] [white]v2.2.0[/]\n[italic cyan]Manual de Comando y Control[/]",
+        border_style="#00f5ff"
     ))
-    table = Table(box=box.DOUBLE_EDGE, border_style="#00ffff")
-    table.add_column("COMANDO", style="bold #39ff14")
-    table.add_column("ALIAS", style="bold yellow")
+    table = Table(box=box.DOUBLE_EDGE, border_style="#00f5ff")
+    table.add_column("COMANDO", style="bold #00ff9f")
+    table.add_column("ALIAS", style="bold #ffe600")
     table.add_column("DESCRIPCIÓN", style="cyan")
 
     table.add_row("oz banner", "oz b", "Muestra telemetría del sistema")
@@ -416,23 +421,23 @@ def show_plugins_detail():
     """Detalla todos los plugins y herramientas activas con estética Neon Retro y utilidad máxima."""
     active_items = get_omega_active_items()
     if not active_items:
-        console.print("[bold yellow]No se detectaron items activos en el estado de Omega-ZSH.[/]")
+        console.print("[bold #ffe600]No se detectaron items activos en el estado de Omega-ZSH.[/]")
         return
 
-    console.print(f"\n[bold magenta]█▓▒░ MANUAL DE OPERACIONES OMEGA ({len(active_items)} módulos) ░▒▓█[/]\n")
+    console.print(f"\n[bold #ff006e]█▓▒░ MANUAL DE OPERACIONES OMEGA ({len(active_items)} módulos) ░▒▓█[/]\n")
 
     for item_id in active_items:
         info = inspect_plugin(item_id)
 
         # Estética diferenciada
         if info["is_binary"]:
-            title = f"[bold #39ff14]󱓞 HERRAMIENTA BINARIA: {item_id.upper()}[/]"
-            border = "#39ff14"
-            type_tag = "[on #39ff14][black] BIN [/]"
+            title = f"[bold #00ff9f]󱓞 HERRAMIENTA BINARIA: {item_id.upper()}[/]"
+            border = "#00ff9f"
+            type_tag = "[bold #00ff9f][ BIN ][/]"
         else:
-            title = f"[bold #ff00ff]󰏗 PLUGIN ZSH: {item_id.upper()}[/]"
-            border = "#ff00ff"
-            type_tag = "[on #ff00ff][black] ZSH [/]"
+            title = f"[bold #ff006e]󰏗 PLUGIN ZSH: {item_id.upper()}[/]"
+            border = "#ff006e"
+            type_tag = "[bold #00f5ff][ ZSH ][/]"
 
         # Construir contenido de alta fidelidad
         content = []
@@ -442,12 +447,12 @@ def show_plugins_detail():
             # Mostrar solo los alias más útiles/comunes
             useful_aliases = info["aliases"][:10]
             content.append(f"\n[bold white]⌨️ ALIAS CRÍTICOS:[/]")
-            content.append(f"  [#00ffff]" + ", ".join(useful_aliases) + ("..." if len(info['aliases'])>10 else "") + "[/]")
+            content.append(f"  [#00f5ff]" + ", ".join(useful_aliases) + ("..." if len(info['aliases'])>10 else "") + "[/]")
 
         if info["functions"]:
             useful_funcs = info["functions"][:5]
             content.append(f"\n[bold white]⚙️ FUNCIONES DISPONIBLES:[/]")
-            content.append(f"  [#39ff14]" + ", ".join(useful_funcs) + ("..." if len(info['functions'])>5 else "") + "[/]")
+            content.append(f"  [#00ff9f]" + ", ".join(useful_funcs) + ("..." if len(info['functions'])>5 else "") + "[/]")
 
         # Añadir un "Tip de Pro" basado en el nombre
         tips = {
@@ -462,7 +467,7 @@ def show_plugins_detail():
         }
 
         if item_id in tips:
-            content.append(f"\n[bold yellow]💡 TIP DE ELITE:[/] [italic white]{tips[item_id]}[/]")
+            content.append(f"\n[bold #ffe600]💡 TIP DE ELITE:[/] [italic white]{tips[item_id]}[/]")
 
         console.print(Panel(
             "\n".join(content),
@@ -476,15 +481,15 @@ def show_plugins_detail():
 def show_banner():
     stats = get_system_stats()
     banner_content = (
-        f"[bold #00ffff]SISTEMA:[/] [white]{stats['os']}[/]\n"
-        f"[bold #ff00ff]MEMORIA:[/] [white]{stats['mem_usage']}[/]\n"
-        f"[bold #39ff14]DISCO:[/]   [white]{stats['disk_usage']}[/]\n"
-        f"[bold yellow]UPTIME:[/]  [white]{stats['uptime']}[/]"
+        f"[bold #00f5ff]SISTEMA:[/] [white]{stats['os']}[/]\n"
+        f"[bold #ff006e]MEMORIA:[/] [white]{stats['mem_usage']}[/]\n"
+        f"[bold #00ff9f]DISCO:[/]   [white]{stats['disk_usage']}[/]\n"
+        f"[bold #ffe600]UPTIME:[/]  [white]{stats['uptime']}[/]"
     )
     console.print(Panel(
         banner_content,
-        title="[bold #ff00ff]◄ STATUS OMEGA ►[/]",
-        border_style="#00ffff",
+        title="[bold #ff006e]◄ STATUS OMEGA ►[/]",
+        border_style="#00f5ff",
         subtitle="[dim white]Entropy Engine Active[/]"
     ))
 
