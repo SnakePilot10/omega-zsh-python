@@ -23,6 +23,15 @@ plugins=({% for plugin in plugins %}{{ plugin }} {% endfor %})
 
 source $ZSH/oh-my-zsh.sh
 
+# --- Optimización de arranque ---
+# compinit con caché: evita compaudit en cada inicio (ahorra ~60ms)
+autoload -Uz compinit
+if [[ -f ~/.zcompdump && $(date +%j) == $(date +%j -r ~/.zcompdump 2>/dev/null || echo 0) ]]; then
+    compinit -C  # Carga desde caché sin re-auditar
+else
+    compinit     # Re-genera caché una vez al día
+fi
+
 {% if default_user %}
 export DEFAULT_USER="{{ default_user }}"
 {% endif %}
