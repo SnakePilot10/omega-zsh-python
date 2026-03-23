@@ -273,8 +273,8 @@ class OmegaApp(App):
                 "is_termux": self.context.is_termux,
                 "active_tools": active_tools,
                 "default_user": "",
-                "personal_zsh": str(self.context.omega_dir / "personal.zsh"),
-                "custom_zsh": str(self.context.home / ".zshrc.custom"),
+                "personal_zsh": str(self.context.home / ".omega-zsh" / "personal.zsh"),
+                "custom_zsh": str(self.context.home / ".omega-zsh" / "custom.zsh"),
             }
 
             if generator.generate_zshrc(self.context.zshrc_path, context_data):
