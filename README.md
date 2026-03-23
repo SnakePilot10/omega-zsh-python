@@ -1,45 +1,62 @@
-# 👾 Omega-ZSH (Neon Retro Elite Edition) ⚡️
+# ⚡ OMEGA-ZSH // Python Edition
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-ff00ff?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Android%20(Termux)%20%7C%20Linux-00ffff?style=for-the-badge)](https://termux.dev/)
-[![Edition](https://img.shields.io/badge/Edition-Elite%20Neon-39ff14?style=for-the-badge)](https://github.com/SnakePilot10/omega-zsh-python)
+[
 
-> **Centro de Comando y Control de Entropía Digital.**
-> Automatiza, gestiona y domina tu shell Zsh mediante una arquitectura Neon Retro de alta fidelidad basada en Python y Textual.
+![Python](https://img.shields.io/badge/Python-3.13%2B-ff006e?style=for-the-badge&logo=python)
 
----
+](https://www.python.org/)
+[
 
-## 📑 Tabla de Contenidos
-1. [Visión Neon Retro](#-visión-neon-retro)
-2. [Arquitectura de Mando](#-arquitectura-de-mando)
-3. [Instalación](#-instalación)
-4. [Arsenal CLI (oz)](#-arsenal-cli-oz)
-5. [Gestión de Plugins](#-gestión-de-plugins)
-6. [Temas God Tier](#-temas-god-tier)
+![Platform](https://img.shields.io/badge/Platform-Termux_%7C_Linux-00f5ff?style=for-the-badge)
 
----
+](https://termux.dev/)
+[
 
-## 🎨 Visión Neon Retro
+![Status](https://img.shields.io/badge/Status-Operativo-00ff9f?style=for-the-badge)
 
-Omega-ZSH v2.2.0 rompe con la estética aburrida de las terminales convencionales. Hemos inyectado una paleta **Cyber-Neon** (Cian, Magenta y Lima) en cada rincón de la interfaz.
+](https://github.com/SnakePilot10/omega-zsh-python)
 
-*   **Dashboard de Elite:** Un panel visual estático de alta densidad que emula los mainframes de infiltración de los 80.
-*   **Interfaz Unificada:** Tanto la TUI (`omega`) como el CLI (`oz`) comparten el mismo ADN visual.
-*   **Estabilidad Total:** Optimizado para Android 14+, manejando las restricciones de sistema con elegancia y estilo.
+> Gestor de shell Zsh con TUI interactiva. Controla plugins, temas y headers desde una interfaz visual sin editar `.zshrc` manualmente.
 
 ---
 
-## 📐 Arquitectura de Mando
+## Índice
 
-*   **Core Inmutable:** Generación de `.zshrc` mediante el motor Jinja2. **Riesgo de corrupción: 0%.**
-*   **Blindaje Android:** Manejo inteligente de permisos de `/proc/stat`. Si el sistema bloquea los sensores, Omega se adapta sin colapsar.
-*   **Sincronización de Alta Densidad:** Gestión fluida de más de 30 plugins simultáneos sin degradar el rendimiento.
+1. [Arquitectura](#arquitectura)
+2. [Instalación](#instalación)
+3. [TUI — Interfaz Visual](#tui--interfaz-visual)
+4. [CLI — Arsenal `oz`](#cli--arsenal-oz)
+5. [Plugins](#plugins)
+6. [Temas](#temas)
+7. [Registro de Cambios](#registro-de-cambios)
 
 ---
 
-## 🚀 Instalación
+## Arquitectura
+omega-zsh-python/
+├── omega_zsh/
+│   ├── core/
+│   │   ├── context.py      # Detección de entorno (Termux/Linux/Arch)
+│   │   ├── generator.py    # Motor Jinja2 → genera .zshrc
+│   │   ├── state.py        # Persistencia de configuración (JSON)
+│   │   ├── installer.py    # Instalación de plugins y binarios
+│   │   └── constants.py    # Definición de plugins, temas y headers
+│   ├── ui/
+│   │   ├── app.py          # Aplicación Textual principal
+│   │   └── screens.py      # Pantallas: Dashboard, Plugins, Themes, Headers
+│   ├── cli/
+│   │   └── oz_tool.py      # Herramienta CLI oz
+│   └── assets/
+│       ├── templates/      # Plantillas Jinja2 (.zshrc.j2, personal.zsh.j2)
+│       └── themes/         # Temas .zsh-theme God Tier
+├── install.sh              # Instalador automático multi-distro
+└── pyproject.toml
+**Flujo de datos:**
+TUI (Textual) → AppState → ConfigGenerator (Jinja2) → ~/.zshrc
+---
 
-### Bootstrap Automático
+## Instalación
+
 ```bash
 git clone https://github.com/SnakePilot10/omega-zsh-python.git
 cd omega-zsh-python
@@ -47,52 +64,111 @@ chmod +x install.sh
 ./install.sh
 ```
 
-**Auto-Sanación Inteligente:** El instalador ahora detecta automáticamente si tu entorno virtual (`.venv`) está roto, incompleto o si la versión de Python del sistema ha cambiado (ej. de 3.12 a 3.13), recreándolo de forma transparente para evitar errores de `ModuleNotFoundError`.
-
----
-
-## 🕹️ Arsenal CLI (`oz`)
-
-La herramienta `oz` es tu navaja suiza de nanosegundos. Ahora con alias ultrarrápidos y **Delegación Inteligente**: Si usas un subcomando (`stats`, `bench`, `update`), Omega lo ejecutará instantáneamente sin cargar la interfaz gráfica.
-
-*   **`oz b` (Banner):** Telemetría esencial (RAM, Disco, Uptime) con blindaje de seguridad.
-*   **`oz v` (Velocidad):** **Hyperdrive Benchmark**. Mide la latencia de arranque con precisión de nanosegundos y ofrece un **Diagnóstico de Entropía** inteligente.
-*   **`oz p` (Plugins):** **Manual de Operaciones**. Detalla cada módulo activo, sus alias críticos y "Tips de Elite" para dominar tus herramientas.
-*   **`oz u` (Update):** Sincronización inmediata con el núcleo del protocolo Janus.
-*   **`oz t` (Themes):** Explorador visual de la librería completa de temas.
-*   **`oz s` (Stats):** Analizador de patrones de uso y sugerencia automática de alias.
-
----
-
-## 📦 Gestión de Plugins
-
-Omega-ZSH gestiona una carga masiva de más de 30 módulos divididos en:
-1.  **Plugins OMZ:** `zsh-autosuggestions`, `syntax-highlighting`, `fzf-tab`, `k`, etc.
-2.  **Binarios Modernos:** `eza` (ls), `zoxide` (cd), `yazi` (file manager), `fzf`, `ripgrep`, `fd`.
-
-**Sincronización Real:** Lo que seleccionas en la TUI es lo que se carga físicamente. Hemos eliminado los plugins fantasmas y los errores de "not found".
-
----
-
-## 🪵 Mantenimiento y Migraciones
-
-- **2026-03-06 (Auto-Sanación y Fix de CLI):** Se implementó una lógica de "Bridge" en `__main__.py` para separar la ejecución de CLI y TUI, solucionando bloqueos en terminales no interactivas. Se añadió detección de corrupción en `install.sh` y se saneó el 100% del código bajo las reglas de **Ruff**.
-- **2026-03-05 (Python 3.13):** Migración estructural tras la actualización del sistema en Termux. Se actualizaron los shebangs de los binarios, se reinstalaron dependencias en el nuevo `venv` y se corrigieron las rutas de fuentes de `figlet` en `.zshrc`.
-
----
-
-## 🤝 Contribución
-
-```bash
-# Entorno de Desarrollo Elite
-python -m venv .venv
-source .venv/bin/activate
+El instalador detecta automáticamente: Termux, Debian/Ubuntu, Arch Linux, Alpine y Fedora.
+Auto-sanación: Si .venv está corrupto o la versión de Python cambió, el instalador lo recrea sin intervención manual.
+Requisitos: python3, zsh, git, oh-my-zsh instalado previamente.
+TUI — Interfaz Visual
+omega
+Tab
+Función
+Dashboard
+Telemetría del sistema: OS, RAM, Disco, Uptime
+Plugins
+Activar/desactivar plugins OMZ y herramientas binarias
+Themes
+Selector con previsualización en vivo via subproceso zsh
+Headers
+Configurar banner de bienvenida: Fastfetch, Figlet, Cowsay, None
+Atajos:
+Tecla
+Acción
+a
+Apply — genera .zshrc sin reinstalar paquetes
+i
+Install — instala paquetes faltantes + genera .zshrc
+q
+Salir
+CLI — Arsenal oz
+oz <comando>
+Comando
+Descripción
+oz b
+Banner — telemetría esencial del sistema
+oz v
+Velocidad — benchmark de latencia de arranque
+oz p
+Plugins — listado de módulos activos y sus alias
+oz u
+Update — sincronización con el repositorio
+oz t
+Themes — explorador de temas disponibles
+oz s
+Stats — análisis de patrones de uso
+Plugins
+Los plugins están divididos en dos categorías que el generador maneja por separado:
+Plugins OMZ — van en plugins=() del .zshrc:
+zsh-autosuggestions, zsh-syntax-highlighting, fzf-tab, zsh-completions, command-not-found, zsh-history-substring-search, magic-enter, fancy-ctrl-z, k, per-directory-history, zsh-navigation-tools, alias-tips, fzf, extract, web-search, copypath, copyfile, cp, gitignore, history, colored-man-pages, safe-paste
+Herramientas binarias — instaladas vía gestor de paquetes, configuradas con alias:
+zoxide, eza, yazi, fd, ripgrep, duf, ncdu, jq, httpie, tldr, lazygit, glow, chafa, lolcat, fastfetch, figlet, fortune, cowsay
+Temas
+Los temas God Tier se almacenan en omega_zsh/assets/themes/ y se enlazan automáticamente a ~/.oh-my-zsh/custom/themes/ al aplicar la configuración.
+Tema
+Estilo
+bira_elegante
+Art Deco — Royal Gold
+bira_espacial
+Space — Deep Purple
+bira_futurista_neon
+Cyberpunk — Neon
+bira_gotico
+Gothic — Dark
+bira_matrix
+Matrix — Green
+bira_minimalista
+Clean — Minimal
+bira_naturaleza
+Nature — Evergreen
+bira_retro
+Retro — Amber
+catppuccin_block
+Catppuccin Mocha
+cyberpunk_block
+Cyberpunk — Powerline
+dracula_block
+Dracula — Powerline
+everforest_friendly
+Everforest — True-color
+gruvbox_block
+Gruvbox — Powerline
+kanagawa_block
+Kanagawa — Powerline
+monokai_block
+Monokai — Powerline
+nord_block
+Nord — Powerline
+rose_pine_block
+Rosé Pine — Powerline
+samsung_powerline
+Samsung Blue/Red — Powerline (OMP port)
+solarized_block
+Solarized — Powerline
+tokyo_block
+Tokyo Night — Powerline
+Registro de Cambios
+2026-03-22 — Estabilización TUI:
+context.py: restaurados atributos omega_dir, project_root, omz_dir, zshrc_path en SystemContext
+app.py: sincronizado header_type → selected_header con AppState; corregido context_data con claves correctas del template Jinja2; filtrado de plugins OMZ vs binarios antes de generar .zshrc; auto-symlink de temas Omega a custom/themes
+screens.py: reemplazado rich.Panel por Static (Textual); fix bin_plugins como lista de strings; IDs de ListItem por índice numérico; contexto OMZ inyectado en preview de temas; cowsay agregado como tipo de header
+install.sh: renumeración de secciones (1–10); fix compatibilidad $? con set -e
+2026-03-06 — Auto-Sanación y Fix CLI:
+Bridge en __main__.py para separar ejecución CLI/TUI
+Detección de corrupción en install.sh
+Saneado 100% del código bajo reglas de Ruff
+2026-03-05 — Migración Python 3.13:
+Actualización de shebangs, reinstalación de dependencias en nuevo venv, corrección de rutas de fuentes figlet
+# Entorno de desarrollo
+python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-
-# Calidad de Código
-pytest --cov=omega_zsh  # Test de Integridad
-ruff check .            # Auditoría de Estilo
-```
-
----
-Copyright © 2026 SnakePilot10. By | Janus & Tesavek⚡️👾.
+pytest --cov=omega_zsh   # Tests
+ruff check .             # Linting
+Copyright © 2026 SnakePilot10 · Janus & Tesavek ⚡
