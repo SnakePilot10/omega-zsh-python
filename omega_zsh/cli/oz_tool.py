@@ -160,6 +160,8 @@ def inspect_plugin(plugin_name):
         aliases = re.findall(r"^alias\s+([\w-]+)=", content, re.MULTILINE)
         functions = re.findall(r"^function\s+([\w-]+)", content, re.MULTILINE)
         functions += re.findall(r"^([\w-]+)\(\)\s*\{", content, re.MULTILINE)
+        # Filtrar funciones privadas (prefijo _) — no son invocables por el usuario
+        functions = [f for f in functions if not f.startswith("_")]
     except:
         aliases, functions = [], []
 
@@ -187,7 +189,7 @@ def benchmark_shell():
         TextColumn("[progress.description]{task.description}"),
         transient=True
     ) as progress:
-        task = progress.add_task("[bold cyan]Calculando entropía del arranque...", total=5)
+        task = progress.add_task("[bold #00f5ff]Calculando entropía del arranque...", total=5)
         for i in range(5):
             start = time.perf_counter()
             subprocess.run(["zsh", "-i", "-c", "exit"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -224,7 +226,7 @@ def benchmark_shell():
         advice = f"[{color}]SE HA DETECTADO LAG EN EL ARRANQUE DEL SHELL.[/] [white]Tu terminal tarda demasiado en estar lista para la acción.[/]"
 
         steps = [
-            "Ejecuta [bold cyan]zsh -i -c 'zprof'[/] para ver exactamente qué función está frenando el inicio.",
+            "Ejecuta [bold #00f5ff]zsh -i -c 'zprof'[/] para ver exactamente qué función está frenando el inicio.",
             "Desactiva plugins pesados en la TUI (oz) que no uses frecuentemente.",
             "Evita comandos pesados como [bold #ff006e]'apt update'[/] o [bold #ff006e]'check-for-updates'[/] dentro de tu .zshrc."
         ]
@@ -264,7 +266,7 @@ def analyze_history():
         console.print("[red]No hay historial disponible.[/]")
         return
 
-    console.print("[bold cyan]📊 Analizando patrones de uso...[/]")
+    console.print("[bold #00f5ff]📊 Analizando patrones de uso...[/]")
     try:
         content = hist_file.read_text(errors="ignore")
         cmds = re.findall(r"^: \d+:\d+;(.*?)(?:\s|$)", content, re.MULTILINE) or content.splitlines()
@@ -286,7 +288,7 @@ def analyze_history():
                 # Generar alias sugerido: primeras letras
                 alias_name = "".join([w[0] for w in cmd.split() if w])
                 suggestion = f"alias {alias_name}='{cmd}'"
-                aliases_suggestion.append(f"[green]alias {alias_name}='{cmd}'[/]")
+                aliases_suggestion.append(f"[#00ff9f]alias {alias_name}='{cmd}'[/]")
 
             table.add_row(str(idx), cmd, str(count), suggestion if suggestion else "-")
 
@@ -298,7 +300,7 @@ def analyze_history():
                 title="💡 OPTIMIZACIÓN DE FLUJO", border_style="#ff006e"
             ))
         else:
-            console.print("[grey]Tu flujo es eficiente. No se detectaron comandos largos repetitivos.[/]")
+            console.print("[#7b8fa1]Tu flujo es eficiente. No se detectaron comandos largos repetitivos.[/]")
 
     except Exception as e:
         console.print(f"[red]Error: {e}[/]")
@@ -308,7 +310,7 @@ def analyze_history():
 
 def list_themes():
     """Lista ABSOLUTAMENTE TODOS los temas disponibles."""
-    console.print("[bold cyan]🎨 Escaneando librería de temas...[/]")
+    console.print("[bold #00f5ff]🎨 Escaneando librería de temas...[/]")
 
     found_themes = {} # nombre -> origen
 
@@ -327,7 +329,7 @@ def list_themes():
     if STANDARD_THEMES.exists():
         for t in STANDARD_THEMES.glob("*.zsh-theme"):
             if t.stem not in found_themes:
-                found_themes[t.stem] = "[grey]Standard OMZ[/]"
+                found_themes[t.stem] = "[#7b8fa1]Standard OMZ[/]"
 
     # Ordenar
     sorted_themes = sorted(found_themes.items())
@@ -348,25 +350,46 @@ def list_themes():
 
 def self_update():
     """Actualiza el código fuente de Omega-ZSH."""
-    console.print("[bold cyan]🔄 Actualizando Sistema Omega-ZSH...[/]")
-    console.print("[italic grey]Esto descarga las últimas mejoras, temas God Tier y correcciones del repositorio oficial.[/]\n")
+    console.print("[bold #00f5ff]🔄 Actualizando Sistema Omega-ZSH...[/]")
 
+    # Buscar el repo git subiendo desde PROJECT_ROOT
     repo_dir = PROJECT_ROOT
-    if not (repo_dir / ".git").exists():
-        console.print("[red]Error: No se detectó un repositorio git. ¿Instalaste manualmente?[/]")
+    for candidate in [PROJECT_ROOT, PROJECT_ROOT.parent, Path.home() / "Projects/omega-zsh-python"]:
+        if (candidate / ".git").exists():
+            repo_dir = candidate
+            break
+    else:
+        console.print("[red]Error: No se detectó un repositorio git. ¿Instalaste con git clone?[/]")
         return
 
+    console.print(f"[dim]Repositorio: {repo_dir}[/]\n")
+
     try:
-        # Git Pull
+        # 1. Git Pull
         res = subprocess.run(["git", "pull"], cwd=repo_dir, capture_output=True, text=True)
-        if res.returncode == 0:
-            console.print(f"[green]{res.stdout.strip()}[/]")
-            if "Already up to date" in res.stdout:
-                console.print("[green]✅ Ya tienes la última versión.[/]")
-            else:
-                console.print("[bold #ffe600]⚠ Cambios detectados. Se recomienda reiniciar la terminal o ejecutar ./install.sh[/]")
+        if res.returncode != 0:
+            console.print(f"[red]Error en git pull:\n{res.stderr}[/]")
+            return
+
+        output = res.stdout.strip()
+        console.print(f"[#00ff9f]{output}[/]")
+
+        if "Already up to date" in output:
+            console.print("[#00ff9f]✅ Ya tienes la última versión.[/]")
+            return
+
+        # 2. Reinstalar paquete para aplicar cambios en Python
+        console.print("[bold #00f5ff]>> Aplicando cambios (pip install)...[/]")
+        venv_pip = repo_dir / ".venv" / "bin" / "pip"
+        pip_cmd = str(venv_pip) if venv_pip.exists() else "pip"
+        res2 = subprocess.run(
+            [pip_cmd, "install", "-e", str(repo_dir), "--quiet"],
+            capture_output=True, text=True
+        )
+        if res2.returncode == 0:
+            console.print("[#00ff9f]✅ Actualización completada. Reinicia la terminal para aplicar cambios.[/]")
         else:
-            console.print(f"[red]Error en git pull: {res.stderr}[/]")
+            console.print(f"[#ffe600]⚠ Pull OK pero pip falló: {res2.stderr[:200]}[/]")
 
     except Exception as e:
         console.print(f"[bold red]❌ Error crítico: {e}[/]")
@@ -441,7 +464,7 @@ def show_plugins_detail():
 
         # Construir contenido de alta fidelidad
         content = []
-        content.append(f"{type_tag} [bold cyan]{info['description']}[/]")
+        content.append(f"{type_tag} [bold #00f5ff]{info['description']}[/]")
 
         if info["aliases"]:
             # Mostrar solo los alias más útiles/comunes
@@ -456,14 +479,14 @@ def show_plugins_detail():
 
         # Añadir un "Tip de Pro" basado en el nombre
         tips = {
-            "zoxide": "Usa [bold green]z <carpeta>[/] para saltar instantáneamente sin usar cd.",
-            "eza": "Usa [bold green]ls[/] o [bold green]ll[/] para ver iconos y carpetas primero.",
-            "zsh-autosuggestions": "Presiona [bold green]Flecha Derecha[/] para completar el comando sugerido.",
-            "fzf-tab": "Presiona [bold green]Tab[/] y usa las flechas para navegar el menú visual.",
-            "yazi": "Usa [bold green]yy[/] para abrir el gestor y al salir quedarte en esa carpeta.",
-            "fzf": "Presiona [bold green]Ctrl+R[/] para buscar en el historial o [bold green]Ctrl+T[/] para buscar archivos.",
-            "lazygit": "Simplemente escribe [bold green]lg[/] para gestionar tus repositorios visualmente.",
-            "tldr": "Escribe [bold green]tldr <comando>[/] para ver ejemplos de uso rápidos.",
+            "zoxide": "Usa [bold #00ff9f]z <carpeta>[/] para saltar instantáneamente sin usar cd.",
+            "eza": "Usa [bold #00ff9f]ls[/] o [bold #00ff9f]ll[/] para ver iconos y carpetas primero.",
+            "zsh-autosuggestions": "Presiona [bold #00ff9f]Flecha Derecha[/] para completar el comando sugerido.",
+            "fzf-tab": "Presiona [bold #00ff9f]Tab[/] y usa las flechas para navegar el menú visual.",
+            "yazi": "Usa [bold #00ff9f]yy[/] para abrir el gestor y al salir quedarte en esa carpeta.",
+            "fzf": "Presiona [bold #00ff9f]Ctrl+R[/] para buscar en el historial o [bold #00ff9f]Ctrl+T[/] para buscar archivos.",
+            "lazygit": "Simplemente escribe [bold #00ff9f]lg[/] para gestionar tus repositorios visualmente.",
+            "tldr": "Escribe [bold #00ff9f]tldr <comando>[/] para ver ejemplos de uso rápidos.",
         }
 
         if item_id in tips:
