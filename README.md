@@ -150,6 +150,12 @@ Los temas God Tier se almacenan en `omega_zsh/assets/themes/` y se enlazan autom
 
 ## Registro de Cambios
 
+**2026-03-27 — Portabilidad y Robustez (v2.2.0):**
+- **Arquitectura:** Migración a `importlib.resources` para localización de assets, eliminando dependencia de rutas relativas frágiles y habilitando instalación vía `pip`.
+- **Instalación:** Restauración de la instalación completa (tecla `i`) mediante la implementación de métodos individuales en `PluginInstaller` y corrección de la firma del constructor.
+- **Estabilidad:** Cambio de hilos *daemon* a hilos controlados con `join()` en el cierre; forzado de `encoding="utf-8"` en todas las operaciones de archivos para evitar errores de locales.
+- **Seguridad:** Reubicación de logs a `~/.omega-zsh/omega_crash.log` para garantizar permisos de escritura en cualquier entorno.
+
 **2026-03-22 — Estabilización TUI:**
 - `context.py`: restaurados atributos `omega_dir`, `project_root`, `omz_dir`, `zshrc_path` en `SystemContext`
 - `app.py`: sincronizado `header_type` → `selected_header` con `AppState`; corregido `context_data` con claves correctas del template Jinja2; filtrado de plugins OMZ vs binarios antes de generar `.zshrc`; auto-symlink de temas Omega a `custom/themes`

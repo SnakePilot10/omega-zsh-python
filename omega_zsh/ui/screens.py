@@ -76,7 +76,7 @@ class DashboardScreen(Static):
             # Memoria (Termux/Linux)
             mem_p = "N/A"
             if os.path.exists("/proc/meminfo"):
-                with open("/proc/meminfo") as f:
+                with open("/proc/meminfo", encoding="utf-8") as f:
                     lines = f.readlines()
                 mem = {}
                 for line in lines:

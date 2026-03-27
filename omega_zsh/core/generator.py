@@ -19,7 +19,7 @@ class ConfigGenerator:
 
             # 3. Escritura atómica
             temp_path = output_path.with_suffix(".tmp")
-            with open(temp_path, "w") as f:
+            with open(temp_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
             os.replace(temp_path, output_path)
@@ -48,7 +48,7 @@ class ConfigGenerator:
             content = template.render(default_ctx)
 
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, "w") as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(content)
             return True
         except Exception as e:
@@ -73,6 +73,6 @@ function auto_venv() {
     fi
 }
 """
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(content)
         path.chmod(0o644)

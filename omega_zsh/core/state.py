@@ -26,7 +26,7 @@ class StateManager:
         # 1. Prioridad: Archivo de estado propio
         if self.config_path.exists():
             try:
-                with open(self.config_path, "r") as f:
+                with open(self.config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 return AppState(**data)
             except Exception:
@@ -38,7 +38,7 @@ class StateManager:
     def save(self, state: AppState):
         """Guarda el estado actual en JSON."""
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.config_path, "w") as f:
+        with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(asdict(state), f, indent=4)
 
     def _import_from_zshrc(self) -> AppState:

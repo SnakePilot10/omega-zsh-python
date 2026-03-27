@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 from typing import List, Callable
+from shutil import which
 from .constants import BIN_PLUGINS, EXTERNAL_URLS
 
 
@@ -9,7 +10,7 @@ class PluginInstaller:
     Gestiona la instalación de plugins, temas y paquetes del sistema.
 
     Esta clase actúa como fachada para las operaciones de instalación, delegando
-    en la plataforma subyacente (Termux/Debian) para paquetes binarios y usando
+    en la plataforma subyecente (Termux/Debian) para paquetes binarios y usando
     Git para plugins externos.
     """
 
@@ -25,7 +26,74 @@ class PluginInstaller:
         self.home = home_dir
         self.custom_dir = self.home / ".oh-my-zsh/custom"
 
+    def get_missing_binaries(self, plugins: List[str]) -> List[str]:
+        """
+        Retorna una lista de binarios del sistema que faltan.
+
+        Args:
+            plugins (List[str]): Lista de identificadores de plugins.
+
+        Returns:
+            List[str]: Subconjunto de binarios no encontrados en el PATH.
+        """
+        return [p for p in plugins if p in BIN_PLUGINS and not which(p)]
+
+    def install_binary(self, plugin: str) -> bool:
+        """
+        Instala un paquete binario usando la plataforma.
+
+        Args:
+            plugin (str): ID del plugin/paquete.
+
+        Returns:
+            bool: True si la instalación fue exitosa.
+        """
+        if plugin not in BIN_PLUGINS:
+            return False
+        # Las plataformas deben implementar install_package(id, on_progress)
+        # Aquí usamos un lambda vacío para on_progress si no se provee
+        return self.platform.install_package(plugin, on_progress=lambda msg: None)
+
+    def get_missing_zsh_plugins(self, plugins: List[str]) -> List[str]:
+        """
+        Retorna una lista de plugins Git que no están descargados localmente.
+
+        Args:
+            plugins (List[str]): Lista de identificadores de plugins.
+
+        Returns:
+            List[str]: Subconjunto de plugins externos no encontrados en custom/plugins.
+        """
+        missing = []
+        for pid in plugins:
+            if pid in EXTERNAL_URLS:
+                target_path = self.custom_dir / "plugins" / pid
+                if not target_path.exists():
+                    missing.append(pid)
+        return missing
+
+    def download_zsh_plugin(self, plugin_id: str) -> bool:
+        """
+        Descarga un plugin Git específico.
+
+        Args:
+            plugin_id (str): Identificador del plugin.
+
+        Returns:
+            bool: True si se clonó correctamente.
+        """
+        if plugin_id not in EXTERNAL_URLS:
+            return False
+        url = EXTERNAL_URLS[plugin_id]
+        target = self.custom_dir / "plugins" / plugin_id
+        try:
+            self._git_clone(url, target, lambda msg: None)
+            return True
+        except Exception:
+            return False
+
     def install_all(self, selected_ids: List[str], on_progress: Callable[[str], None]):
+
         """
         Orquestador principal de instalación de plugins.
 
@@ -61,7 +129,7 @@ class PluginInstaller:
 
     def _git_clone(self, url: str, target: Path, on_progress: Callable[[str], None]):
         """
-        Clona un repositorio git de forma silenciosa.
+        Clona un repositorio git de forma silenciosa con timeout.
 
         Args:
             url (str): URL del repositorio Git.
@@ -79,7 +147,12 @@ class PluginInstaller:
             if process.stdout:
                 for line in process.stdout:
                     on_progress(f"  [git] {line.strip()}")
-            process.wait()
+            
+            try:
+                process.wait(timeout=300)  # 5 minutos máximo
+            except subprocess.TimeoutExpired:
+                process.kill()
+                on_progress(f"Error: Timeout clonando {url}")
         except Exception as e:
             on_progress(f"Error clonando {url}: {e}")
 

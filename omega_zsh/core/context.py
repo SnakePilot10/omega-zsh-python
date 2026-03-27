@@ -4,6 +4,7 @@ import shlex
 import subprocess
 from pathlib import Path
 from shutil import which
+from importlib.resources import files
 
 
 class SystemContext:
@@ -37,8 +38,12 @@ class SystemContext:
 
     def _detect_paths(self):
         """Calcula rutas críticas del proyecto y del entorno del usuario."""
-        # Raíz del proyecto: sube desde core/ → omega_zsh/ → project_root/
-        self.project_root = Path(__file__).parent.parent.parent
+        # Raíz del paquete (vía importlib para portabilidad pip)
+        self.package_root = Path(str(files("omega_zsh")))
+        self.assets_dir = self.package_root / "assets"
+        
+        # Mantener project_root para compatibilidad hacia atrás (apunta a la raíz del paquete)
+        self.project_root = self.package_root.parent
 
         # Directorio de estado persistente de Omega (~/.local/share/omega-zsh)
         self.omega_dir = self.home / ".omega-zsh"
@@ -85,7 +90,7 @@ class SystemContext:
         os_release = Path("/etc/os-release")
         if os_release.exists():
             try:
-                with open(os_release) as f:
+                with open(os_release, encoding="utf-8") as f:
                     data = {}
                     for line in f:
                         if "=" in line:

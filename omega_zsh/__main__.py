@@ -5,8 +5,10 @@ import traceback
 from pathlib import Path
 
 # --- CONFIGURACIÓN DE LOGGING ---
-# Ubicación del log en la raíz del proyecto para visibilidad
-LOG_FILE = Path(__file__).parent.parent / "omega_crash.log"
+# Ubicación del log en el home del usuario para asegurar permisos de escritura
+LOG_FILE = Path.home() / ".omega-zsh" / "omega_crash.log"
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
 
 logging.basicConfig(
     filename=LOG_FILE,

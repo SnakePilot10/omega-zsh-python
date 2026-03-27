@@ -10,33 +10,33 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}>>> Iniciando Instalador de Omega-ZSH (Python Edition)${NC}"
 
 # --- 1. CONFIGURACIÓN DE DEPENDENCIAS DEL SISTEMA ---
-PKG_MANAGER=""
-PRE_INSTALL_CMD=""
+declare -a PKG_MANAGER_ARRAY
+declare -a PRE_INSTALL_ARRAY
 PACKAGES=""
 
 echo -e "${BLUE}>> Detectando entorno del sistema...${NC}"
 
 if [ -d "/data/data/com.termux" ]; then
     echo -e "${GREEN}>> Entorno detectado: Android (Termux)${NC}"
-    PKG_MANAGER="pkg install -y"
+    PKG_MANAGER_ARRAY=(pkg install -y)
     PACKAGES="python zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide eza debianutils"
 elif [ -f "/etc/debian_version" ]; then
     echo -e "${GREEN}>> Entorno detectado: Debian/Ubuntu${NC}"
-    PRE_INSTALL_CMD="sudo apt-get update"
-    PKG_MANAGER="sudo apt-get install -y"
+    PRE_INSTALL_ARRAY=(sudo apt-get update)
+    PKG_MANAGER_ARRAY=(sudo apt-get install -y)
     PACKAGES="python3 python3-venv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza debianutils"
 elif [ -f "/etc/arch-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Arch Linux${NC}"
-    PKG_MANAGER="sudo pacman -Sy --noconfirm --needed"
+    PKG_MANAGER_ARRAY=(sudo pacman -Sy --noconfirm --needed)
     PACKAGES="python zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza which"
 elif [ -f "/etc/alpine-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Alpine Linux${NC}"
-    PRE_INSTALL_CMD="sudo apk update"
-    PKG_MANAGER="sudo apk add"
+    PRE_INSTALL_ARRAY=(sudo apk update)
+    PKG_MANAGER_ARRAY=(sudo apk add)
     PACKAGES="python3 py3-venv zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide lolcat eza"
 elif [ -f "/etc/fedora-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Fedora${NC}"
-    PKG_MANAGER="sudo dnf install -y"
+    PKG_MANAGER_ARRAY=(sudo dnf install -y)
     PACKAGES="python3 python3-virtualenv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza"
 else
     echo -e "${RED}⚠️  No se pudo detectar la distro automáticamente.${NC}"
@@ -45,16 +45,16 @@ fi
 
 # --- 2. INSTALACIÓN DE DEPENDENCIAS DEL SISTEMA ---
 # Si se detectó un gestor de paquetes, se ejecuta para asegurar que todo esté instalado.
-if [ -n "$PKG_MANAGER" ]; then
+if [ ${#PKG_MANAGER_ARRAY[@]} -gt 0 ]; then
     echo -e "${BLUE}>> Asegurando que todas las dependencias del sistema estén instaladas...${NC}"
     
-    if [ -n "$PRE_INSTALL_CMD" ]; then
+    if [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
         echo -e "${BLUE}>> Actualizando índices de paquetes...${NC}"
-        $PRE_INSTALL_CMD
+        "${PRE_INSTALL_ARRAY[@]}"
     fi
 
     echo "Paquetes: $PACKAGES"
-    $PKG_MANAGER $PACKAGES
+    "${PKG_MANAGER_ARRAY[@]}" $PACKAGES
     if [ $? -ne 0 ]; then
         echo -e "${RED}❌ Falló la instalación de dependencias del sistema. Revisa los errores del gestor de paquetes.${NC}"
         exit 1

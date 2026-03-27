@@ -48,7 +48,7 @@ state_manager = StateManager(OMEGA_CONFIG_DIR) if StateManager else None
 def _get_ram_usage():
     """Obtiene el uso de RAM leyendo /proc/meminfo de forma nativa."""
     try:
-        with open('/proc/meminfo', 'r') as f:
+        with open('/proc/meminfo', 'r', encoding="utf-8") as f:
             lines = f.readlines()
         mem = {}
         for line in lines:
@@ -84,7 +84,7 @@ def _get_disk_usage(path='/'):
 def _get_uptime_simple():
     """Obtiene el uptime leyendo /proc/uptime."""
     try:
-        with open('/proc/uptime', 'r') as f:
+        with open('/proc/uptime', 'r', encoding="utf-8") as f:
             uptime_seconds = float(f.readline().split()[0])
             hours, remainder = divmod(int(uptime_seconds), 3600)
             minutes, _ = divmod(remainder, 60)

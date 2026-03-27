@@ -152,7 +152,7 @@ class OmegaApp(App):
         user_themes = []
 
         # 1. Temas de Omega (Assets locales)
-        omega_dir = self.context.project_root / "omega_zsh" / "assets" / "themes"
+        omega_dir = self.context.assets_dir / "themes"
         if omega_dir.exists():
             for f in omega_dir.glob("*.zsh-theme"):
                 omega_themes.append(ThemeDef(f.stem, "Omega God Tier", str(f)))
@@ -234,7 +234,7 @@ class OmegaApp(App):
         self.save_state()
         try:
             generator = ConfigGenerator(
-                self.context.project_root / "omega_zsh" / "assets" / "templates"
+                self.context.assets_dir / "templates"
             )
 
             # Generar Header Figlet si es necesario
@@ -256,7 +256,7 @@ class OmegaApp(App):
             import shutil as _shutil
             custom_themes = self.context.omz_dir / "custom" / "themes"
             custom_themes.mkdir(parents=True, exist_ok=True)
-            omega_themes_dir = self.context.project_root / "omega_zsh" / "assets" / "themes"
+            omega_themes_dir = self.context.assets_dir / "themes"
             if omega_themes_dir.exists():
                 for tf in omega_themes_dir.glob("*.zsh-theme"):
                     link = custom_themes / tf.name
@@ -300,9 +300,16 @@ class OmegaApp(App):
     # --- Worker de Instalación ---
     def run_installation(self, on_message: Callable) -> None:
         """Ejecuta el proceso de instalación en un hilo secundario."""
-        threading.Thread(
-            target=self._installation_worker, args=(on_message,), daemon=True
-        ).start()
+        self.install_thread = threading.Thread(
+            target=self._installation_worker, args=(on_message,)
+        )
+        self.install_thread.start()
+
+    def on_unmount(self) -> None:
+        """Cleanup al cerrar la aplicación."""
+        if hasattr(self, "install_thread") and self.install_thread.is_alive():
+            logging.info("Esperando a que finalice el hilo de instalación...")
+            self.install_thread.join(timeout=5)
 
     def _installation_worker(self, on_message: Callable) -> None:
         try:
@@ -311,7 +318,7 @@ class OmegaApp(App):
             self.context.omega_dir.mkdir(parents=True, exist_ok=True)
 
             # 2. Instalar binarios faltantes
-            installer = PluginInstaller(self.platform)
+            installer = PluginInstaller(self.platform, self.context.home)
             current_state = AppState(
                 selected_plugins=self.state.selected_plugins,
                 selected_theme=self.state.selected_theme,
