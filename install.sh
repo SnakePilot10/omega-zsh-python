@@ -132,95 +132,53 @@ echo -e "${BLUE}>> Instalando la aplicación y sus dependencias...${NC}"
 }
 
 # --- 6. CREAR ENLACES SIMBÓLICOS PARA ACCESO GLOBAL ---
-echo -e "${BLUE}>> Creando enlaces simbólicos para 'omega' y 'oz'...${NC}"
+echo -e "${BLUE}>> Configurando acceso global para 'omega' y 'oz'...${NC}"
 
-# Definir directorio de destino para binarios
-if [ -w "/usr/local/bin" ]; then
+# 1. Determinar el mejor directorio de binarios
+if [ -d "/data/data/com.termux/files/usr/bin" ]; then
+    BIN_DEST="/data/data/com.termux/files/usr/bin"
+    SUDO_CMD=""
+elif [ -w "/usr/local/bin" ]; then
     BIN_DEST="/usr/local/bin"
     SUDO_CMD=""
-elif command -v sudo &> /dev/null && sudo -n true 2>/dev/null; then
-    BIN_DEST="/usr/local/bin"
-    SUDO_CMD="sudo"
 else
-    # Fallback para usuarios sin root (como Termux estándar)
     BIN_DEST="$HOME/.local/bin"
     mkdir -p "$BIN_DEST"
     SUDO_CMD=""
-    
-    # Asegurarse de que el directorio esté en el PATH
-    if [[ ":$PATH:" != *":$BIN_DEST:"* ]]; then
-        echo -e "${BLUE}>> Agregando $BIN_DEST a tu PATH temporalmente...${NC}"
-        export PATH="$BIN_DEST:$PATH"
-    fi
 fi
 
-echo -e "${BLUE}>> Instalando binarios en $BIN_DEST...${NC}"
-$SUDO_CMD ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega"
-$SUDO_CMD ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz"
+echo -e "${BLUE}>> Instalando binarios en: $BIN_DEST${NC}"
+
+# 2. Crear symlinks
+ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega"
+ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz"
 
 if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falló la creación de enlaces simbólicos.${NC}"
-    echo -e "Intentando copia directa como último recurso..."
-    cp "$VENV_DIR/bin/omega" "$BIN_DEST/omega" 2>/dev/null || true
-    cp "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || true
-fi
-
-# --- 7. FINALIZACIÓN ---
-echo -e "${GREEN}>> ✅ ¡Instalación completada!${NC}"
-echo -e "Ahora puedes ejecutar ${BLUE}'omega'${NC} o ${BLUE}'oz'${NC}."
-
-# --- 8. CONFIGURAR ZSH COMO SHELL PREDETERMINADA ---
-REAL_USER="${SUDO_USER:-$(whoami)}"
-
-# Obtener la home del usuario real
-if [ "$REAL_USER" = "root" ]; then
-    REAL_HOME="/root"
-elif [ -d "/data/data/com.termux" ]; then
-    REAL_HOME="/data/data/com.termux/files/home"
+    echo -e "${RED}⚠️  No se pudieron crear los enlaces simbólicos automáticamente.${NC}"
+    echo -e "   Puedes ejecutar la app directamente usando: ${GREEN}$VENV_DIR/bin/omega${NC}"
 else
-    if [ "$(uname)" = "Linux" ]; then
-         REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6 2>/dev/null || echo "$HOME")
-    else
-         REAL_HOME="$HOME"
-    fi
+    echo -e "${GREEN}>> Enlaces creados correctamente en $BIN_DEST.${NC}"
 fi
 
-if command -v zsh &> /dev/null; then
-    ZSH_PATH=$(which zsh)
-    
-    # En Termux no se usa chsh de la misma manera o no es necesario si ya se usa proot/login
-    if [ -d "/data/data/com.termux" ]; then
-        echo -e "${GREEN}>> Entorno Termux detectado. Asegúrate de que tu terminal inicie con zsh.${NC}"
-    else
-        CURRENT_SHELL=$(getent passwd "$REAL_USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
-        if [ "$CURRENT_SHELL" != "$ZSH_PATH" ]; then
-            echo -e "${BLUE}>> Intentando configurar Zsh como shell predeterminada...${NC}"
-            if command -v chsh &> /dev/null; then
-                if [ "$(id -u)" -eq 0 ]; then
-                     chsh -s "$ZSH_PATH" "$REAL_USER"
-                elif command -v sudo &> /dev/null; then
-                     sudo chsh -s "$ZSH_PATH" "$REAL_USER"
-                else
-                     chsh -s "$ZSH_PATH" || echo -e "${RED}⚠️  Ejecuta: chsh -s $ZSH_PATH manualmente.${NC}"
-                fi
-            fi
-        fi
-    fi
+# 3. Verificar si el destino está en el PATH
+if [[ ":$PATH:" != *":$BIN_DEST:"* ]]; then
+    echo -e "${RED}⚠️  AVISO: $BIN_DEST no está en tu PATH.${NC}"
+    echo -e "   Para arreglarlo, añade esto a tu ~/.zshrc:"
+    echo -e "   ${BLUE}export PATH=\"\$PATH:$BIN_DEST\"${NC}"
+fi
+
+# --- 7. FINALIZACIÓN Y LANZAMIENTO ---
+echo -e "${GREEN}>> ✅ ¡Instalación completada con éxito!${NC}"
+echo -e "${BLUE}>> Lanzando Omega-ZSH para configuración inicial...${NC}"
+
+# Ejecutar la aplicación inmediatamente
+if [ -f "$BIN_DEST/omega" ]; then
+    export PATH="$PATH:$BIN_DEST"
+    exec "$BIN_DEST/omega"
+elif [ -f "$VENV_DIR/bin/omega" ]; then
+    exec "$VENV_DIR/bin/omega"
 else
-    echo -e "${RED}❌ Zsh no está instalado.${NC}"
-fi
-
-# --- 9. VERIFICAR CONFIGURACIÓN INICIAL ---
-# Si no existe .zshrc, sugerir correr omega
-if [ ! -f "$REAL_HOME/.zshrc" ]; then
-    echo -e "${BLUE}>> AVISO: No se detectó un archivo .zshrc.${NC}"
-    echo -e "   Para generar tu configuración, ejecuta: ${GREEN}omega${NC}"
-fi
-
-# --- 10. FINALIZACIÓN Y LANZAMIENTO ---
-# Si estamos en una terminal (stdout es TTY), lanzamos zsh ahora mismo.
-if [ -t 1 ]; then
-    echo -e "${BLUE}>> Cambiando a Zsh...${NC}"
-    exec zsh -l
+    echo -e "${RED}❌ No se pudo lanzar la aplicación automáticamente.${NC}"
+    echo -e "   Ejecútala manualmente con: ${GREEN}omega${NC}"
 fi
 

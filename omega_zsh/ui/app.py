@@ -110,6 +110,9 @@ class OmegaApp(App):
         # Configuración
         self.state_manager = StateManager(self.context.omega_dir)
 
+        # Registrar pantallas
+        self.install_screen(InstallScreen(), name="InstallScreen")
+
         # Cargar estado previo
         try:
             self.state = self.state_manager.load()
@@ -312,9 +315,12 @@ class OmegaApp(App):
             self.install_thread.join(timeout=5)
 
     def _installation_worker(self, on_message: Callable) -> None:
+        def safe_msg(msg: str):
+            self.call_from_thread(on_message, msg)
+
         try:
             # 1. Asegurar directorios
-            on_message("Preparando directorios del sistema...")
+            safe_msg("Preparando directorios del sistema...")
             self.context.omega_dir.mkdir(parents=True, exist_ok=True)
 
             # 2. Instalar binarios faltantes
@@ -327,34 +333,40 @@ class OmegaApp(App):
             missing = installer.get_missing_binaries(current_state.selected_plugins)
             if missing:
                 for plugin in missing:
-                    on_message(f"Instalando binario: {plugin}...")
+                    safe_msg(f"Instalando binario: {plugin}...")
                     if installer.install_binary(plugin):
-                        on_message(f"✅ {plugin} instalado correctamente.")
+                        safe_msg(f"✅ {plugin} instalado correctamente.")
                     else:
-                        on_message(f"❌ Error al instalar {plugin}.")
+                        safe_msg(f"❌ Error al instalar {plugin}.")
+            else:
+                safe_msg("Todos los binarios requeridos ya están en el sistema.")
 
             # 3. Descargar plugins ZSH faltantes
             zsh_missing = installer.get_missing_zsh_plugins(current_state.selected_plugins)
             if zsh_missing:
                 for plugin in zsh_missing:
-                    on_message(f"Descargando plugin Zsh: {plugin}...")
+                    safe_msg(f"Descargando plugin Zsh: {plugin}...")
                     if installer.download_zsh_plugin(plugin):
-                        on_message(f"✅ {plugin} descargado.")
+                        safe_msg(f"✅ {plugin} descargado.")
                     else:
-                        on_message(f"❌ Error al descargar {plugin}.")
+                        safe_msg(f"❌ Error al descargar {plugin}.")
+            else:
+                safe_msg("Todos los plugins de Zsh ya están descargados.")
 
-            on_message("Finalizando instalación...")
+            safe_msg("Finalizando instalación...")
             self.call_from_thread(self._installation_complete, True)
 
         except Exception as e:
             logging.error(f"Error en hilo de instalación: {e}", exc_info=True)
-            on_message(f"ERROR FATAL: {e}")
+            safe_msg(f"[bold red]ERROR FATAL:[/] {e}")
             self.call_from_thread(self._installation_complete, False)
 
     def _installation_complete(self, success: bool) -> None:
-        screen = self.get_screen("InstallScreen")
-        if screen:
-            screen.on_installation_finished(success)
+        """Notifica a la pantalla activa el fin de la instalación si es la correcta."""
+        if isinstance(self.screen, InstallScreen):
+            self.screen.on_installation_finished(success)
+        else:
+            logging.warning("La instalación finalizó pero InstallScreen ya no es la pantalla activa.")
 
 
 def main():
