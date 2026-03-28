@@ -16,6 +16,7 @@ custom.zsh
 .zshrc
 .zshrc.bak.*
 *.swp
+TODO.md
 build/
 *.egg-info/
 omega_crash.log
