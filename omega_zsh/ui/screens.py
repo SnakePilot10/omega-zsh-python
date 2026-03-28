@@ -206,8 +206,6 @@ class ThemeSelectScreen(Horizontal):
 
         preview_box.update(Text("Rendering...", style="yellow"))
 
-        # Ejecución asíncrona simulada con subproceso (no bloquea UI de Textual si es rápido)
-        # En una versión más pro, usaríamos un worker de Textual.
         zsh_bin = shutil.which("zsh")
         if not zsh_bin:
             preview_box.update(Text("Error: Zsh binary not found.", style="bold red"))
