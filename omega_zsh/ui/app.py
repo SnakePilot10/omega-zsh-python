@@ -100,6 +100,7 @@ class OmegaApp(App):
         super().__init__(**kwargs)
         logging.info("Inicializando OmegaApp...")
         self.context = SystemContext()
+        self.install_cancel_event = threading.Event()
 
         # Determinar plataforma
         if self.context.os_type == "android":
@@ -154,8 +155,8 @@ class OmegaApp(App):
         omz_themes = []
         user_themes = []
 
-        # 1. Temas de Omega (Assets locales)
-        omega_dir = self.context.assets_dir / "themes"
+        # 1. Temas de Omega (Assets locales convertidos a Path real)
+        omega_dir = Path(str(self.context.assets_dir / "themes"))
         if omega_dir.exists():
             for f in omega_dir.glob("*.zsh-theme"):
                 omega_themes.append(ThemeDef(f.stem, "Omega God Tier", str(f)))
@@ -236,9 +237,7 @@ class OmegaApp(App):
         """Genera .zshrc sin reinstalar paquetes. Rápido."""
         self.save_state()
         try:
-            generator = ConfigGenerator(
-                self.context.assets_dir / "templates"
-            )
+            generator = ConfigGenerator(self.context.assets_dir / "templates")
 
             # Generar Header Figlet si es necesario
             header_cmd = ""
@@ -259,7 +258,10 @@ class OmegaApp(App):
             import shutil as _shutil
             custom_themes = self.context.omz_dir / "custom" / "themes"
             custom_themes.mkdir(parents=True, exist_ok=True)
-            omega_themes_dir = self.context.assets_dir / "themes"
+            
+            # Obtener directorio de temas Omega como path real
+            omega_themes_dir = Path(str(self.context.assets_dir / "themes"))
+            
             if omega_themes_dir.exists():
                 for tf in omega_themes_dir.glob("*.zsh-theme"):
                     link = custom_themes / tf.name
@@ -282,8 +284,9 @@ class OmegaApp(App):
 
             if generator.generate_zshrc(self.context.zshrc_path, context_data):
                 self.notify("Configuración actualizada con éxito (A).", severity="information")
-                # Cerrar app tras éxito para que el usuario pueda probar el shell
-                self.exit()
+                # Ya no cerramos la app automáticamente (Mejora UX)
+            else:
+                self.notify("Error al generar .zshrc. Revisa el log para detalles.", severity="error")
         except Exception as e:
             logging.error(f"Fallo en Apply: {e}", exc_info=True)
             self.notify(f"Error al aplicar: {e}", severity="error")
@@ -303,6 +306,7 @@ class OmegaApp(App):
     # --- Worker de Instalación ---
     def run_installation(self, on_message: Callable) -> None:
         """Ejecuta el proceso de instalación en un hilo secundario."""
+        self.install_cancel_event.clear()
         self.install_thread = threading.Thread(
             target=self._installation_worker, args=(on_message,)
         )
@@ -310,9 +314,10 @@ class OmegaApp(App):
 
     def on_unmount(self) -> None:
         """Cleanup al cerrar la aplicación."""
+        self.install_cancel_event.set()
         if hasattr(self, "install_thread") and self.install_thread.is_alive():
             logging.info("Esperando a que finalice el hilo de instalación...")
-            self.install_thread.join(timeout=5)
+            self.install_thread.join(timeout=2)
 
     def _installation_worker(self, on_message: Callable) -> None:
         def safe_msg(msg: str):
@@ -320,10 +325,12 @@ class OmegaApp(App):
 
         try:
             # 1. Asegurar directorios
+            if self.install_cancel_event.is_set(): return
             safe_msg("Preparando directorios del sistema...")
             self.context.omega_dir.mkdir(parents=True, exist_ok=True)
 
             # 2. Instalar binarios faltantes
+            if self.install_cancel_event.is_set(): return
             installer = PluginInstaller(self.platform, self.context.home)
             current_state = AppState(
                 selected_plugins=self.state.selected_plugins,
@@ -333,6 +340,9 @@ class OmegaApp(App):
             missing = installer.get_missing_binaries(current_state.selected_plugins)
             if missing:
                 for plugin in missing:
+                    if self.install_cancel_event.is_set():
+                        safe_msg("Instalación cancelada por el usuario.")
+                        return
                     safe_msg(f"Instalando binario: {plugin}...")
                     if installer.install_binary(plugin):
                         safe_msg(f"✅ {plugin} instalado correctamente.")
@@ -342,9 +352,13 @@ class OmegaApp(App):
                 safe_msg("Todos los binarios requeridos ya están en el sistema.")
 
             # 3. Descargar plugins ZSH faltantes
+            if self.install_cancel_event.is_set(): return
             zsh_missing = installer.get_missing_zsh_plugins(current_state.selected_plugins)
             if zsh_missing:
                 for plugin in zsh_missing:
+                    if self.install_cancel_event.is_set():
+                        safe_msg("Instalación cancelada por el usuario.")
+                        return
                     safe_msg(f"Descargando plugin Zsh: {plugin}...")
                     if installer.download_zsh_plugin(plugin):
                         safe_msg(f"✅ {plugin} descargado.")
@@ -353,12 +367,13 @@ class OmegaApp(App):
             else:
                 safe_msg("Todos los plugins de Zsh ya están descargados.")
 
+            if self.install_cancel_event.is_set(): return
             safe_msg("Finalizando instalación...")
             self.call_from_thread(self._installation_complete, True)
 
         except Exception as e:
             logging.error(f"Error en hilo de instalación: {e}", exc_info=True)
-            safe_msg(f"[bold red]ERROR FATAL:[/] {e}")
+            safe_msg(f"ERROR FATAL: {e}")
             self.call_from_thread(self._installation_complete, False)
 
     def _installation_complete(self, success: bool) -> None:

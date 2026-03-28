@@ -7,7 +7,7 @@ import subprocess
 
 from rich.table import Table
 from rich.text import Text
-from textual import on
+from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
@@ -99,11 +99,20 @@ class DashboardScreen(Static):
             except Exception:
                 pass
 
+            # Uptime
+            uptime_str = "N/A"
+            if os.path.exists("/proc/uptime"):
+                with open("/proc/uptime", "r", encoding="utf-8") as f:
+                    uptime_seconds = float(f.readline().split()[0])
+                    hours, remainder = divmod(int(uptime_seconds), 3600)
+                    minutes, _ = divmod(remainder, 60)
+                    uptime_str = f"{hours}h {minutes}m"
+
             return {
                 "os": "Android/Termux" if os.path.exists("/data/data/com.termux") else "Linux",
                 "mem_usage": mem_p,
                 "disk_usage": disk_p,
-                "uptime": "N/A",
+                "uptime": uptime_str,
             }
         except Exception:
             return {"os": "Unknown", "mem_usage": "N/A", "disk_usage": "N/A", "uptime": "N/A"}
@@ -123,16 +132,20 @@ class PluginSelectScreen(Vertical):
         yield Label("[bold #ff006e]SELECCIÓN DE PLUGINS Y BINARIOS[/]")
         yield Label("[dim]Usa [bold]Espacio[/] para marcar/desmarcar[/]", id="plugin-hint")
 
-        # Construir opciones para la lista
+        # Construir opciones para la lista asegurando unicidad
         options = []
+        seen_ids = set()
+
         for p in self.all_plugins:
-            # Prefijar ID con 'p-' para cumplir reglas de Textual (no empezar con número)
-            options.append(Selection(p.id, p.id, p.id in self.selected_plugins))
+            if p.id not in seen_ids:
+                options.append(Selection(p.id, p.id, p.id in self.selected_plugins))
+                seen_ids.add(p.id)
 
         for p in self.bin_plugins:
-            # bin_plugins puede ser lista de strings o de PluginDef
             pid = p if isinstance(p, str) else p.id
-            options.append(Selection(f"📦 {pid}", pid, pid in self.selected_plugins))
+            if pid not in seen_ids:
+                options.append(Selection(f"📦 {pid}", pid, pid in self.selected_plugins))
+                seen_ids.add(pid)
 
         yield SelectionList(*options, id="plugin-list")
 
@@ -168,7 +181,7 @@ class ThemeSelectScreen(Horizontal):
         # Columna Derecha: Preview
         with Vertical(id="theme-preview-container"):
             yield Label("[bold #00f5ff]PREVISUALIZACIÓN[/]")
-            yield Static("Select a theme to see preview...", id="theme-preview-box")
+            yield Static("Select a theme to see preview...", id="preview-area")
 
     def get_selected(self) -> str:
         idx = self.query_one(ListView).index
@@ -177,14 +190,15 @@ class ThemeSelectScreen(Horizontal):
         return self.selected_theme
 
     @on(ListView.Highlighted)
+    @work(exclusive=True, thread=True)
     def update_preview(self, event: ListView.Highlighted) -> None:
-        """Lanza la previsualización del tema usando un subproceso de Zsh."""
+        """Lanza la previsualización del tema usando un subproceso de Zsh (Worker asíncrono)."""
         idx = self.query_one(ListView).index
         if idx is None:
             return
 
         theme = self.all_themes[idx]
-        preview_box = self.query_one("#theme-preview-box")
+        preview_box = self.query_one("#preview-area")
 
         if not theme.path or not os.path.exists(theme.path):
             preview_box.update(Text("Preview not available (No path found)", style="red"))
@@ -285,7 +299,7 @@ class HeaderSelectScreen(Vertical):
                 yield lv
 
         yield Label("[bold #00f5ff]PREVIEW:[/]")
-        yield Static("", id="header-preview-area")
+        yield Static("", id="preview-area")
 
     def get_selected(self) -> tuple[str, str, str]:
         # Obtener tipo
@@ -312,10 +326,11 @@ class HeaderSelectScreen(Vertical):
     @on(RadioSet.Changed)
     @on(Input.Changed)
     @on(ListView.Highlighted)
+    @work(exclusive=True, thread=True)
     def update_header_preview(self) -> None:
-        """Actualiza la previsualización del banner en tiempo real."""
+        """Actualiza la previsualización del banner en tiempo real (Worker asíncrono)."""
         h_type, text, font = self.get_selected()
-        preview_area = self.query_one("#header-preview-area")
+        preview_area = self.query_one("#preview-area")
 
         if h_type == "none":
             preview_area.update(Text("No header selected", style="dim"))
@@ -385,27 +400,30 @@ class InstallScreen(Screen):
             yield Button("Finalizar", variant="success", id="btn-finish", disabled=True)
 
     def on_mount(self) -> None:
-        self.query_one("#install-log").write_line("Iniciando instalador...")
+        self.query_one("#install-log").write("Iniciando instalador...\n")
         self.app.run_installation(self.on_installation_message)
 
     def on_installation_message(self, message: str) -> None:
-        self.query_one("#install-log").write_line(Text.from_markup(message))
+        self.query_one("#install-log").write(Text.from_markup(message + "\n"))
 
     def on_installation_finished(self, success: bool) -> None:
         log = self.query_one("#install-log")
         if success:
-            log.write_line(Text.from_markup("\n[bold #00ff9f]¡INSTALACIÓN COMPLETADA CON ÉXITO![/]"))
+            log.write(Text.from_markup("\n[bold #00ff9f]¡INSTALACIÓN COMPLETADA CON ÉXITO![/]\n"))
             self.query_one("#install-progress").progress = 100
             self.query_one("#btn-finish").disabled = False
             self.query_one("#btn-cancel").disabled = True
         else:
-            log.write_line(Text.from_markup("\n[bold red]LA INSTALACIÓN HA FALLADO O SE CANCELÓ.[/]"))
+            log.write(Text.from_markup("\n[bold red]LA INSTALACIÓN HA FALLADO O SE CANCELÓ.[/]\n"))
             self.query_one("#btn-cancel").label = "Volver"
 
     @on(Button.Pressed, "#btn-finish")
-    def finish_install(self) -> None:
+    def on_finish_pressed(self) -> None:
+        """Cierra la pantalla tras una instalación exitosa."""
         self.dismiss(True)
 
     @on(Button.Pressed, "#btn-cancel")
-    def cancel_install(self) -> None:
+    def on_cancel_pressed(self) -> None:
+        """Cierra la pantalla tras una cancelación o fallo."""
+        self.app.install_cancel_event.set()
         self.dismiss(False)

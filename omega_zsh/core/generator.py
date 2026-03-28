@@ -1,5 +1,6 @@
 import getpass
 import os
+import logging
 from pathlib import Path
 from typing import Any, Dict
 
@@ -8,6 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 
 class ConfigGenerator:
     def __init__(self, templates_dir: Path):
+        # Usamos FileSystemLoader con una ruta física real
         self.env = Environment(loader=FileSystemLoader(str(templates_dir)))
 
     def generate_zshrc(self, output_path: Path, context: Dict[str, Any]) -> bool:
@@ -25,7 +27,7 @@ class ConfigGenerator:
             os.replace(temp_path, output_path)
             return True
         except Exception as e:
-            print(f"Error generando .zshrc: {e}")
+            logging.error(f"Error generando .zshrc: {e}", exc_info=True)
             return False
 
     def generate_personal_config(self, output_path: Path, context: Dict[str, Any]) -> bool:
@@ -52,7 +54,7 @@ class ConfigGenerator:
                 f.write(content)
             return True
         except Exception as e:
-            print(f"Error generando personal.zsh: {e}")
+            logging.error(f"Error generando personal.zsh: {e}", exc_info=True)
             return False
 
     def create_default_custom_zsh(self, path: Path):

@@ -38,11 +38,12 @@ class SystemContext:
 
     def _detect_paths(self):
         """Calcula rutas críticas del proyecto y del entorno del usuario."""
-        # Raíz del paquete (vía importlib para portabilidad pip)
-        self.package_root = Path(str(files("omega_zsh")))
+        # Raíz del paquete (vía __file__ del paquete para máxima compatibilidad)
+        import omega_zsh
+        self.package_root = Path(omega_zsh.__file__).parent.absolute()
         self.assets_dir = self.package_root / "assets"
         
-        # Mantener project_root para compatibilidad hacia atrás (apunta a la raíz del paquete)
+        # Mantener project_root para compatibilidad hacia atrás
         self.project_root = self.package_root.parent
 
         # Directorio de estado persistente de Omega (~/.local/share/omega-zsh)

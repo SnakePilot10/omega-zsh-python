@@ -167,7 +167,7 @@ THEMES_ROOT: List[ThemeDef] = [
 
 DB_HEADERS: List[HeaderDef] = [
     HeaderDef("fastfetch", "Info del Sistema (Moderno)"),
-    HeaderDef("figlet_custom", "Figlet: Banner Personalizado ✨"),
-    HeaderDef("cow", "Vaca Sabia (Fortune)"),
+    HeaderDef("figlet", "Figlet: Banner Personalizado ✨"),
+    HeaderDef("cowsay", "Vaca Sabia (Fortune)"),
     HeaderDef("none", "Ninguno (Limpio)"),
 ]

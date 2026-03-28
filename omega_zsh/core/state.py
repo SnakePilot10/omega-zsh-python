@@ -74,9 +74,11 @@ class StateManager:
             if "fastfetch" in content:
                 state.selected_header = "fastfetch"
             elif "figlet" in content:
-                state.selected_header = "figlet_slant"
+                state.selected_header = "figlet"
             elif "cowsay" in content:
-                state.selected_header = "cow"
+                state.selected_header = "cowsay"
+            else:
+                state.selected_header = "none"
 
         except Exception as e:
             logging.warning(f"No se pudo importar configuración de .zshrc: {e}")
