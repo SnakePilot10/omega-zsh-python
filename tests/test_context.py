@@ -1,5 +1,6 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from omega_zsh.core.context import SystemContext
 
@@ -8,6 +9,9 @@ from omega_zsh.core.context import SystemContext
 def reset_singleton():
     """Resetea la instancia Singleton de SystemContext antes de cada test."""
     SystemContext._instance = None
+    # Parcheamos omega_zsh.__file__ para que sea un string de ruta válido
+    with patch("omega_zsh.__file__", "/mock/path/omega_zsh/__init__.py"):
+        yield
 
 
 def test_singleton_instance():

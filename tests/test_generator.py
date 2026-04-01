@@ -1,8 +1,9 @@
+from pathlib import Path
+
 import pytest
 
-from pathlib import Path
-from omega_zsh.core.generator import ConfigGenerator
 import omega_zsh
+from omega_zsh.core.generator import ConfigGenerator
 
 
 @pytest.fixture

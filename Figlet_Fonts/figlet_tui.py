@@ -1,11 +1,12 @@
+import glob
+import os
 import shutil
 import subprocess
-import os
-import glob
+
+from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Container
-from textual.widgets import Header, Footer, Input, ListView, ListItem, Label, Static
-from textual import on
+from textual.widgets import Footer, Header, Input, Label, ListItem, ListView, Static
 
 # --- CAPA DE LÓGICA (BACKEND) ---
 

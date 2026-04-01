@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+
 from omega_zsh.core.constants import ThemeDef
 from omega_zsh.ui.screens import ThemeSelectScreen
 

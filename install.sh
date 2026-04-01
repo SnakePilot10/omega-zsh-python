@@ -19,49 +19,72 @@ echo -e "${BLUE}>> Detectando entorno del sistema...${NC}"
 if [ -d "/data/data/com.termux" ]; then
     echo -e "${GREEN}>> Entorno detectado: Android (Termux)${NC}"
     PKG_MANAGER_ARRAY=(pkg install -y)
-    PACKAGES="python zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide eza debianutils"
+    CORE_PACKAGES="python zsh git curl wget debianutils"
+    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide eza"
 elif [ -f "/etc/debian_version" ]; then
     echo -e "${GREEN}>> Entorno detectado: Debian/Ubuntu${NC}"
     PRE_INSTALL_ARRAY=(sudo apt-get update)
     PKG_MANAGER_ARRAY=(sudo apt-get install -y)
-    PACKAGES="python3 python3-venv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza debianutils"
+    # python3-venv es CRÍTICO en Ubuntu para que python3 -m venv funcione
+    CORE_PACKAGES="python3 python3-venv zsh git curl wget debianutils"
+    # Algunos de estos pueden fallar en versiones antiguas de Ubuntu sin PPAs (fastfetch/eza), 
+    # el instalador continuará sin problemas.
+    EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
 elif [ -f "/etc/arch-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Arch Linux${NC}"
     PKG_MANAGER_ARRAY=(sudo pacman -Sy --noconfirm --needed)
-    PACKAGES="python zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza which"
+    CORE_PACKAGES="python zsh git curl wget which"
+    EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
 elif [ -f "/etc/alpine-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Alpine Linux${NC}"
     PRE_INSTALL_ARRAY=(sudo apk update)
     PKG_MANAGER_ARRAY=(sudo apk add)
-    PACKAGES="python3 py3-venv zsh figlet fastfetch fortune cowsay git curl wget fzf zoxide lolcat eza"
+    CORE_PACKAGES="python3 py3-venv zsh git curl wget"
+    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide lolcat eza"
 elif [ -f "/etc/fedora-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Fedora${NC}"
     PKG_MANAGER_ARRAY=(sudo dnf install -y)
-    PACKAGES="python3 python3-virtualenv zsh figlet fastfetch fortune-mod cowsay git curl wget fzf zoxide lolcat eza"
+    CORE_PACKAGES="python3 python3-virtualenv zsh git curl wget"
+    EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
 else
     echo -e "${RED}⚠️  No se pudo detectar la distro automáticamente.${NC}"
     echo "Se asumirá que las dependencias (zsh, python3, etc.) ya están instaladas."
 fi
 
 # --- 2. INSTALACIÓN DE DEPENDENCIAS DEL SISTEMA ---
-# Si se detectó un gestor de paquetes, se ejecuta para asegurar que todo esté instalado.
 if [ ${#PKG_MANAGER_ARRAY[@]} -gt 0 ]; then
-    echo -e "${BLUE}>> Asegurando que todas las dependencias del sistema estén instaladas...${NC}"
+    echo -e "${BLUE}>> Asegurando dependencias del sistema...${NC}"
     
     if [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
         echo -e "${BLUE}>> Actualizando índices de paquetes...${NC}"
-        "${PRE_INSTALL_ARRAY[@]}"
+        "${PRE_INSTALL_ARRAY[@]}" || echo -e "${RED}⚠️  Fallo al actualizar índices. Intentando continuar...${NC}"
     fi
 
-    echo "Paquetes: $PACKAGES"
-    "${PKG_MANAGER_ARRAY[@]}" $PACKAGES
+    echo -e "${BLUE}>> Instalando paquetes críticos: $CORE_PACKAGES${NC}"
+    "${PKG_MANAGER_ARRAY[@]}" $CORE_PACKAGES
     if [ $? -ne 0 ]; then
-        echo -e "${RED}❌ Falló la instalación de dependencias del sistema. Revisa los errores del gestor de paquetes.${NC}"
+        echo -e "${RED}❌ Falló la instalación de dependencias CRÍTICAS.${NC}"
         exit 1
+    fi
+
+    echo -e "${BLUE}>> Instalando herramientas adicionales (opcional): $EXTRA_PACKAGES${NC}"
+    # Instalamos una por una para que si una falla (ej: fastfetch no en PPA), no detenga el resto
+    for pkg in $EXTRA_PACKAGES; do
+        echo -e "${BLUE}   + Instalando $pkg...${NC}"
+        "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null || echo -e "${RED}   ⚠️  No se pudo instalar $pkg. Continuando...${NC}"
+    done
+fi
+
+# --- 3. LIMPIEZA DE CONFLICTOS (lolcat) ---
+if command -v pip3 &> /dev/null; then
+    if pip3 show lolcat &> /dev/null; then
+        echo -e "${BLUE}>> Detectado conflicto: lolcat (versión Python) está instalado globalmente.${NC}"
+        echo -e "${BLUE}   Eliminando para preferir la versión de sistema más estable...${NC}"
+        sudo pip3 uninstall -y lolcat &> /dev/null || pip3 uninstall -y lolcat &> /dev/null || true
     fi
 fi
 
-# --- 3. VERIFICACIÓN CRÍTICA DE DEPENDENCIAS ---
+# --- 4. VERIFICACIÓN CRÍTICA DE DEPENDENCIAS ---
 # Después de intentar instalar, verificamos que los comandos esenciales existan.
 echo -e "${BLUE}>> Verificando la instalación de dependencias críticas...${NC}"
 if ! command -v zsh &> /dev/null; then

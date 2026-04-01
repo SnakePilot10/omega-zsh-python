@@ -4,7 +4,6 @@ import shlex
 import subprocess
 from pathlib import Path
 from shutil import which
-from importlib.resources import files
 
 
 class SystemContext:
@@ -40,7 +39,8 @@ class SystemContext:
         """Calcula rutas críticas del proyecto y del entorno del usuario."""
         # Raíz del paquete (vía __file__ del paquete para máxima compatibilidad)
         import omega_zsh
-        self.package_root = Path(omega_zsh.__file__).parent.absolute()
+        pkg_file = os.path.abspath(omega_zsh.__file__)
+        self.package_root = Path(os.path.dirname(pkg_file))
         self.assets_dir = self.package_root / "assets"
         
         # Mantener project_root para compatibilidad hacia atrás

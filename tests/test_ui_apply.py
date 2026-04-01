@@ -1,7 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call, ANY
-from omega_zsh.ui.app import OmegaApp
+
 from omega_zsh.core.state import AppState
+from omega_zsh.ui.app import OmegaApp
 
 
 @pytest.fixture
@@ -137,15 +139,16 @@ def test_header_cmd_none(mock_app):
         assert context_data["header_cmd"] == ""
 
 
-def test_apply_success_cierra_app(mock_app):
-    """Verifica que tras generar .zshrc exitosamente la app se cierra."""
+def test_apply_success_no_cierra_app(mock_app):
+    """Verifica que tras generar .zshrc exitosamente la app NO se cierra (Mejora UX)."""
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", []):
         mock_gen = mock_gen_class.return_value
         mock_gen.generate_zshrc.return_value = True
         mock_app.action_apply_changes()
-        mock_app.exit.assert_called_once()
+        mock_app.exit.assert_not_called()
+        mock_app.notify.assert_called_with("Configuración actualizada con éxito (A).", severity="information")
 
 
 def test_apply_failure_notifica_error(mock_app):

@@ -1,7 +1,8 @@
-import pytest
 import json
 
-from omega_zsh.core.state import StateManager, AppState
+import pytest
+
+from omega_zsh.core.state import AppState, StateManager
 
 
 @pytest.fixture

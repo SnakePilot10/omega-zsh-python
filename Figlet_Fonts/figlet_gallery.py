@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
+import glob
 import os
+import shutil  # <-- Nueva librería para detectar ejecutables correctamente
 import subprocess
 import sys
-import glob
-import shutil  # <-- Nueva librería para detectar ejecutables correctamente
 
 # Configuración
 TEXTO_MUESTRA = "Termux Ninja"

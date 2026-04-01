@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import os
 import re
+import subprocess
 import sys
 import time
-import shutil
-import subprocess
 from collections import Counter
 from pathlib import Path
+
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
-from rich import box
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 try:
     from omega_zsh.core.plugins_db import get_description
@@ -19,8 +19,8 @@ except ImportError:
     def get_description(name): return "Sin descripción disponible."
 
 try:
-    from omega_zsh.core.state import StateManager
     from omega_zsh.core.constants import DB_PLUGINS
+    from omega_zsh.core.state import StateManager
 except ImportError:
     StateManager = None
     DB_PLUGINS = []
@@ -102,7 +102,7 @@ def get_system_stats():
             "disk_usage": _get_disk_usage(),
             "uptime": _get_uptime_simple()
         }
-    except Exception as e:
+    except Exception:
         return {"os": "Unknown", "mem_usage": "N/A", "disk_usage": "N/A", "uptime": "N/A"}
 
 
@@ -235,7 +235,7 @@ def benchmark_shell():
             steps.append("Tu [bold #ffe600]Header visual[/] está consumiendo tiempo de CPU. Prueba el modo 'none' para velocidad pura.")
 
         if detected_heavy:
-            steps.append(f"Culpables detectados en tu lista activa:\n  - " + "\n  - ".join(detected_heavy))
+            steps.append("Culpables detectados en tu lista activa:\n  - " + "\n  - ".join(detected_heavy))
 
     # Renderizado del Reporte
     res_panel = Table.grid(expand=True)
@@ -398,7 +398,7 @@ def self_update():
 def show_help():
     """Muestra la ayuda con estética Neon."""
     console.print(Panel(
-        f"[bold #ff006e]OMEGA CLI (oz)[/] [white]v2.2.0[/]\n[italic cyan]Manual de Comando y Control[/]",
+        "[bold #ff006e]OMEGA CLI (oz)[/] [white]v2.2.0[/]\n[italic cyan]Manual de Comando y Control[/]",
         border_style="#00f5ff"
     ))
     table = Table(box=box.DOUBLE_EDGE, border_style="#00f5ff")
@@ -469,13 +469,13 @@ def show_plugins_detail():
         if info["aliases"]:
             # Mostrar solo los alias más útiles/comunes
             useful_aliases = info["aliases"][:10]
-            content.append(f"\n[bold white]⌨️ ALIAS CRÍTICOS:[/]")
-            content.append(f"  [#00f5ff]" + ", ".join(useful_aliases) + ("..." if len(info['aliases'])>10 else "") + "[/]")
+            content.append("\n[bold white]⌨️ ALIAS CRÍTICOS:[/]")
+            content.append("  [#00f5ff]" + ", ".join(useful_aliases) + ("..." if len(info['aliases'])>10 else "") + "[/]")
 
         if info["functions"]:
             useful_funcs = info["functions"][:5]
-            content.append(f"\n[bold white]⚙️ FUNCIONES DISPONIBLES:[/]")
-            content.append(f"  [#00ff9f]" + ", ".join(useful_funcs) + ("..." if len(info['functions'])>5 else "") + "[/]")
+            content.append("\n[bold white]⚙️ FUNCIONES DISPONIBLES:[/]")
+            content.append("  [#00ff9f]" + ", ".join(useful_funcs) + ("..." if len(info['functions'])>5 else "") + "[/]")
 
         # Añadir un "Tip de Pro" basado en el nombre
         tips = {

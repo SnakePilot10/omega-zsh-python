@@ -85,11 +85,15 @@ class FigletManager:
         """Genera un comando de shell seguro para .zshrc."""
 
         # 1. Resolver ruta absoluta de la fuente
-        # Esto es crítico para que funcione desde cualquier directorio en zsh
         font_path = self._resolve_font_path(font)
 
         # 2. Sanitizar texto
         safe_text = shlex.quote(text)
         safe_font = shlex.quote(font_path)
 
-        return f"figlet -f {safe_font} -c {safe_text} | lolcat"
+        # 3. Verificar si lolcat está instalado
+        which_val = shutil.which("lolcat")
+        has_lolcat = which_val is not None
+        
+        base_cmd = f"figlet -f {safe_font} -c {safe_text}"
+        return f"{base_cmd} | lolcat" if has_lolcat else base_cmd

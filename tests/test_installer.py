@@ -1,8 +1,10 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
+from omega_zsh.core.constants import BIN_PLUGINS, EXTERNAL_URLS
 from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.platforms.base import BasePlatform
-from omega_zsh.core.constants import BIN_PLUGINS, EXTERNAL_URLS
 
 
 class MockPlatform(BasePlatform):

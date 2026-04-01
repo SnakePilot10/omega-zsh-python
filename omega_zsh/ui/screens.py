@@ -1,11 +1,9 @@
-import logging
 import os
-from pathlib import Path
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
-from rich.table import Table
 from rich.text import Text
 from textual import on, work
 from textual.app import ComposeResult
@@ -13,8 +11,6 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import (
     Button,
-    Footer,
-    Header,
     Input,
     Label,
     ListItem,
@@ -28,7 +24,6 @@ from textual.widgets import (
 )
 from textual.widgets.selection_list import Selection
 
-from ..core.constants import DB_HEADERS
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
 

@@ -1,7 +1,7 @@
-from unittest.mock import MagicMock, patch
-from omega_zsh.ui.app import OmegaApp
-from omega_zsh.core.constants import ThemeDef
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+from omega_zsh.ui.app import OmegaApp
 
 
 def test_get_all_themes_discovery():

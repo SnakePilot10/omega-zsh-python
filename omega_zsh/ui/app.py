@@ -255,7 +255,6 @@ class OmegaApp(App):
             active_tools = [p for p in self.state.selected_plugins if p in bin_set]
 
             # Crear symlinks para temas Omega en custom/themes
-            import shutil as _shutil
             custom_themes = self.context.omz_dir / "custom" / "themes"
             custom_themes.mkdir(parents=True, exist_ok=True)
             

@@ -61,6 +61,18 @@ chmod +x install.sh
 
 El instalador detecta automáticamente: Termux, Debian/Ubuntu, Arch Linux, Alpine y Fedora.
 
+### Dependencias de Sistema (Ubuntu/Debian)
+
+Si prefieres instalar las dependencias manualmente o el instalador falla en algún paquete opcional, utiliza:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y zsh figlet fortune-mod cowsay git curl wget fzf zoxide lolcat debianutils
+```
+
+> [!IMPORTANT]
+> **Conflicto de lolcat:** Asegúrate de instalar `lolcat` mediante el gestor de paquetes del sistema (`apt`, `pkg`, `pacman`). **Evita** instalar el paquete `lolcat` de Python vía `pip`, ya que Omega-ZSH utiliza la versión binaria para colorear la shell y pueden existir conflictos de nombre.
+
 **Auto-sanación:** Si `.venv` está corrupto o la versión de Python cambió, el instalador lo recrea sin intervención manual.
 
 **Requisitos:** `python3`, `zsh`, `git`, `oh-my-zsh` instalado previamente.

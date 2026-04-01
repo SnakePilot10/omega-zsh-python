@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock, patch
-from omega_zsh.ui.app import OmegaApp
+
 from textual.widgets import TabbedContent
+
+from omega_zsh.ui.app import OmegaApp
 
 
 def test_action_switch_tab_cambia_tab_activo():

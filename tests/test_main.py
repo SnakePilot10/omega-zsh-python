@@ -1,4 +1,3 @@
-import sys
 from unittest.mock import patch
 
 from omega_zsh.__main__ import handle_exception, main
