@@ -102,24 +102,56 @@ fi
 print_step 2 7 "Asegurando dependencias del sistema..."
 
 if [ "$OS_ID" != "unknown" ]; then
-    if [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
-        echo -e "   ${INFO} Actualizando índices de paquetes..."
-        "${PRE_INSTALL_ARRAY[@]}" &>/dev/null || echo -e "   ${WARN} Fallo al actualizar índices."
+    # Verificar si ya tenemos los paquetes básicos instalados
+    NEED_INSTALL=false
+    for pkg in $CORE_PACKAGES; do
+        if [ "$pkg" = "python3-venv" ] && [ "$OS_ID" = "debian" ]; then
+            if ! dpkg -s python3-venv &>/dev/null; then NEED_INSTALL=true; break; fi
+        elif ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
+            NEED_INSTALL=true
+            break
+        fi
+    done
+
+    if [ "$NEED_INSTALL" = true ]; then
+        if [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
+            echo -e "   ${INFO} Actualizando índices de paquetes..."
+            "${PRE_INSTALL_ARRAY[@]}" &>/dev/null || echo -e "   ${WARN} Fallo al actualizar índices."
+        fi
+
+        echo -e "   ${INFO} Instalando paquetes críticos..."
+        "${PKG_MANAGER_ARRAY[@]}" $CORE_PACKAGES &>/dev/null
+    else
+        echo -e "   ${CHECK} Paquetes críticos ya instalados."
     fi
-
-    echo -e "   ${INFO} Instalando paquetes críticos..."
-    "${PKG_MANAGER_ARRAY[@]}" $CORE_PACKAGES &>/dev/null
     
-    ask_question "¿Deseas instalar herramientas estéticas adicionales? (figlet, lolcat, etc.)" "S/n"
-    read -n 1 opt_choice
-    echo ""
+    # Preguntar por extras solo si no están instalados
+    EXTRAS_MISSING=false
+    for pkg in $EXTRA_PACKAGES; do
+        if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
+            EXTRAS_MISSING=true
+            break
+        fi
+    done
 
-    if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
-        echo -e "   ${INFO} Instalando extras..."
-        for pkg in $EXTRA_PACKAGES; do
-            echo -ne "     + $pkg "
-            "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null && echo -e "${GREEN}${CHECK}${NC}" || echo -e "${RED}${ERROR}${NC}"
-        done
+    if [ "$EXTRAS_MISSING" = true ]; then
+        ask_question "¿Deseas instalar herramientas estéticas adicionales? (figlet, lolcat, etc.)" "S/n"
+        read -n 1 opt_choice
+        echo ""
+
+        if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
+            echo -e "   ${INFO} Instalando extras..."
+            for pkg in $EXTRA_PACKAGES; do
+                if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
+                    echo -ne "     + $pkg "
+                    "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null && echo -e "${GREEN}${CHECK}${NC}" || echo -e "${RED}${ERROR}${NC}"
+                else
+                    echo -e "     + $pkg [OK]"
+                fi
+            done
+        fi
+    else
+        echo -e "   ${CHECK} Herramientas adicionales ya instaladas."
     fi
 fi
 
@@ -138,15 +170,24 @@ print_step 4 7 "Configurando entorno virtual aislado (.venv)..."
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
 
-if [ -d "$VENV_DIR" ]; then
-    rm -rf "$VENV_DIR"
+VENV_VALID=true
+if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ] || [ ! -f "$VENV_DIR/bin/pip" ]; then
+    VENV_VALID=false
 fi
 
-run_with_spinner "Creando venv con Python3" "python3 -m venv \"$VENV_DIR\""
+if [ "$VENV_VALID" = false ]; then
+    if [ -d "$VENV_DIR" ]; then rm -rf "$VENV_DIR"; fi
+    run_with_spinner "Creando venv con Python3" "python3 -m venv \"$VENV_DIR\""
+else
+    echo -e "   ${CHECK} Entorno virtual ya configurado."
+fi
 
 # --- 7. INSTALACIÓN APP ---
 print_step 5 7 "Instalando Omega-ZSH y dependencias de Python..."
-run_with_spinner "Descargando dependencias de Python" "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
+# Solo instalamos si no está instalado o si hay cambios (pip maneja el cache, pero entrar en pip ya toma tiempo)
+# Si omega ya existe en el venv, podemos ir más rápido, pero pip install . es lo más seguro.
+# Para velocidad máxima, solo ejecutamos pip si es necesario, pero pip --quiet es decente.
+run_with_spinner "Sincronizando dependencias de Python" "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
 
 # --- 8. ACCESO GLOBAL ---
 print_step 6 7 "Configurando acceso global (omega/oz)..."
