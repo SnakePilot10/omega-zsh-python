@@ -72,7 +72,7 @@ ask_question() {
 }
 
 # --- 3. DETECCIÓN DE ENTORNO ---
-print_step 1 7 "Detectando entorno del sistema..."
+print_step 1 8 "Detectando entorno del sistema..."
 
 if [ -f "/etc/debian_version" ]; then
     OS_ID="debian"
@@ -98,8 +98,16 @@ else
     echo -e "   ${WARN} No se pudo detectar la distro automáticamente."
 fi
 
-# --- 4. INSTALACIÓN DE DEPENDENCIAS ---
-print_step 2 7 "Asegurando dependencias del sistema..."
+# --- 4. ASEGURAR OH MY ZSH ---
+print_step 2 8 "Asegurando motor Oh My Zsh..."
+if [ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
+    run_with_spinner "Instalando Oh My Zsh (Bootstrap)" "RUNZSH=no KEEP_ZSHRC=yes sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" --unattended"
+else
+    echo -e "   ${CHECK} Oh My Zsh ya está presente."
+fi
+
+# --- 5. INSTALACIÓN DE DEPENDENCIAS ---
+print_step 3 8 "Asegurando dependencias del sistema..."
 
 if [ "$OS_ID" != "unknown" ]; then
     # Verificar si ya tenemos los paquetes básicos instalados
@@ -156,7 +164,7 @@ if [ "$OS_ID" != "unknown" ]; then
 fi
 
 # --- 5. LIMPIEZA DE CONFLICTOS ---
-print_step 3 7 "Limpiando conflictos de entorno..."
+print_step 4 8 "Limpiando conflictos de entorno..."
 CLEAN_CMD="true"
 if command -v pip3 &> /dev/null; then
     if pip3 show lolcat &> /dev/null; then
@@ -166,7 +174,7 @@ fi
 run_with_spinner "Eliminando lolcat (Python) global" "$CLEAN_CMD"
 
 # --- 6. ENTORNO VIRTUAL ---
-print_step 4 7 "Configurando entorno virtual aislado (.venv)..."
+print_step 5 8 "Configurando entorno virtual aislado (.venv)..."
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
 
@@ -183,7 +191,7 @@ else
 fi
 
 # --- 7. INSTALACIÓN APP ---
-print_step 5 7 "Instalando Omega-ZSH y dependencias de Python..."
+print_step 6 8 "Instalando Omega-ZSH y dependencias de Python..."
 # Sistema de caché inteligente basado en Hash de pyproject.toml
 # Aseguramos que PROJECT_DIR sea absoluto
 ABS_PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -203,7 +211,7 @@ else
 fi
 
 # --- 8. ACCESO GLOBAL ---
-print_step 6 7 "Configurando acceso global (omega/oz)..."
+print_step 7 8 "Configurando acceso global (omega/oz)..."
 if [ "$OS_ID" = "termux" ]; then
     BIN_DEST="/data/data/com.termux/files/usr/bin"
     SUDO_CMD=""
@@ -221,7 +229,7 @@ ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_
 echo -e "   ${CHECK} Binarios en: ${BOLD}$BIN_DEST${NC}"
 
 # --- 9. CONFIGURACIÓN DE SHELL ---
-print_step 7 7 "Finalización y configuración de Shell..."
+print_step 8 8 "Finalización y configuración de Shell..."
 
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
