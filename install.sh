@@ -95,7 +95,7 @@ elif [ -d "/data/data/com.termux" ] || [ -n "$TERMUX_VERSION" ]; then
     echo -e "   ${CHECK} Entorno detectado: ${BOLD}Android (Termux)${NC}"
     PKG_MANAGER_ARRAY=(pkg install -y)
     CORE_PACKAGES="python zsh git curl wget debianutils bc"
-    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide eza"
+    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide lolcat eza"
 elif [ -f "/etc/arch-release" ]; then
     OS_ID="arch"
     echo -e "   ${CHECK} Entorno detectado: ${BOLD}Arch Linux${NC}"
