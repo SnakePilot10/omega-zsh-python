@@ -82,7 +82,7 @@ class FigletManager:
             return f"Error renderizando: {text}"
 
     def generate_safe_command(self, text: str, font: str) -> str:
-        """Genera un comando de shell seguro para .zshrc."""
+        """Genera un comando de shell blindado para .zshrc."""
 
         # 1. Resolver ruta absoluta de la fuente
         font_path = self._resolve_font_path(font)
@@ -91,9 +91,7 @@ class FigletManager:
         safe_text = shlex.quote(text)
         safe_font = shlex.quote(font_path)
 
-        # 3. Verificar si lolcat está instalado
-        which_val = shutil.which("lolcat")
-        has_lolcat = which_val is not None
-        
+        # 3. Generar comando con verificación de runtime (Zsh native)
+        # Esto evita el lag de 'command not found' si lolcat desaparece
         base_cmd = f"figlet -f {safe_font} -c {safe_text}"
-        return f"{base_cmd} | lolcat" if has_lolcat else base_cmd
+        return f"(( $+commands[lolcat] )) && {base_cmd} | lolcat || {base_cmd}"
