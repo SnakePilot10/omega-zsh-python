@@ -51,11 +51,20 @@ run_with_spinner() {
         sleep 0.05
     done
     
-    # Restaurar cursor y mostrar estado final
+    # Restaurar cursor
     tput cnorm 2>/dev/null || echo -ne "\033[?25h"
-    echo -ne "\b\b\b\b\b\b${GREEN}${CHECK}${NC}\n"
     
-    wait $pid || return 1
+    # VERIFICACIÓN REAL DEL CÓDIGO DE SALIDA
+    wait $pid
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        echo -ne "\b\b\b\b\b\b${GREEN}${CHECK}${NC}\n"
+        return 0
+    else
+        echo -ne "\b\b\b\b\b\b${RED}${ERROR}${NC}\n"
+        return $exit_code
+    fi
 }
 
 print_step() {
@@ -101,6 +110,18 @@ fi
 # --- 4. ASEGURAR OH MY ZSH ---
 print_step 2 8 "Asegurando motor Oh My Zsh..."
 if [ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
+    # Si la carpeta existe pero el archivo no, es una instalación rota. Limpiar.
+    if [ -d "$HOME/.oh-my-zsh" ]; then
+        echo -e "   ${WARN} Detectada instalación de Oh My Zsh corrupta. Limpiando..."
+        rm -rf "$HOME/.oh-my-zsh"
+    fi
+    
+    # Verificar curl
+    if ! command -v curl &>/dev/null; then
+        echo -e "   ${INFO} Instalando curl temporalmente para bootstrap..."
+        "${PKG_MANAGER_ARRAY[@]}" curl &>/dev/null
+    fi
+
     run_with_spinner "Instalando Oh My Zsh (Bootstrap)" "RUNZSH=no KEEP_ZSHRC=yes sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" --unattended"
 else
     echo -e "   ${CHECK} Oh My Zsh ya está presente."
