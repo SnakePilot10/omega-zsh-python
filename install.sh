@@ -155,16 +155,16 @@ if [ "$OS_ID" != "unknown" ]; then
     fi
     
     # Preguntar por extras solo si no están instalados
-    EXTRAS_MISSING=false
+    MISSING_EXTRAS=""
     for pkg in $EXTRA_PACKAGES; do
         if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
-            EXTRAS_MISSING=true
-            break
+            MISSING_EXTRAS="$MISSING_EXTRAS $pkg"
         fi
     done
 
-    if [ "$EXTRAS_MISSING" = true ]; then
-        ask_question "¿Deseas instalar herramientas estéticas adicionales? (figlet, lolcat, etc.)" "S/n"
+    if [ -n "$MISSING_EXTRAS" ]; then
+        echo -e "   ${INFO} Faltan herramientas opcionales:${BOLD}${YELLOW}$MISSING_EXTRAS${NC}"
+        ask_question "¿Deseas instalarlas ahora?" "S/n"
         read -n 1 opt_choice
         echo ""
 
@@ -299,12 +299,20 @@ if [ "$CURRENT_SHELL" != "zsh" ]; then
 fi
 
 echo -e "\n${BOLD}${GREEN}${STAR} ¡Instalación de Omega-ZSH completada con éxito! ${STAR}${NC}"
-echo -e "${CYAN}Escribe ${BOLD}'omega'${NC}${CYAN} para iniciar la interfaz visual.${NC}"
 
-# Lanzar inmediatamente
-if [ -f "$BIN_DEST/omega" ]; then
-    export PATH="$PATH:$BIN_DEST"
-    exec "$BIN_DEST/omega"
+ask_question "¿Deseas iniciar la interfaz visual (omega) ahora?" "S/n"
+read -n 1 launch_choice
+echo ""
+
+if [[ $launch_choice =~ ^[SsYy]$ ]] || [ -z "$launch_choice" ]; then
+    # Lanzar inmediatamente
+    if [ -f "$BIN_DEST/omega" ]; then
+        export PATH="$PATH:$BIN_DEST"
+        exec "$BIN_DEST/omega"
+    else
+        exec "$VENV_DIR/bin/omega"
+    fi
 else
-    exec "$VENV_DIR/bin/omega"
+    echo -e "${CYAN}Escribe ${BOLD}'omega'${NC}${CYAN} en cualquier momento para iniciar la interfaz visual.${NC}"
+    exit 0
 fi
