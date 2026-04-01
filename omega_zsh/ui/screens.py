@@ -397,17 +397,17 @@ class InstallScreen(Screen):
         self.app.run_installation(self.on_installation_message)
 
     def on_installation_message(self, message: str) -> None:
-        self.query_one("#install-log").write(Text.from_markup(message + "\n"))
+        self.query_one("#install-log").write(message + "\n")
 
     def on_installation_finished(self, success: bool) -> None:
         log = self.query_one("#install-log")
         if success:
-            log.write(Text.from_markup("\n[bold #00ff9f]¡INSTALACIÓN COMPLETADA CON ÉXITO![/]\n"))
+            log.write("\n[ OK ] ¡INSTALACIÓN COMPLETADA CON ÉXITO!\n")
             self.query_one("#install-progress").progress = 100
             self.query_one("#btn-finish").disabled = False
             self.query_one("#btn-cancel").disabled = True
         else:
-            log.write(Text.from_markup("\n[bold red]LA INSTALACIÓN HA FALLADO O SE CANCELÓ.[/]\n"))
+            log.write("\n[FAIL] LA INSTALACIÓN HA FALLADO O SE CANCELÓ.\n")
             self.query_one("#btn-cancel").label = "Volver"
 
     @on(Button.Pressed, "#btn-finish")
