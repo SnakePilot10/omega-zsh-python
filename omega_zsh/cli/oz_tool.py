@@ -226,7 +226,7 @@ def benchmark_shell():
         advice = f"[{color}]SE HA DETECTADO LAG EN EL ARRANQUE DEL SHELL.[/] [white]Tu terminal tarda demasiado en estar lista para la acción.[/]"
 
         steps = [
-            "Ejecuta [bold #00f5ff]zsh -i -c 'zprof'[/] para ver exactamente qué función está frenando el inicio.",
+            "Ejecuta [bold #00f5ff]oz profile[/] para un análisis automatizado y detallado (zprof).",
             "Desactiva plugins pesados en la TUI (oz) que no uses frecuentemente.",
             "Evita comandos pesados como [bold #ff006e]'apt update'[/] o [bold #ff006e]'check-for-updates'[/] dentro de tu .zshrc."
         ]
@@ -255,6 +255,54 @@ def benchmark_shell():
         border_style="#00f5ff",
         padding=(1, 2)
     ))
+
+
+def run_zprof_analysis():
+    """Automatiza la ejecución de zprof inyectándolo dinámicamente."""
+    console.print("[bold #00f5ff]🔍 INICIANDO PERFILADO PROFUNDO (Deep Probe)...[/]")
+
+    with Progress(
+        SpinnerColumn(style="bold #ff006e"),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True
+    ) as progress:
+        task = progress.add_task("[bold #00f5ff]Analizando secuencia de arranque...", total=100)
+
+        # Comando mágico: inyectar zprof, cargar shell, ejecutar zprof y salir
+        cmd = "zmodload zsh/zprof && source ~/.zshrc && zprof | head -n 40"
+        try:
+            result = subprocess.run(
+                ["zsh", "-i", "-c", cmd],
+                capture_output=True, text=True, timeout=10
+            )
+            progress.update(task, completed=100)
+
+            if result.stdout:
+                table = Table(title="TOP 20 FUNCIONES MÁS PESADAS (ms)", box=box.ROUNDED, border_style="#ff006e")
+                table.add_column("Llamadas", justify="right", style="dim")
+                table.add_column("Tiempo (ms)", justify="right", style="bold #ffe600")
+                table.add_column("Función", style="cyan")
+
+                # Parsear salida de zprof (Líneas 4 en adelante suelen ser los datos)
+                lines = result.stdout.splitlines()
+                # Filtrar líneas vacías y encabezados
+                data_lines = [L for L in lines if L.strip() and not L.startswith("num")]
+                for line in data_lines[:20]:
+                    parts = line.split()
+                    if len(parts) >= 4:
+                        calls = parts[0]
+                        time_ms = parts[1]
+                        func = parts[3]
+                        table.add_row(calls, time_ms, func)
+
+                console.print(table)
+                console.print("[#00f5ff]💡 TIP:[/] Los tiempos altos en 'compinit' o 'syntax-highlighting' son normales en sistemas ARM.")
+            else:
+                console.print("[red]No se pudo obtener datos de perfilado. Asegúrate de que Zsh esté bien configurado.[/]")
+                if result.stderr:
+                    console.print(f"[dim red]Error: {result.stderr}[/]")
+        except Exception as e:
+            console.print(f"[bold red]Error en Deep Probe: {e}[/]")
 
 # --- STATS CON SUGERENCIAS DE ALIAS ---
 
@@ -409,6 +457,7 @@ def show_help():
     table.add_row("oz banner", "oz b", "Muestra telemetría del sistema")
     table.add_row("oz plugins", "oz p", "Manual detallado de tus herramientas")
     table.add_row("oz bench", "oz v", "Prueba de velocidad de arranque (Hiperdrive)")
+    table.add_row("oz profile", "oz vp", "Perfilado profundo automático (zprof)")
     table.add_row("oz stats", "oz s", "Análisis de historial y sugerencia de alias")
     table.add_row("oz themes", "oz t", "Explorador de la librería de temas")
     table.add_row("oz update", "oz u", "Sincroniza Omega con el repositorio central")
@@ -426,6 +475,8 @@ def main():
             show_plugins_detail()
         elif cmd in ["bench", "v", "speed"]:
             benchmark_shell()
+        elif cmd in ["profile", "vp"]:
+            run_zprof_analysis()
         elif cmd in ["stats", "s"]:
             analyze_history()
         elif cmd in ["themes", "t"]:
