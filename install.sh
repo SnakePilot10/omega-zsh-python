@@ -185,12 +185,18 @@ fi
 # --- 7. INSTALACIÓN APP ---
 print_step 5 7 "Instalando Omega-ZSH y dependencias de Python..."
 # Sistema de caché inteligente basado en Hash de pyproject.toml
-CURR_HASH=$(md5sum "$PROJECT_DIR/pyproject.toml" 2>/dev/null | cut -d' ' -f1 || sha1sum "$PROJECT_DIR/pyproject.toml" 2>/dev/null | cut -d' ' -f1 || echo "none")
+# Aseguramos que PROJECT_DIR sea absoluto
+ABS_PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CURR_HASH="none"
+if [ -f "$ABS_PROJECT_DIR/pyproject.toml" ]; then
+    CURR_HASH=$(md5sum "$ABS_PROJECT_DIR/pyproject.toml" 2>/dev/null | cut -d' ' -f1 || sha1sum "$ABS_PROJECT_DIR/pyproject.toml" 2>/dev/null | cut -d' ' -f1)
+fi
+
 LAST_HASH_FILE="$VENV_DIR/.last_install_hash"
 LAST_HASH=$(cat "$LAST_HASH_FILE" 2>/dev/null || echo "")
 
-if [ "$CURR_HASH" != "$LAST_HASH" ] || [ ! -f "$VENV_DIR/bin/omega" ]; then
-    run_with_spinner "Sincronizando dependencias de Python" "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
+if [ "$CURR_HASH" != "$LAST_HASH" ] || [ ! -f "$VENV_DIR/bin/omega" ] || [ ! -f "$VENV_DIR/bin/oz" ]; then
+    run_with_spinner "Sincronizando dependencias de Python" "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$ABS_PROJECT_DIR\" --quiet"
     echo "$CURR_HASH" > "$LAST_HASH_FILE"
 else
     echo -e "   ${CHECK} Dependencias de Python ya sincronizadas."
