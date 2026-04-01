@@ -184,10 +184,17 @@ fi
 
 # --- 7. INSTALACIÓN APP ---
 print_step 5 7 "Instalando Omega-ZSH y dependencias de Python..."
-# Solo instalamos si no está instalado o si hay cambios (pip maneja el cache, pero entrar en pip ya toma tiempo)
-# Si omega ya existe en el venv, podemos ir más rápido, pero pip install . es lo más seguro.
-# Para velocidad máxima, solo ejecutamos pip si es necesario, pero pip --quiet es decente.
-run_with_spinner "Sincronizando dependencias de Python" "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
+# Sistema de caché inteligente basado en Hash de pyproject.toml
+CURR_HASH=$(md5sum "$PROJECT_DIR/pyproject.toml" 2>/dev/null | cut -d' ' -f1 || sha1sum "$PROJECT_DIR/pyproject.toml" 2>/dev/null | cut -d' ' -f1 || echo "none")
+LAST_HASH_FILE="$VENV_DIR/.last_install_hash"
+LAST_HASH=$(cat "$LAST_HASH_FILE" 2>/dev/null || echo "")
+
+if [ "$CURR_HASH" != "$LAST_HASH" ] || [ ! -f "$VENV_DIR/bin/omega" ]; then
+    run_with_spinner "Sincronizando dependencias de Python" "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
+    echo "$CURR_HASH" > "$LAST_HASH_FILE"
+else
+    echo -e "   ${CHECK} Dependencias de Python ya sincronizadas."
+fi
 
 # --- 8. ACCESO GLOBAL ---
 print_step 6 7 "Configurando acceso global (omega/oz)..."
