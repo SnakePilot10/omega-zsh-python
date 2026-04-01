@@ -1,183 +1,141 @@
 #!/usr/bin/env bash
 set -e
 
-# --- 0. MANEJO DE INTERRUPCIONES ---
-# Función para limpiar y salir si el usuario presiona Ctrl+C
+# --- 0. CONFIGURACIÓN ESTÉTICA (COLORES) ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# --- Iconos ---
+CHECK="✅"
+WARN="⚠️"
+ERROR="❌"
+INFO="ℹ️"
+STAR="✨"
+
+# --- 1. MANEJO DE INTERRUPCIONES ---
 cleanup_and_exit() {
-    echo -e "\n${RED}⚠️  Instalación interrumpida por el usuario. Saliendo...${NC}"
-    # Matar procesos hijos si existen
+    echo -e "\n${RED}${ERROR}  Instalación interrumpida por el usuario. Saliendo...${NC}"
     pkill -P $$ || true
     exit 130
 }
-
-# Configurar el trap para SIGINT (Ctrl+C) y SIGTERM
 trap cleanup_and_exit SIGINT SIGTERM
 
-# Colores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# --- 2. FUNCIONES HELPERS ---
+show_progress() {
+    local duration=$1
+    local steps=20
+    local step_time=$(echo "scale=2; $duration / $steps" | bc)
+    
+    echo -ne "   [${CYAN}"
+    for ((i=0; i<steps; i++)); do
+        echo -ne "■"
+        sleep "$step_time"
+    done
+    echo -e "${NC}] 100%"
+}
 
-echo -e "${BLUE}>>> Iniciando Instalador de Omega-ZSH (Python Edition)${NC}"
+print_step() {
+    local num=$1
+    local total=$2
+    local msg=$3
+    echo -e "\n${BOLD}${BLUE}[$num/$total]${NC} ${CYAN}$msg${NC}"
+}
 
-# --- 1. CONFIGURACIÓN DE DEPENDENCIAS DEL SISTEMA ---
-declare -a PKG_MANAGER_ARRAY
-declare -a PRE_INSTALL_ARRAY
-PACKAGES=""
+ask_question() {
+    local msg=$1
+    local default=$2
+    echo -ne "${BOLD}${YELLOW}>> $msg [$default]: ${NC}"
+}
 
-echo -e "${BLUE}>> Detectando entorno del sistema...${NC}"
+# --- 3. DETECCIÓN DE ENTORNO ---
+print_step 1 7 "Detectando entorno del sistema..."
 
 if [ -f "/etc/debian_version" ]; then
-    echo -e "${GREEN}>> Entorno detectado: Debian/Ubuntu${NC}"
+    OS_ID="debian"
+    echo -e "   ${CHECK} Entorno detectado: ${BOLD}Debian/Ubuntu${NC}"
     PRE_INSTALL_ARRAY=(sudo apt-get update)
     PKG_MANAGER_ARRAY=(sudo apt-get install -y)
-    # python3-venv es CRÍTICO en Ubuntu para que python3 -m venv funcione
-    CORE_PACKAGES="python3 python3-venv zsh git curl wget debianutils"
+    CORE_PACKAGES="python3 python3-venv zsh git curl wget debianutils bc"
     EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
 elif [ -d "/data/data/com.termux" ] || [ -n "$TERMUX_VERSION" ]; then
-    echo -e "${GREEN}>> Entorno detectado: Android (Termux)${NC}"
+    OS_ID="termux"
+    echo -e "   ${CHECK} Entorno detectado: ${BOLD}Android (Termux)${NC}"
     PKG_MANAGER_ARRAY=(pkg install -y)
-    CORE_PACKAGES="python zsh git curl wget debianutils"
+    CORE_PACKAGES="python zsh git curl wget debianutils bc"
     EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide eza"
 elif [ -f "/etc/arch-release" ]; then
-    echo -e "${GREEN}>> Entorno detectado: Arch Linux${NC}"
+    OS_ID="arch"
+    echo -e "   ${CHECK} Entorno detectado: ${BOLD}Arch Linux${NC}"
     PKG_MANAGER_ARRAY=(sudo pacman -Sy --noconfirm --needed)
-    CORE_PACKAGES="python zsh git curl wget which"
-    EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
-elif [ -f "/etc/alpine-release" ]; then
-    echo -e "${GREEN}>> Entorno detectado: Alpine Linux${NC}"
-    PRE_INSTALL_ARRAY=(sudo apk update)
-    PKG_MANAGER_ARRAY=(sudo apk add)
-    CORE_PACKAGES="python3 py3-venv zsh git curl wget"
-    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide lolcat eza"
-elif [ -f "/etc/fedora-release" ]; then
-    echo -e "${GREEN}>> Entorno detectado: Fedora${NC}"
-    PKG_MANAGER_ARRAY=(sudo dnf install -y)
-    CORE_PACKAGES="python3 python3-virtualenv zsh git curl wget"
+    CORE_PACKAGES="python zsh git curl wget which bc"
     EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
 else
-    echo -e "${RED}⚠️  No se pudo detectar la distro automáticamente.${NC}"
-    echo "Se asumirá que las dependencias (zsh, python3, etc.) ya están instaladas."
+    OS_ID="unknown"
+    echo -e "   ${WARN} No se pudo detectar la distro automáticamente."
 fi
 
-# --- 2. INSTALACIÓN DE DEPENDENCIAS DEL SISTEMA ---
-if [ ${#PKG_MANAGER_ARRAY[@]} -gt 0 ]; then
-    echo -e "${BLUE}>> Asegurando dependencias del sistema...${NC}"
-    
+# --- 4. INSTALACIÓN DE DEPENDENCIAS ---
+print_step 2 7 "Asegurando dependencias del sistema..."
+
+if [ "$OS_ID" != "unknown" ]; then
     if [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
-        echo -e "${BLUE}>> Actualizando índices de paquetes...${NC}"
-        "${PRE_INSTALL_ARRAY[@]}" || echo -e "${RED}⚠️  Fallo al actualizar índices. Intentando continuar...${NC}"
+        echo -e "   ${INFO} Actualizando índices de paquetes..."
+        "${PRE_INSTALL_ARRAY[@]}" &>/dev/null || echo -e "   ${WARN} Fallo al actualizar índices."
     fi
 
-    echo -e "${BLUE}>> Instalando paquetes críticos: $CORE_PACKAGES${NC}"
-    "${PKG_MANAGER_ARRAY[@]}" $CORE_PACKAGES
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}❌ Falló la instalación de dependencias CRÍTICAS.${NC}"
-        exit 1
-    fi
-
-    echo -e "${BLUE}>> ¿Deseas instalar las herramientas estéticas adicionales? (Opcional)${NC}"
-    echo -e "${BLUE}   (figlet, fastfetch, lolcat, eza, etc.) [S/n]: ${NC}"
-    read -t 10 -n 1 opt_choice || opt_choice="s"
+    echo -e "   ${INFO} Instalando paquetes críticos..."
+    "${PKG_MANAGER_ARRAY[@]}" $CORE_PACKAGES &>/dev/null
+    
+    ask_question "¿Deseas instalar herramientas estéticas adicionales? (figlet, lolcat, etc.)" "S/n"
+    read -t 15 -n 1 opt_choice || opt_choice="s"
     echo ""
 
     if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
-        echo -e "${BLUE}>> Instalando herramientas adicionales: $EXTRA_PACKAGES${NC}"
-        # Instalamos una por una para que si una falla (ej: fastfetch no en PPA), no detenga el resto
+        echo -e "   ${INFO} Instalando extras..."
         for pkg in $EXTRA_PACKAGES; do
-            echo -e "${BLUE}   + Instalando $pkg...${NC}"
-            "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null || echo -e "${RED}   ⚠️  No se pudo instalar $pkg. Continuando...${NC}"
+            echo -ne "     + $pkg "
+            "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null && echo -e "${GREEN}${CHECK}${NC}" || echo -e "${RED}${ERROR}${NC}"
         done
-    else
-        echo -e "${BLUE}>> Saltando herramientas adicionales a petición del usuario.${NC}"
     fi
 fi
 
-# --- 3. LIMPIEZA DE CONFLICTOS (lolcat) ---
+# --- 5. LIMPIEZA DE CONFLICTOS ---
+print_step 3 7 "Limpiando conflictos de entorno..."
 if command -v pip3 &> /dev/null; then
     if pip3 show lolcat &> /dev/null; then
-        echo -e "${BLUE}>> Detectado conflicto: lolcat (versión Python) está instalado globalmente.${NC}"
-        echo -e "${BLUE}   Eliminando para preferir la versión de sistema más estable...${NC}"
-        sudo pip3 uninstall -y lolcat &> /dev/null || pip3 uninstall -y lolcat &> /dev/null || true
+        echo -e "   ${INFO} Eliminando lolcat (Python) global..."
+        sudo pip3 uninstall -y lolcat &>/dev/null || pip3 uninstall -y lolcat &>/dev/null || true
     fi
 fi
+show_progress 0.5
 
-# --- 4. VERIFICACIÓN CRÍTICA DE DEPENDENCIAS ---
-# Después de intentar instalar, verificamos que los comandos esenciales existan.
-echo -e "${BLUE}>> Verificando la instalación de dependencias críticas...${NC}"
-if ! command -v zsh &> /dev/null; then
-    echo -e "${RED}❌ Error Crítico: El comando 'zsh' no se encontró después de la instalación.${NC}"
-    echo -e "${RED}   Por favor, revisa los errores del gestor de paquetes más arriba.${NC}"
-    exit 1
-fi
-if ! command -v python3 &> /dev/null; then
-    echo -e "${RED}❌ Error Crítico: El comando 'python3' no se encontró después de la instalación.${NC}"
-    echo -e "${RED}   Por favor, revisa los errores del gestor de paquetes más arriba.${NC}"
-    exit 1
-fi
-if ! python3 -c "import venv" &> /dev/null; then
-    echo -e "${RED}❌ Error Crítico: El módulo 'venv' de Python no está disponible.${NC}"
-    echo -e "${RED}   El instalador intentó instalarlo pero falló. Revisa los errores del gestor de paquetes.${NC}"
-    exit 1
-fi
-echo -e "${GREEN}>> Dependencias críticas verificadas con éxito.${NC}"
-
-# --- 4. CREACIÓN DEL ENTORNO VIRTUAL ---
+# --- 6. ENTORNO VIRTUAL ---
+print_step 4 7 "Configurando entorno virtual aislado (.venv)..."
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
 
-# Detección inteligente de entornos virtuales rotos o de versiones diferentes
-SHOULD_RECREATE=false
-
 if [ -d "$VENV_DIR" ]; then
-    # Caso 1: Falta el binario de pip
-    if [ ! -f "$VENV_DIR/bin/pip" ]; then
-        echo -e "${BLUE}>> Entorno virtual (.venv) incompleto (falta pip). Se recreará.${NC}"
-        SHOULD_RECREATE=true
-    # Caso 2: El entorno es de una versión de Python diferente a la del sistema
-    else
-        VENV_PY_VER=$("$VENV_DIR/bin/python" --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-        SYS_PY_VER=$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-        
-        if [ "$VENV_PY_VER" != "$SYS_PY_VER" ]; then
-            echo -e "${BLUE}>> Versión de Python cambió ($VENV_PY_VER -> $SYS_PY_VER). Recreando entorno...${NC}"
-            SHOULD_RECREATE=true
-        # Caso 3: El entorno está corrupto (ej: ModuleNotFoundError en pip)
-        elif ! "$VENV_DIR/bin/pip" --version &> /dev/null; then
-            echo -e "${BLUE}>> Entorno virtual (.venv) detectado como CORRUPTO. Se recreará.${NC}"
-            SHOULD_RECREATE=true
-        fi
-    fi
-fi
-
-if [ "$SHOULD_RECREATE" = true ]; then
     rm -rf "$VENV_DIR"
 fi
 
-if [ ! -d "$VENV_DIR" ]; then
-    echo -e "${BLUE}>> Creando entorno virtual aislado (.venv)...${NC}"
-    python3 -m venv "$VENV_DIR"
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}❌ Falló la creación del entorno virtual.${NC}"
-        echo "Asegúrate de tener permisos de escritura y el módulo venv instalado."
-        exit 1
-    fi
-fi
+python3 -m venv "$VENV_DIR"
+show_progress 1
 
-# --- 5. INSTALACIÓN DE LA APLICACIÓN Y DEPENDENCIAS ---
-echo -e "${BLUE}>> Instalando la aplicación y sus dependencias...${NC}"
+# --- 7. INSTALACIÓN APP ---
+print_step 5 7 "Instalando Omega-ZSH y dependencias de Python..."
 "$VENV_DIR/bin/pip" install --upgrade pip --quiet
-"$VENV_DIR/bin/pip" install "$PROJECT_DIR" --quiet || {
-    echo -e "${RED}❌ Falló la instalación de Omega-ZSH.${NC}"
-    exit 1
-}
+"$VENV_DIR/bin/pip" install "$PROJECT_DIR" --quiet
+show_progress 1.5
 
-# --- 6. CREAR ENLACES SIMBÓLICOS PARA ACCESO GLOBAL ---
-echo -e "${BLUE}>> Configurando acceso global para 'omega' y 'oz'...${NC}"
-
-# 1. Determinar el mejor directorio de binarios
-if [ -d "/data/data/com.termux/files/usr/bin" ]; then
+# --- 8. ACCESO GLOBAL ---
+print_step 6 7 "Configurando acceso global (omega/oz)..."
+if [ "$OS_ID" = "termux" ]; then
     BIN_DEST="/data/data/com.termux/files/usr/bin"
     SUDO_CMD=""
 elif [ -w "/usr/local/bin" ]; then
@@ -189,38 +147,37 @@ else
     SUDO_CMD=""
 fi
 
-echo -e "${BLUE}>> Instalando binarios en: $BIN_DEST${NC}"
-
-# 2. Crear symlinks
 ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega"
 ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz"
+echo -e "   ${CHECK} Binarios en: ${BOLD}$BIN_DEST${NC}"
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}⚠️  No se pudieron crear los enlaces simbólicos automáticamente.${NC}"
-    echo -e "   Puedes ejecutar la app directamente usando: ${GREEN}$VENV_DIR/bin/omega${NC}"
-else
-    echo -e "${GREEN}>> Enlaces creados correctamente en $BIN_DEST.${NC}"
+# --- 9. CONFIGURACIÓN DE SHELL ---
+print_step 7 7 "Finalización y configuración de Shell..."
+
+CURRENT_SHELL=$(basename "$SHELL")
+if [ "$CURRENT_SHELL" != "zsh" ]; then
+    ask_question "¿Deseas establecer Zsh como tu shell predeterminada?" "S/n"
+    read -t 15 -n 1 shell_choice || shell_choice="s"
+    echo ""
+    
+    if [[ $shell_choice =~ ^[SsYy]$ ]] || [ -z "$shell_choice" ]; then
+        echo -e "   ${INFO} Cambiando shell predeterminada a Zsh..."
+        if [ "$OS_ID" = "termux" ]; then
+            chsh -s zsh
+        else
+            sudo chsh -s "$(which zsh)" "$USER" || chsh -s "$(which zsh)"
+        fi
+        echo -e "   ${CHECK} Shell cambiada. El cambio se aplicará en tu próxima sesión."
+    fi
 fi
 
-# 3. Verificar si el destino está en el PATH
-if [[ ":$PATH:" != *":$BIN_DEST:"* ]]; then
-    echo -e "${RED}⚠️  AVISO: $BIN_DEST no está en tu PATH.${NC}"
-    echo -e "   Para arreglarlo, añade esto a tu ~/.zshrc:"
-    echo -e "   ${BLUE}export PATH=\"\$PATH:$BIN_DEST\"${NC}"
-fi
+echo -e "\n${BOLD}${GREEN}${STAR} ¡Instalación de Omega-ZSH completada con éxito! ${STAR}${NC}"
+echo -e "${CYAN}Escribe ${BOLD}'omega'${NC}${CYAN} para iniciar la interfaz visual.${NC}"
 
-# --- 7. FINALIZACIÓN Y LANZAMIENTO ---
-echo -e "${GREEN}>> ✅ ¡Instalación completada con éxito!${NC}"
-echo -e "${BLUE}>> Lanzando Omega-ZSH para configuración inicial...${NC}"
-
-# Ejecutar la aplicación inmediatamente
+# Lanzar inmediatamente
 if [ -f "$BIN_DEST/omega" ]; then
     export PATH="$PATH:$BIN_DEST"
     exec "$BIN_DEST/omega"
-elif [ -f "$VENV_DIR/bin/omega" ]; then
-    exec "$VENV_DIR/bin/omega"
 else
-    echo -e "${RED}❌ No se pudo lanzar la aplicación automáticamente.${NC}"
-    echo -e "   Ejecútala manualmente con: ${GREEN}omega${NC}"
+    exec "$VENV_DIR/bin/omega"
 fi
-
