@@ -81,7 +81,7 @@ ask_question() {
 }
 
 # --- 3. DETECCIÓN DE ENTORNO ---
-print_step 1 8 "Detectando entorno del sistema..."
+print_step 1 9 "Detectando entorno del sistema..."
 
 if [ -f "/etc/debian_version" ]; then
     OS_ID="debian"
@@ -108,7 +108,7 @@ else
 fi
 
 # --- 4. ASEGURAR OH MY ZSH ---
-print_step 2 8 "Asegurando motor Oh My Zsh..."
+print_step 2 9 "Asegurando motor Oh My Zsh..."
 if [ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
     # Si la carpeta existe pero el archivo no, es una instalación rota. Limpiar.
     if [ -d "$HOME/.oh-my-zsh" ]; then
@@ -128,7 +128,7 @@ else
 fi
 
 # --- 5. INSTALACIÓN DE DEPENDENCIAS ---
-print_step 3 8 "Asegurando dependencias del sistema..."
+print_step 3 9 "Asegurando dependencias del sistema..."
 
 if [ "$OS_ID" != "unknown" ]; then
     # Verificar si ya tenemos los paquetes básicos instalados
@@ -184,8 +184,8 @@ if [ "$OS_ID" != "unknown" ]; then
     fi
 fi
 
-# --- 5. LIMPIEZA DE CONFLICTOS ---
-print_step 4 8 "Limpiando conflictos de entorno..."
+# --- 6. LIMPIEZA DE CONFLICTOS ---
+print_step 4 9 "Limpiando conflictos de entorno..."
 CLEAN_CMD="true"
 if command -v pip3 &> /dev/null; then
     if pip3 show lolcat &> /dev/null; then
@@ -194,8 +194,8 @@ if command -v pip3 &> /dev/null; then
 fi
 run_with_spinner "Eliminando lolcat (Python) global" "$CLEAN_CMD"
 
-# --- 6. ENTORNO VIRTUAL ---
-print_step 5 8 "Configurando entorno virtual aislado (.venv)..."
+# --- 7. ENTORNO VIRTUAL ---
+print_step 5 9 "Configurando entorno virtual aislado (.venv)..."
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
 
@@ -211,8 +211,8 @@ else
     echo -e "   ${CHECK} Entorno virtual ya configurado."
 fi
 
-# --- 7. INSTALACIÓN APP ---
-print_step 6 8 "Instalando Omega-ZSH y dependencias de Python..."
+# --- 8. INSTALACIÓN APP ---
+print_step 6 9 "Instalando Omega-ZSH y dependencias de Python..."
 # Sistema de caché inteligente basado en Hash de pyproject.toml
 # Aseguramos que PROJECT_DIR sea absoluto
 ABS_PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -231,8 +231,24 @@ else
     echo -e "   ${CHECK} Dependencias de Python ya sincronizadas."
 fi
 
-# --- 8. ACCESO GLOBAL ---
-print_step 7 8 "Configurando acceso global (omega/oz)..."
+# --- 9. DESCARGA DE PLUGINS ZSH ---
+print_step 7 9 "Descargando plugins de Zsh seleccionados..."
+run_with_spinner "Sincronizando repositorios de plugins (Git)" "\"$VENV_DIR/bin/python\" -c \"
+from omega_zsh.core.installer import PluginInstaller
+from omega_zsh.platforms.debian import DebianPlatform
+from omega_zsh.platforms.termux import TermuxPlatform
+from omega_zsh.core.context import SystemContext
+from pathlib import Path
+ctx = SystemContext()
+plat = TermuxPlatform() if ctx.is_termux else DebianPlatform()
+inst = PluginInstaller(plat, Path.home())
+base_plugins = ['zsh-autosuggestions', 'zsh-syntax-highlighting', 'fzf-tab', 'zsh-completions', 'k', 'alias-tips', 'zsh-history-substring-search']
+for p in base_plugins:
+    inst.download_zsh_plugin(p)
+\""
+
+# --- 10. ACCESO GLOBAL ---
+print_step 8 9 "Configurando acceso global (omega/oz)..."
 if [ "$OS_ID" = "termux" ]; then
     BIN_DEST="/data/data/com.termux/files/usr/bin"
     SUDO_CMD=""
@@ -249,8 +265,8 @@ ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega" 2>/dev/null || $SUDO_CMD ln -sf "
 ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz"
 echo -e "   ${CHECK} Binarios en: ${BOLD}$BIN_DEST${NC}"
 
-# --- 9. CONFIGURACIÓN DE SHELL ---
-print_step 8 8 "Finalización y configuración de Shell..."
+# --- 11. CONFIGURACIÓN DE SHELL ---
+print_step 9 9 "Finalización y configuración de Shell..."
 
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
