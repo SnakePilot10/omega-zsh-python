@@ -154,7 +154,8 @@ if [ "$OS_ID" != "unknown" ]; then
         echo -e "   ${CHECK} Paquetes críticos ya instalados."
     fi
     
-    # Preguntar por extras solo si no están instalados
+    # Preguntar por extras solo si no están instalados y no se ha declinado antes
+    SKIP_EXTRAS_FLAG="$OMEGA_CONFIG_DIR/.skip_extras"
     MISSING_EXTRAS=""
     for pkg in $EXTRA_PACKAGES; do
         if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
@@ -162,8 +163,8 @@ if [ "$OS_ID" != "unknown" ]; then
         fi
     done
 
-    if [ -n "$MISSING_EXTRAS" ]; then
-        echo -e "   ${INFO} Faltan herramientas opcionales:${BOLD}${YELLOW}$MISSING_EXTRAS${NC}"
+    if [ -n "$MISSING_EXTRAS" ] && [ ! -f "$SKIP_EXTRAS_FLAG" ]; then
+        echo -e "   ${INFO} Herramientas opcionales disponibles:${BOLD}${YELLOW}$MISSING_EXTRAS${NC}"
         ask_question "¿Deseas instalarlas ahora?" "S/n"
         read -n 1 opt_choice
         echo ""
@@ -178,7 +179,12 @@ if [ "$OS_ID" != "unknown" ]; then
                     echo -e "     + $pkg [OK]"
                 fi
             done
+        else
+            echo -e "   ${INFO} Declinado. No volveré a preguntar (puedes borrar $SKIP_EXTRAS_FLAG para resetear)."
+            touch "$SKIP_EXTRAS_FLAG"
         fi
+    elif [ -n "$MISSING_EXTRAS" ]; then
+        echo -e "   ${INFO} Herramientas opcionales omitidas por elección previa."
     else
         echo -e "   ${CHECK} Herramientas adicionales ya instaladas."
     fi
@@ -234,18 +240,29 @@ from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.platforms.debian import DebianPlatform
 from omega_zsh.platforms.termux import TermuxPlatform
 from omega_zsh.core.context import SystemContext
+from omega_zsh.core.state import StateManager, AppState
+from omega_zsh.core.constants import BIN_PLUGINS
 from pathlib import Path
 import os
-import shutil
 
 ctx = SystemContext()
 plat = TermuxPlatform() if ctx.is_termux else DebianPlatform()
 inst = PluginInstaller(plat, Path.home())
+sm = StateManager(ctx.omega_dir)
 
-# 1. Plugins base
-base_plugins = ['zsh-autosuggestions', 'zsh-syntax-highlighting', 'fzf-tab', 'zsh-completions', 'k', 'alias-tips', 'zsh-history-substring-search']
-for p in base_plugins:
-    inst.download_zsh_plugin(p)
+# Cargar estado real del usuario
+try:
+    state = sm.load()
+    selected = state.selected_plugins
+except Exception:
+    # Fallback si no hay estado previo
+    selected = ['zsh-autosuggestions', 'zsh-syntax-highlighting', 'fzf-tab', 'zsh-completions', 'k', 'alias-tips', 'zsh-history-substring-search']
+
+# 1. Filtrar y descargar plugins (solo los que no son binarios)
+bin_set = set(BIN_PLUGINS)
+for p in selected:
+    if p not in bin_set:
+        inst.download_zsh_plugin(p)
 
 # 2. Temas Omega (Symlinks)
 custom_themes_dir = ctx.omz_dir / 'custom' / 'themes'
