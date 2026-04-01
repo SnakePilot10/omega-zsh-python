@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
+# --- 0. MANEJO DE INTERRUPCIONES ---
+# Función para limpiar y salir si el usuario presiona Ctrl+C
+cleanup_and_exit() {
+    echo -e "\n${RED}⚠️  Instalación interrumpida por el usuario. Saliendo...${NC}"
+    # Matar procesos hijos si existen
+    pkill -P $$ || true
+    exit 130
+}
+
+# Configurar el trap para SIGINT (Ctrl+C) y SIGTERM
+trap cleanup_and_exit SIGINT SIGTERM
+
 # Colores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
