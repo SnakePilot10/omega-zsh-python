@@ -1,5 +1,28 @@
 # OMEGA-ZSH {{ version }} (Python/Jinja2 Generated)
+# --- HYPERDRIVE PERFORMANCE ENGINE ---
+# 1. Modo Asíncrono para sugerencias (evita lag al escribir)
+export ZSH_AUTOSUGGEST_USE_ASYNC=1
+export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+
+# 2. Desactivar escaneo de Git pesado (Turbo Prompt)
+export DISABLE_UNTRACKED_FILES_DIRTY="true"
+export GIT_PS1_SHOWDIRTYSTATE=""
+
+# 3. Z-Compile (Compilación automática a Bytecode)
+# Esto hace que los plugins se carguen 10 veces más rápido
+function omega_zcompile() {
+    local zfile=$1
+    if [[ -f "$zfile" ]]; then
+        if [[ ! -f "${zfile}.zwc" || "$zfile" -nt "${zfile}.zwc" ]]; then
+            zsh -c "zcompile $zfile" 2>/dev/null
+        fi
+    fi
+}
+
+# Aplicar a los archivos base de Oh My Zsh
 export ZSH="{{ omz_dir }}"
+for _f in $ZSH/oh-my-zsh.sh $ZSH/lib/*.zsh; do omega_zcompile $_f; done
+
 export TERM=xterm-256color
 export COLORTERM=truecolor
 
