@@ -111,7 +111,7 @@ if [ "$OS_ID" != "unknown" ]; then
     "${PKG_MANAGER_ARRAY[@]}" $CORE_PACKAGES &>/dev/null
     
     ask_question "¿Deseas instalar herramientas estéticas adicionales? (figlet, lolcat, etc.)" "S/n"
-    read -t 15 -n 1 opt_choice || opt_choice="s"
+    read -n 1 opt_choice
     echo ""
 
     if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
@@ -172,7 +172,7 @@ print_step 7 7 "Finalización y configuración de Shell..."
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
     ask_question "¿Deseas establecer Zsh como tu shell predeterminada?" "S/n"
-    read -t 15 -n 1 shell_choice || shell_choice="s"
+    read -n 1 shell_choice
     echo ""
     
     if [[ $shell_choice =~ ^[SsYy]$ ]] || [ -z "$shell_choice" ]; then
