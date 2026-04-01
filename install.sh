@@ -65,12 +65,21 @@ if [ ${#PKG_MANAGER_ARRAY[@]} -gt 0 ]; then
         exit 1
     fi
 
-    echo -e "${BLUE}>> Instalando herramientas adicionales (opcional): $EXTRA_PACKAGES${NC}"
-    # Instalamos una por una para que si una falla (ej: fastfetch no en PPA), no detenga el resto
-    for pkg in $EXTRA_PACKAGES; do
-        echo -e "${BLUE}   + Instalando $pkg...${NC}"
-        "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null || echo -e "${RED}   ⚠️  No se pudo instalar $pkg. Continuando...${NC}"
-    done
+    echo -e "${BLUE}>> ¿Deseas instalar las herramientas estéticas adicionales? (Opcional)${NC}"
+    echo -e "${BLUE}   (figlet, fastfetch, lolcat, eza, etc.) [S/n]: ${NC}"
+    read -t 10 -n 1 opt_choice || opt_choice="s"
+    echo ""
+
+    if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
+        echo -e "${BLUE}>> Instalando herramientas adicionales: $EXTRA_PACKAGES${NC}"
+        # Instalamos una por una para que si una falla (ej: fastfetch no en PPA), no detenga el resto
+        for pkg in $EXTRA_PACKAGES; do
+            echo -e "${BLUE}   + Instalando $pkg...${NC}"
+            "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null || echo -e "${RED}   ⚠️  No se pudo instalar $pkg. Continuando...${NC}"
+        done
+    else
+        echo -e "${BLUE}>> Saltando herramientas adicionales a petición del usuario.${NC}"
+    fi
 fi
 
 # --- 3. LIMPIEZA DE CONFLICTOS (lolcat) ---
