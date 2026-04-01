@@ -253,21 +253,27 @@ class OmegaApp(App):
             bin_set = set(BIN_PLUGINS)
             omz_plugins = [p for p in self.state.selected_plugins if p not in bin_set]
             active_tools = [p for p in self.state.selected_plugins if p in bin_set]
+# Crear symlinks para temas Omega en custom/themes de forma segura
+import os
+custom_themes = self.context.omz_dir / "custom" / "themes"
+custom_themes.mkdir(parents=True, exist_ok=True)
 
-            # Crear symlinks para temas Omega en custom/themes
-            custom_themes = self.context.omz_dir / "custom" / "themes"
-            custom_themes.mkdir(parents=True, exist_ok=True)
-            
-            # Obtener directorio de temas Omega como path real
-            omega_themes_dir = Path(str(self.context.assets_dir / "themes"))
-            
-            if omega_themes_dir.exists():
-                for tf in omega_themes_dir.glob("*.zsh-theme"):
-                    link = custom_themes / tf.name
-                    if not link.exists():
-                        link.symlink_to(tf)
+# Obtener directorio de temas Omega como path real
+omega_themes_dir = Path(str(self.context.assets_dir / "themes"))
 
-            context_data = {
+if omega_themes_dir.exists():
+    for tf in omega_themes_dir.glob("*.zsh-theme"):
+        link = custom_themes / tf.name
+        try:
+            # Si el link existe (incluso si está roto), lo quitamos primero
+            if os.lexists(link):
+                os.unlink(link)
+            # Creamos el nuevo link
+            os.symlink(tf, link)
+        except Exception as e:
+            logging.warning(f"No se pudo crear symlink para {tf.name}: {e}")
+
+context_data = {
                 "version": "2.2.0",
                 "omz_dir": str(self.context.omz_dir),
                 "user_theme": self.state.selected_theme,
