@@ -27,36 +27,30 @@ cleanup_and_exit() {
 trap cleanup_and_exit SIGINT SIGTERM
 
 # --- 2. FUNCIONES HELPERS ---
-# Barra de progreso animada para tareas en background
-run_with_progress() {
+# Runner ASCII animado para tareas en background
+run_with_spinner() {
     local msg=$1
     local cmd=$2
     local pid
     
-    echo -ne "   $msg "
+    echo -ne "   $msg  [ - ]"
     
     # Ejecutar el comando en background
     eval "$cmd" &>/dev/null &
     pid=$!
     
-    # Animación de la barra mientras el proceso existe
-    local spin='■'
-    local count=0
-    echo -ne "[${CYAN}"
-    
+    # Animación de hélice (Runner)
+    local spin='|/-\'
+    local i=0
     while kill -0 $pid 2>/dev/null; do
-        echo -ne "$spin"
-        count=$((count + 1))
-        if [ $count -eq 20 ]; then
-            echo -ne "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-            count=0
-        fi
-        sleep 0.5
+        i=$(( (i+1) % 4 ))
+        # Retroceder 4 espacios para sobreescribir [ x ]
+        echo -ne "\b\b\b\b[ ${spin:$i:1} ]"
+        sleep 0.1
     done
     
-    # Rellenar lo que falte hasta 20
-    for ((i=count; i<20; i++)); do echo -ne "■"; done
-    echo -e "${NC}] 100% ${GREEN}${CHECK}${NC}"
+    # Limpiar spinner y mostrar estado final
+    echo -ne "\b\b\b\b${GREEN}${CHECK}${NC}\n"
     
     wait $pid || return 1
 }
@@ -134,7 +128,7 @@ if command -v pip3 &> /dev/null; then
         CLEAN_CMD="sudo pip3 uninstall -y lolcat &>/dev/null || pip3 uninstall -y lolcat &>/dev/null || true"
     fi
 fi
-run_with_progress "Eliminando lolcat (Python) global..." "$CLEAN_CMD"
+run_with_spinner "Eliminando lolcat (Python) global" "$CLEAN_CMD"
 
 # --- 6. ENTORNO VIRTUAL ---
 print_step 4 7 "Configurando entorno virtual aislado (.venv)..."
@@ -145,11 +139,11 @@ if [ -d "$VENV_DIR" ]; then
     rm -rf "$VENV_DIR"
 fi
 
-run_with_progress "Creando venv con Python3..." "python3 -m venv \"$VENV_DIR\""
+run_with_spinner "Creando venv con Python3" "python3 -m venv \"$VENV_DIR\""
 
 # --- 7. INSTALACIÓN APP ---
 print_step 5 7 "Instalando Omega-ZSH y dependencias de Python..."
-run_with_progress "Descargando dependencias de Python..." "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
+run_with_spinner "Descargando dependencias de Python" "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
 
 # --- 8. ACCESO GLOBAL ---
 print_step 6 7 "Configurando acceso global (omega/oz)..."
