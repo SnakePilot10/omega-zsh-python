@@ -12,11 +12,11 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # --- Iconos ---
-CHECK="✅"
-WARN="⚠️"
-ERROR="❌"
-INFO="ℹ️"
-STAR="✨"
+CHECK="[ OK ]"
+WARN="[WARN]"
+ERROR="[FAIL]"
+INFO="[INFO]"
+STAR="***"
 
 # --- 1. MANEJO DE INTERRUPCIONES ---
 cleanup_and_exit() {
