@@ -227,20 +227,37 @@ else
     echo -e "   ${CHECK} Código y dependencias ya sincronizados."
 fi
 
-# --- 9. DESCARGA DE PLUGINS ZSH ---
-print_step 7 9 "Descargando plugins de Zsh seleccionados..."
-run_with_spinner "Sincronizando repositorios de plugins (Git)" "\"$VENV_DIR/bin/python\" -c \"
+# --- 9. DESCARGA DE PLUGINS Y TEMAS ZSH ---
+print_step 7 9 "Sincronizando recursos de Zsh (Plugins/Temas)..."
+run_with_spinner "Sincronizando repositorios y enlaces" "\"$VENV_DIR/bin/python\" -c \"
 from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.platforms.debian import DebianPlatform
 from omega_zsh.platforms.termux import TermuxPlatform
 from omega_zsh.core.context import SystemContext
 from pathlib import Path
+import os
+import shutil
+
 ctx = SystemContext()
 plat = TermuxPlatform() if ctx.is_termux else DebianPlatform()
 inst = PluginInstaller(plat, Path.home())
+
+# 1. Plugins base
 base_plugins = ['zsh-autosuggestions', 'zsh-syntax-highlighting', 'fzf-tab', 'zsh-completions', 'k', 'alias-tips', 'zsh-history-substring-search']
 for p in base_plugins:
     inst.download_zsh_plugin(p)
+
+# 2. Temas Omega (Symlinks)
+custom_themes_dir = ctx.omz_dir / 'custom' / 'themes'
+custom_themes_dir.mkdir(parents=True, exist_ok=True)
+omega_themes_src = ctx.assets_dir / 'themes'
+
+if omega_themes_src.exists():
+    for tf in omega_themes_src.glob('*.zsh-theme'):
+        link_path = custom_themes_dir / tf.name
+        if os.path.lexists(link_path):
+            os.unlink(link_path)
+        os.symlink(tf, link_path)
 \""
 
 # --- 10. ACCESO GLOBAL ---
