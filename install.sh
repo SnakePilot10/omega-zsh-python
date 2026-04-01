@@ -16,20 +16,18 @@ PACKAGES=""
 
 echo -e "${BLUE}>> Detectando entorno del sistema...${NC}"
 
-if [ -d "/data/data/com.termux" ]; then
-    echo -e "${GREEN}>> Entorno detectado: Android (Termux)${NC}"
-    PKG_MANAGER_ARRAY=(pkg install -y)
-    CORE_PACKAGES="python zsh git curl wget debianutils"
-    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide eza"
-elif [ -f "/etc/debian_version" ]; then
+if [ -f "/etc/debian_version" ]; then
     echo -e "${GREEN}>> Entorno detectado: Debian/Ubuntu${NC}"
     PRE_INSTALL_ARRAY=(sudo apt-get update)
     PKG_MANAGER_ARRAY=(sudo apt-get install -y)
     # python3-venv es CRÍTICO en Ubuntu para que python3 -m venv funcione
     CORE_PACKAGES="python3 python3-venv zsh git curl wget debianutils"
-    # Algunos de estos pueden fallar en versiones antiguas de Ubuntu sin PPAs (fastfetch/eza), 
-    # el instalador continuará sin problemas.
     EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
+elif [ -d "/data/data/com.termux" ] || [ -n "$TERMUX_VERSION" ]; then
+    echo -e "${GREEN}>> Entorno detectado: Android (Termux)${NC}"
+    PKG_MANAGER_ARRAY=(pkg install -y)
+    CORE_PACKAGES="python zsh git curl wget debianutils"
+    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide eza"
 elif [ -f "/etc/arch-release" ]; then
     echo -e "${GREEN}>> Entorno detectado: Arch Linux${NC}"
     PKG_MANAGER_ARRAY=(sudo pacman -Sy --noconfirm --needed)
