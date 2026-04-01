@@ -48,7 +48,7 @@ run_with_spinner() {
     while kill -0 $pid 2>/dev/null; do
         echo -ne "\b\b\b\b\b\b${frames[$i]}"
         i=$(( (i+1) % 8 ))
-        sleep 0.1
+        sleep 0.05
     done
     
     # Restaurar cursor y mostrar estado final
