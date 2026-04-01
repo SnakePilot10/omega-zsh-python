@@ -27,17 +27,38 @@ cleanup_and_exit() {
 trap cleanup_and_exit SIGINT SIGTERM
 
 # --- 2. FUNCIONES HELPERS ---
-show_progress() {
-    local duration=$1
-    local steps=20
-    local step_time=$(echo "scale=2; $duration / $steps" | bc)
+# Barra de progreso animada para tareas en background
+run_with_progress() {
+    local msg=$1
+    local cmd=$2
+    local pid
     
-    echo -ne "   [${CYAN}"
-    for ((i=0; i<steps; i++)); do
-        echo -ne "■"
-        sleep "$step_time"
+    echo -ne "   $msg "
+    
+    # Ejecutar el comando en background
+    eval "$cmd" &>/dev/null &
+    pid=$!
+    
+    # Animación de la barra mientras el proceso existe
+    local spin='■'
+    local count=0
+    echo -ne "[${CYAN}"
+    
+    while kill -0 $pid 2>/dev/null; do
+        echo -ne "$spin"
+        count=$((count + 1))
+        if [ $count -eq 20 ]; then
+            echo -ne "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
+            count=0
+        fi
+        sleep 0.5
     done
-    echo -e "${NC}] 100%"
+    
+    # Rellenar lo que falte hasta 20
+    for ((i=count; i<20; i++)); do echo -ne "■"; done
+    echo -e "${NC}] 100% ${GREEN}${CHECK}${NC}"
+    
+    wait $pid || return 1
 }
 
 print_step() {
@@ -107,13 +128,13 @@ fi
 
 # --- 5. LIMPIEZA DE CONFLICTOS ---
 print_step 3 7 "Limpiando conflictos de entorno..."
+CLEAN_CMD="true"
 if command -v pip3 &> /dev/null; then
     if pip3 show lolcat &> /dev/null; then
-        echo -e "   ${INFO} Eliminando lolcat (Python) global..."
-        sudo pip3 uninstall -y lolcat &>/dev/null || pip3 uninstall -y lolcat &>/dev/null || true
+        CLEAN_CMD="sudo pip3 uninstall -y lolcat &>/dev/null || pip3 uninstall -y lolcat &>/dev/null || true"
     fi
 fi
-show_progress 0.5
+run_with_progress "Eliminando lolcat (Python) global..." "$CLEAN_CMD"
 
 # --- 6. ENTORNO VIRTUAL ---
 print_step 4 7 "Configurando entorno virtual aislado (.venv)..."
@@ -124,14 +145,11 @@ if [ -d "$VENV_DIR" ]; then
     rm -rf "$VENV_DIR"
 fi
 
-python3 -m venv "$VENV_DIR"
-show_progress 1
+run_with_progress "Creando venv con Python3..." "python3 -m venv \"$VENV_DIR\""
 
 # --- 7. INSTALACIÓN APP ---
 print_step 5 7 "Instalando Omega-ZSH y dependencias de Python..."
-"$VENV_DIR/bin/pip" install --upgrade pip --quiet
-"$VENV_DIR/bin/pip" install "$PROJECT_DIR" --quiet
-show_progress 1.5
+run_with_progress "Descargando dependencias de Python..." "\"$VENV_DIR/bin/pip\" install --upgrade pip --quiet && \"$VENV_DIR/bin/pip\" install \"$PROJECT_DIR\" --quiet"
 
 # --- 8. ACCESO GLOBAL ---
 print_step 6 7 "Configurando acceso global (omega/oz)..."
