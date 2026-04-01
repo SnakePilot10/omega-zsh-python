@@ -138,9 +138,12 @@ class SystemContext:
         """Ejecuta un comando shell de forma segura y devuelve stdout limpio."""
         try:
             # Usamos shlex.split para tokenizar el comando correctamente
-            # y evitar el uso de shell=True
+            # y evitar el uso de shell=True. 
+            # Redirigimos stderr a DEVNULL para evitar ruidos de permisos.
             args = shlex.split(cmd)
-            return subprocess.check_output(args, text=True).strip()
+            return subprocess.check_output(
+                args, text=True, stderr=subprocess.DEVNULL
+            ).strip()
         except Exception:
             return ""
 
