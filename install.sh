@@ -27,30 +27,33 @@ cleanup_and_exit() {
 trap cleanup_and_exit SIGINT SIGTERM
 
 # --- 2. FUNCIONES HELPERS ---
-# Runner ASCII animado para tareas en background
+# Runner Neon Scanner (KITT Style) para tareas en background
 run_with_spinner() {
     local msg=$1
     local cmd=$2
     local pid
     
-    echo -ne "   $msg  [ - ]"
+    # Ocultar cursor
+    tput civis 2>/dev/null || echo -ne "\033[?25l"
+    
+    echo -ne "   $msg  [    ]"
     
     # Ejecutar el comando en background
     eval "$cmd" &>/dev/null &
     pid=$!
     
-    # Animación de hélice (Runner)
-    local spin='|/-\'
+    # Animación Neon Scanner
+    local frames=("[=   ]" "[==  ]" "[ ===]" "[  ==]" "[   =]" "[  ==]" "[ ===]" "[==  ]")
     local i=0
     while kill -0 $pid 2>/dev/null; do
-        i=$(( (i+1) % 4 ))
-        # Retroceder 4 espacios para sobreescribir [ x ]
-        echo -ne "\b\b\b\b[ ${spin:$i:1} ]"
+        echo -ne "\b\b\b\b\b\b${frames[$i]}"
+        i=$(( (i+1) % 8 ))
         sleep 0.1
     done
     
-    # Limpiar spinner y mostrar estado final
-    echo -ne "\b\b\b\b${GREEN}${CHECK}${NC}\n"
+    # Restaurar cursor y mostrar estado final
+    tput cnorm 2>/dev/null || echo -ne "\033[?25h"
+    echo -ne "\b\b\b\b\b\b${GREEN}${CHECK}${NC}\n"
     
     wait $pid || return 1
 }
