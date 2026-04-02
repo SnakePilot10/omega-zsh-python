@@ -82,6 +82,7 @@ ask_question() {
 
 # --- 3. DETECCIÓN DE ENTORNO ---
 print_step 1 9 "Detectando entorno del sistema..."
+UPDATED=false
 
 if [ -f "/etc/debian_version" ]; then
     OS_ID="debian"
@@ -95,7 +96,7 @@ elif [ -d "/data/data/com.termux" ] || [ -n "$TERMUX_VERSION" ]; then
     echo -e "   ${CHECK} Entorno detectado: ${BOLD}Android (Termux)${NC}"
     PKG_MANAGER_ARRAY=(pkg install -y)
     CORE_PACKAGES="python zsh git curl wget debianutils bc"
-    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide lolcat eza"
+    EXTRA_PACKAGES="figlet fastfetch fortune cowsay fzf zoxide lolcat eza ruby"
 elif [ -f "/etc/arch-release" ]; then
     OS_ID="arch"
     echo -e "   ${CHECK} Entorno detectado: ${BOLD}Arch Linux${NC}"
@@ -146,6 +147,7 @@ if [ "$OS_ID" != "unknown" ]; then
         if [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
             echo -e "   ${INFO} Actualizando índices de paquetes..."
             "${PRE_INSTALL_ARRAY[@]}" &>/dev/null || echo -e "   ${WARN} Fallo al actualizar índices."
+            UPDATED=true
         fi
 
         echo -e "   ${INFO} Instalando paquetes críticos..."
@@ -170,6 +172,13 @@ if [ "$OS_ID" != "unknown" ]; then
         echo ""
 
         if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
+            # Forzar actualización si no se ha hecho
+            if [ "$UPDATED" = false ] && [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
+                echo -e "   ${INFO} Actualizando índices para asegurar extras..."
+                "${PRE_INSTALL_ARRAY[@]}" &>/dev/null
+                UPDATED=true
+            fi
+
             echo -e "   ${INFO} Instalando extras..."
             for pkg in $EXTRA_PACKAGES; do
                 if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
