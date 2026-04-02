@@ -183,7 +183,14 @@ if [ "$OS_ID" != "unknown" ]; then
             for pkg in $EXTRA_PACKAGES; do
                 if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
                     echo -ne "     + $pkg "
-                    "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null && echo -e "${GREEN}${CHECK}${NC}" || echo -e "${RED}${ERROR}${NC}"
+                    if "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null; then
+                        echo -e "${GREEN}${CHECK}${NC}"
+                    elif [ "$pkg" = "lolcat" ] && command -v gem &>/dev/null; then
+                        # Fallback para lolcat via Ruby Gem (común en Termux)
+                        gem install lolcat --no-document &>/dev/null && echo -e "${GREEN}${CHECK} (via gem)${NC}" || echo -e "${RED}${ERROR}${NC}"
+                    else
+                        echo -e "${RED}${ERROR}${NC}"
+                    fi
                 else
                     echo -e "     + $pkg [OK]"
                 fi
