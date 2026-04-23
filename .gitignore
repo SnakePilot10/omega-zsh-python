@@ -19,10 +19,13 @@ dist/
 # ==========================================
 # 🧪 Testing y Cobertura (Pytest)
 # ==========================================
-.pytest_cache/
 .coverage
+.pytest_cache/
 htmlcov/
 .tox/
+nosetests.xml
+coverage.xml
+*.cover
 
 # ==========================================
 # 📝 Logs y Depuración
