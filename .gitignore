@@ -1,22 +1,53 @@
+# ==========================================
+# 🐍 Entornos y Caché de Python
+# ==========================================
 .venv/
+venv/
+env/
 __pycache__/
+*.py[cod]
+*$py.class
+
+# ==========================================
+# 📦 Empaquetado y Distribución
+# ==========================================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ==========================================
+# 🧪 Testing y Cobertura (Pytest)
+# ==========================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ==========================================
+# 📝 Logs y Depuración
+# ==========================================
 *.log
-*.pyc
 debug_import.py
-raw_output.log
-omega_crash.log
+
+# ==========================================
+# 💻 Entornos de Desarrollo (IDEs) y SO
+# ==========================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# ==========================================
+# 🔒 Específicos del Proyecto y Usuario
+# ==========================================
+# Archivos de configuración local y datos sensibles que no deben subir al repo
 .gemini/
 gha-creds-*.json
-.DS_Store
-
-# User Configuration Files (Local exclusions)
-# These files should never be committed as they contain user-specific data
 personal.zsh
 custom.zsh
 .zshrc
 .zshrc.bak.*
-*.swp
+GEMINI.md
 TODO.md
-build/
-*.egg-info/
-omega_crash.log
