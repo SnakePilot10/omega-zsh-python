@@ -1,0 +1,4 @@
+# Ignorar tipografías y directorios pesados
+Figlet_Fonts/
+omega_zsh/assets/fonts/
+*.flf
