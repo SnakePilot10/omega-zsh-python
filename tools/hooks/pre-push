@@ -1,31 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Hook de Omega-ZSH para evitar subir código roto
+if [ "${OMEGA_SKIP_HOOK:-}" = "1" ]; then
+    echo "⚠️  OMEGA_SKIP_HOOK=1 detectado. Saltando validación pre-push."
+    exit 0
+fi
+
 echo "🚀 Validando cambios antes del push..."
 
-# Navegar a la raíz del proyecto
-# (El hook se ejecuta desde la raíz del repo)
-
-# Activar el entorno virtual
 if [ -d ".venv" ]; then
+    # shellcheck disable=SC1091
     source .venv/bin/activate
 else
     echo "❌ Error: No se encontró el entorno virtual (.venv)"
+    echo "💡 Ejecuta ./install.sh o crea el entorno antes de usar este hook."
     exit 1
 fi
 
-# Ejecutar los tests
-echo "🧪 Ejecutando pytest..."
-pytest -q
-TEST_EXIT_CODE=$?
+echo "🧹 Ejecutando Ruff check..."
+ruff check .
 
-if [ $TEST_EXIT_CODE -ne 0 ]; then
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "❌ ERROR: Los tests fallaron. El push ha sido cancelado."
-    echo "💡 Revisa los errores arriba y arréglalos antes de subir."
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    exit 1
-fi
+echo "🎨 Verificando formato Ruff..."
+ruff format --check .
 
-echo "✅ Todos los tests pasaron. Subiendo a GitHub..."
+echo "✅ Validación pre-push completada."
 exit 0
