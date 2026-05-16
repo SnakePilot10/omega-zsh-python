@@ -45,6 +45,7 @@ BIN_PLUGINS: List[str] = [
     "zoxide",
     "eza",
     "yazi",
+    "fzf",
     "fd",
     "ripgrep",
     "duf",

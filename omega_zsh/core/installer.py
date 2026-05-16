@@ -87,11 +87,7 @@ class PluginInstaller:
             return False
         url = EXTERNAL_URLS[plugin_id]
         target = self.custom_dir / "plugins" / plugin_id
-        try:
-            self._git_clone(url, target, lambda msg: None)
-            return True
-        except Exception:
-            return False
+        return self._git_clone(url, target, lambda msg: None)
 
     def install_all(self, selected_ids: List[str], on_progress: Callable[[str], None]):
 
@@ -110,7 +106,8 @@ class PluginInstaller:
             # 1. ¿Es un paquete binario del sistema?
             if plugin_id in BIN_PLUGINS:
                 on_progress(f"Instalando paquete binario: {plugin_id}")
-                self.platform.install_package(plugin_id, on_progress=on_progress)
+                if not self.platform.install_package(plugin_id, on_progress=on_progress):
+                    on_progress(f"Error instalando paquete binario: {plugin_id}")
 
             # 2. ¿Es un plugin externo de Git?
             elif plugin_id in EXTERNAL_URLS:
@@ -119,7 +116,8 @@ class PluginInstaller:
 
                 if not target_path.exists():
                     on_progress(f"Clonando plugin Git: {plugin_id}")
-                    self._git_clone(url, target_path, on_progress)
+                    if not self._git_clone(url, target_path, on_progress):
+                        on_progress(f"Error clonando plugin Git: {plugin_id}")
                 else:
                     on_progress(f"Plugin Git ya existe: {plugin_id}")
 
@@ -128,7 +126,7 @@ class PluginInstaller:
             else:
                 on_progress(f"Activando plugin nativo: {plugin_id}")
 
-    def _git_clone(self, url: str, target: Path, on_progress: Callable[[str], None]):
+    def _git_clone(self, url: str, target: Path, on_progress: Callable[[str], None]) -> bool:
         """
         Clona un repositorio git de forma silenciosa con timeout.
 
@@ -139,6 +137,11 @@ class PluginInstaller:
         """
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
+
+            if target.exists():
+                on_progress(f"Plugin ya existe: {target.name}")
+                return True
+
             process = subprocess.Popen(
                 ["git", "clone", "--depth", "1", url, str(target)],
                 stdout=subprocess.PIPE,
@@ -148,16 +151,24 @@ class PluginInstaller:
             if process.stdout:
                 for line in process.stdout:
                     on_progress(f"  [git] {line.strip()}")
-            
+
             try:
-                process.wait(timeout=300)  # 5 minutos máximo
+                return_code = process.wait(timeout=300)  # 5 minutos máximo
             except subprocess.TimeoutExpired:
                 process.kill()
                 on_progress(f"Error: Timeout clonando {url}")
+                return False
+
+            if return_code != 0:
+                on_progress(f"Error: git clone falló con código {return_code}: {url}")
+                return False
+
+            return True
         except Exception as e:
             on_progress(f"Error clonando {url}: {e}")
+            return False
 
-    def ensure_omz(self, on_progress: Callable[[str], None]):
+    def ensure_omz(self, on_progress: Callable[[str], None]) -> bool:
         """
         Asegura que Oh My Zsh esté instalado. Si no existe, lo clona.
 
@@ -165,8 +176,10 @@ class PluginInstaller:
             on_progress (Callable[[str], None]): Callback para logs.
         """
         omz_dir = self.home / ".oh-my-zsh"
-        if not omz_dir.exists():
-            on_progress("Oh My Zsh no encontrado. Clonando...")
-            self._git_clone(
-                "https://github.com/ohmyzsh/ohmyzsh.git", omz_dir, on_progress
-            )
+        if omz_dir.exists():
+            return True
+
+        on_progress("Oh My Zsh no encontrado. Clonando...")
+        return self._git_clone(
+            "https://github.com/ohmyzsh/ohmyzsh.git", omz_dir, on_progress
+        )

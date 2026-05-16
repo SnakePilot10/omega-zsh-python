@@ -4,6 +4,8 @@ from typing import Callable, List, Optional
 
 
 class BasePlatform(ABC):
+    COMMAND_TIMEOUT_SECONDS = 600
+
     @abstractmethod
     def update_repos(self) -> bool:
         """Actualiza los repositorios del sistema."""
@@ -35,7 +37,15 @@ class BasePlatform(ABC):
                     if on_progress:
                         on_progress(line.strip())
 
-            return process.wait() == 0
+            try:
+                return process.wait(timeout=self.COMMAND_TIMEOUT_SECONDS) == 0
+            except subprocess.TimeoutExpired:
+                process.kill()
+                if on_progress:
+                    on_progress(
+                        f"Timeout ejecutando comando tras {self.COMMAND_TIMEOUT_SECONDS}s: {' '.join(cmd)}"
+                    )
+                return False
         except Exception as e:
             if on_progress:
                 on_progress(f"Error ejecutando comando: {e}")
