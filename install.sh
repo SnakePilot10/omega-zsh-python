@@ -18,6 +18,16 @@ ERROR="[FAIL]"
 INFO="[INFO]"
 STAR="***"
 
+# --- Configuración Omega ---
+OMEGA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/omega-zsh"
+mkdir -p "$OMEGA_CONFIG_DIR"
+
+PYTHON_BIN="$(command -v python3 || command -v python || true)"
+if [ -z "$PYTHON_BIN" ]; then
+    echo -e "${RED}${ERROR} Python no está instalado o no está disponible en PATH.${NC}"
+    exit 1
+fi
+
 # --- 1. MANEJO DE INTERRUPCIONES ---
 cleanup_and_exit() {
     echo -e "\n${RED}${ERROR}  Instalación interrumpida por el usuario. Saliendo...${NC}"
@@ -32,38 +42,38 @@ run_with_spinner() {
     local msg=$1
     local cmd=$2
     local pid
-    
+
     # Ocultar cursor
     tput civis 2>/dev/null || echo -ne "\033[?25l"
-    
+
     echo -ne "   $msg  [    ]"
-    
+
     # Ejecutar el comando en background
     eval "$cmd" &>/dev/null &
     pid=$!
-    
+
     # Animación Neon Scanner
     local frames=("[=   ]" "[==  ]" "[ ===]" "[  ==]" "[   =]" "[  ==]" "[ ===]" "[==  ]")
     local i=0
-    while kill -0 $pid 2>/dev/null; do
+    while kill -0 "$pid" 2>/dev/null; do
         echo -ne "\b\b\b\b\b\b${frames[$i]}"
         i=$(( (i+1) % 8 ))
         sleep 0.05
     done
-    
+
     # Restaurar cursor
     tput cnorm 2>/dev/null || echo -ne "\033[?25h"
-    
+
     # VERIFICACIÓN REAL DEL CÓDIGO DE SALIDA
-    wait $pid
+    wait "$pid"
     local exit_code=$?
-    
-    if [ $exit_code -eq 0 ]; then
+
+    if [ "$exit_code" -eq 0 ]; then
         echo -ne "\b\b\b\b\b\b${GREEN}${CHECK}${NC}\n"
         return 0
     else
         echo -ne "\b\b\b\b\b\b${RED}${ERROR}${NC}\n"
-        return $exit_code
+        return "$exit_code"
     fi
 }
 
@@ -80,9 +90,29 @@ ask_question() {
     echo -ne "${BOLD}${YELLOW}>> $msg [$default]: ${NC}"
 }
 
+pkg_installed() {
+    local pkg="$1"
+
+    case "$OS_ID" in
+        debian|termux)
+            command -v "$pkg" >/dev/null 2>&1 || dpkg -s "$pkg" >/dev/null 2>&1
+            ;;
+        arch)
+            command -v "$pkg" >/dev/null 2>&1 || pacman -Qi "$pkg" >/dev/null 2>&1
+            ;;
+        *)
+            command -v "$pkg" >/dev/null 2>&1
+            ;;
+    esac
+}
+
 # --- 3. DETECCIÓN DE ENTORNO ---
 print_step 1 9 "Detectando entorno del sistema..."
 UPDATED=false
+PRE_INSTALL_ARRAY=()
+PKG_MANAGER_ARRAY=()
+CORE_PACKAGES=""
+EXTRA_PACKAGES=""
 
 if [ -f "/etc/debian_version" ]; then
     OS_ID="debian"
@@ -91,7 +121,7 @@ if [ -f "/etc/debian_version" ]; then
     PKG_MANAGER_ARRAY=(sudo apt-get install -y)
     CORE_PACKAGES="python3 python3-venv zsh git curl wget debianutils bc"
     EXTRA_PACKAGES="figlet fastfetch fortune-mod cowsay fzf zoxide lolcat eza"
-elif [ -d "/data/data/com.termux" ] || [ -n "$TERMUX_VERSION" ]; then
+elif [ -d "/data/data/com.termux" ] || [ -n "${TERMUX_VERSION:-}" ]; then
     OS_ID="termux"
     echo -e "   ${CHECK} Entorno detectado: ${BOLD}Android (Termux)${NC}"
     PKG_MANAGER_ARRAY=(pkg install -y)
@@ -116,11 +146,16 @@ if [ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
         echo -e "   ${WARN} Detectada instalación de Oh My Zsh corrupta. Limpiando..."
         rm -rf "$HOME/.oh-my-zsh"
     fi
-    
+
     # Verificar curl
     if ! command -v curl &>/dev/null; then
         echo -e "   ${INFO} Instalando curl temporalmente para bootstrap..."
-        "${PKG_MANAGER_ARRAY[@]}" curl &>/dev/null
+        if [ "${#PKG_MANAGER_ARRAY[@]}" -gt 0 ]; then
+            "${PKG_MANAGER_ARRAY[@]}" curl &>/dev/null
+        else
+            echo -e "   ${RED}${ERROR} curl no está disponible y no hay gestor de paquetes detectado.${NC}"
+            exit 1
+        fi
     fi
 
     run_with_spinner "Instalando Oh My Zsh (Bootstrap)" "RUNZSH=no KEEP_ZSHRC=yes sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" --unattended"
@@ -137,14 +172,14 @@ if [ "$OS_ID" != "unknown" ]; then
     for pkg in $CORE_PACKAGES; do
         if [ "$pkg" = "python3-venv" ] && [ "$OS_ID" = "debian" ]; then
             if ! dpkg -s python3-venv &>/dev/null; then NEED_INSTALL=true; break; fi
-        elif ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
+        elif ! pkg_installed "$pkg"; then
             NEED_INSTALL=true
             break
         fi
     done
 
     if [ "$NEED_INSTALL" = true ]; then
-        if [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
+        if [ "${#PRE_INSTALL_ARRAY[@]}" -gt 0 ]; then
             echo -e "   ${INFO} Actualizando índices de paquetes..."
             "${PRE_INSTALL_ARRAY[@]}" &>/dev/null || echo -e "   ${WARN} Fallo al actualizar índices."
             UPDATED=true
@@ -155,12 +190,12 @@ if [ "$OS_ID" != "unknown" ]; then
     else
         echo -e "   ${CHECK} Paquetes críticos ya instalados."
     fi
-    
+
     # Preguntar por extras solo si no están instalados y no se ha declinado antes
     SKIP_EXTRAS_FLAG="$OMEGA_CONFIG_DIR/.skip_extras"
     MISSING_EXTRAS=""
     for pkg in $EXTRA_PACKAGES; do
-        if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
+        if ! pkg_installed "$pkg"; then
             MISSING_EXTRAS="$MISSING_EXTRAS $pkg"
         fi
     done
@@ -168,12 +203,12 @@ if [ "$OS_ID" != "unknown" ]; then
     if [ -n "$MISSING_EXTRAS" ] && [ ! -f "$SKIP_EXTRAS_FLAG" ]; then
         echo -e "   ${INFO} Herramientas opcionales disponibles:${BOLD}${YELLOW}$MISSING_EXTRAS${NC}"
         ask_question "¿Deseas instalarlas ahora?" "S/n"
-        read -n 1 opt_choice
+        read -r -n 1 opt_choice
         echo ""
 
         if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
             # Forzar actualización si no se ha hecho
-            if [ "$UPDATED" = false ] && [ ${#PRE_INSTALL_ARRAY[@]} -gt 0 ]; then
+            if [ "$UPDATED" = false ] && [ "${#PRE_INSTALL_ARRAY[@]}" -gt 0 ]; then
                 echo -e "   ${INFO} Actualizando índices para asegurar extras..."
                 "${PRE_INSTALL_ARRAY[@]}" &>/dev/null
                 UPDATED=true
@@ -181,7 +216,7 @@ if [ "$OS_ID" != "unknown" ]; then
 
             echo -e "   ${INFO} Instalando extras..."
             for pkg in $EXTRA_PACKAGES; do
-                if ! command -v "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null && ! pacman -Qi "$pkg" &>/dev/null; then
+                if ! pkg_installed "$pkg"; then
                     echo -ne "     + $pkg "
                     if "${PKG_MANAGER_ARRAY[@]}" "$pkg" &>/dev/null; then
                         echo -e "${GREEN}${CHECK}${NC}"
@@ -228,7 +263,7 @@ fi
 
 if [ "$VENV_VALID" = false ]; then
     if [ -d "$VENV_DIR" ]; then rm -rf "$VENV_DIR"; fi
-    run_with_spinner "Creando venv con Python3" "python3 -m venv \"$VENV_DIR\""
+    run_with_spinner "Creando venv con Python" "\"$PYTHON_BIN\" -m venv \"$VENV_DIR\""
 else
     echo -e "   ${CHECK} Entorno virtual ya configurado."
 fi
@@ -238,7 +273,14 @@ print_step 6 9 "Instalando Omega-ZSH y dependencias de Python..."
 # Sistema de caché inteligente basado en Hash de pyproject.toml Y código fuente
 ABS_PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Generar hash de pyproject.toml + archivos críticos de la app
-CURR_HASH=$(cat "$ABS_PROJECT_DIR/pyproject.toml" "$ABS_PROJECT_DIR/omega_zsh/cli/oz_tool.py" 2>/dev/null | md5sum | cut -d' ' -f1)
+CURR_HASH=$(
+    {
+        cat "$ABS_PROJECT_DIR/pyproject.toml"
+        find "$ABS_PROJECT_DIR/omega_zsh" -type f \
+            \( -name "*.py" -o -name "*.zsh-theme" -o -name "*.j2" \) \
+            -print0 | sort -z | xargs -0 cat
+    } 2>/dev/null | md5sum | cut -d' ' -f1
+)
 LAST_HASH_FILE="$VENV_DIR/.last_install_hash"
 LAST_HASH=$(cat "$LAST_HASH_FILE" 2>/dev/null || echo "")
 
@@ -317,9 +359,9 @@ print_step 9 9 "Finalización y configuración de Shell..."
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
     ask_question "¿Deseas establecer Zsh como tu shell predeterminada?" "S/n"
-    read -n 1 shell_choice
+    read -r -n 1 shell_choice
     echo ""
-    
+
     if [[ $shell_choice =~ ^[SsYy]$ ]] || [ -z "$shell_choice" ]; then
         echo -e "   ${INFO} Cambiando shell predeterminada a Zsh..."
         if [ "$OS_ID" = "termux" ]; then
@@ -334,7 +376,7 @@ fi
 echo -e "\n${BOLD}${GREEN}${STAR} ¡Instalación de Omega-ZSH completada con éxito! ${STAR}${NC}"
 
 ask_question "¿Deseas iniciar la interfaz visual (omega) ahora?" "S/n"
-read -n 1 launch_choice
+read -r -n 1 launch_choice
 echo ""
 
 if [[ $launch_choice =~ ^[SsYy]$ ]] || [ -z "$launch_choice" ]; then
