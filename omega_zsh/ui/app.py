@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Callable
 
@@ -23,6 +24,13 @@ from .screens import (
     PluginSelectScreen,
     ThemeSelectScreen,
 )
+
+
+def get_app_version() -> str:
+    try:
+        return version("omega-zsh")
+    except PackageNotFoundError:
+        return "dev"
 
 
 class OmegaApp(App):
@@ -103,23 +111,20 @@ class OmegaApp(App):
         self.context = SystemContext()
         self.install_cancel_event = threading.Event()
 
-        # Determinar plataforma
         if self.context.os_type == "android":
             self.platform = TermuxPlatform()
         else:
             self.platform = DebianPlatform()
 
-        # Configuración
         self.state_manager = StateManager(self.context.omega_dir)
-
-        # Registrar pantallas
         self.install_screen(InstallScreen(), name="InstallScreen")
 
-        # Cargar estado previo
         try:
             self.state = self.state_manager.load()
             logging.info(
-                f"Estado cargado: {len(self.state.selected_plugins)} plugins, {self.state.selected_theme} tema"
+                "Estado cargado: %s plugins, %s tema",
+                len(self.state.selected_plugins),
+                self.state.selected_theme,
             )
         except Exception as e:
             logging.error(f"Fallo al cargar estado: {e}")
@@ -155,38 +160,34 @@ class OmegaApp(App):
         omega_themes = []
         omz_themes = []
         user_themes = []
+        builtin_theme_ids = {theme.id for theme in THEMES_OMZ_BUILTIN}
 
-        # 1. Temas de Omega (Assets locales convertidos a Path real)
         omega_dir = Path(str(self.context.assets_dir / "themes"))
         if omega_dir.exists():
             for f in omega_dir.glob("*.zsh-theme"):
                 omega_themes.append(ThemeDef(f.stem, "Omega God Tier", str(f)))
 
-        # 2. Temas incorporados de OMZ
         omz_builtin_dir = self.context.omz_dir / "themes"
         if omz_builtin_dir.exists():
             for f in omz_builtin_dir.glob("*.zsh-theme"):
                 omz_themes.append(ThemeDef(f.stem, "Standard OMZ", str(f)))
 
-        # 3. Temas personalizados del usuario
         user_custom_dir = self.context.omz_dir / "custom" / "themes"
         if user_custom_dir.exists():
             for f in user_custom_dir.glob("*.zsh-theme"):
-                if f.stem not in THEMES_OMZ_BUILTIN:
+                if f.stem not in builtin_theme_ids:
                     user_themes.append(ThemeDef(f.stem, "User Custom", str(f)))
 
-        # 4. Combinar todo en un mapa para unicidad (ID -> ThemeDef)
         themes_map = {}
         for t in omz_themes:
             themes_map[t.id] = t
         for t in user_themes:
             themes_map[t.id] = t
         for t in omega_themes:
-            themes_map[t.id] = t  # Omega tiene prioridad máxima sobre IDs repetidos
+            themes_map[t.id] = t
 
         return sorted(themes_map.values(), key=lambda x: x.id.lower())
 
-    # --- Acciones ---
     def action_switch_tab(self, tab_id: str) -> None:
         """Cambia programáticamente a un Tab por su ID."""
         try:
@@ -195,23 +196,20 @@ class OmegaApp(App):
             logging.warning("No se pudo cambiar de tab: TabbedContent no encontrado.")
 
     def save_state(self) -> None:
-        """Sincroniza el estado actual de la UI con el objeto AppState y el archivo JSON."""
+        """Sincroniza el estado actual de la UI con AppState y el archivo JSON."""
         try:
-            # Obtener plugins del widget
             try:
                 plugin_screen = self.query_one(PluginSelectScreen)
                 selected_plugins = plugin_screen.get_selected()
             except Exception:
                 selected_plugins = self.state.selected_plugins
 
-            # Obtener tema del widget
             try:
                 theme_screen = self.query_one(ThemeSelectScreen)
                 selected_theme = theme_screen.get_selected()
             except Exception:
                 selected_theme = self.state.selected_theme
 
-            # Obtener header del widget
             try:
                 header_screen = self.query_one(HeaderSelectScreen)
                 h_type, h_text, h_font = header_screen.get_selected()
@@ -240,7 +238,6 @@ class OmegaApp(App):
         try:
             generator = ConfigGenerator(self.context.assets_dir / "templates")
 
-            # Generar Header Figlet si es necesario
             header_cmd = ""
             if self.state.selected_header == "figlet":
                 header_cmd = FigletManager().generate_safe_command(
@@ -249,32 +246,26 @@ class OmegaApp(App):
             elif self.state.selected_header == "fastfetch":
                 header_cmd = "fastfetch"
 
-            # Separar plugins OMZ reales de herramientas binarias
-            from ..core.constants import BIN_PLUGINS
             bin_set = set(BIN_PLUGINS)
             omz_plugins = [p for p in self.state.selected_plugins if p not in bin_set]
             active_tools = [p for p in self.state.selected_plugins if p in bin_set]
-            # Crear symlinks para temas Omega en custom/themes de forma segura
+
             custom_themes = self.context.omz_dir / "custom" / "themes"
             custom_themes.mkdir(parents=True, exist_ok=True)
-
-            # Obtener directorio de temas Omega como path real
             omega_themes_dir = Path(str(self.context.assets_dir / "themes"))
 
             if omega_themes_dir.exists():
                 for tf in omega_themes_dir.glob("*.zsh-theme"):
                     link = custom_themes / tf.name
                     try:
-                        # Si el link existe (incluso si está roto), lo quitamos primero
                         if os.lexists(link):
                             os.unlink(link)
-                        # Creamos el nuevo link
                         os.symlink(tf, link)
                     except Exception as e:
                         logging.warning(f"No se pudo crear symlink para {tf.name}: {e}")
 
             context_data = {
-                "version": "2.2.0",
+                "version": get_app_version(),
                 "omz_dir": str(self.context.omz_dir),
                 "user_theme": self.state.selected_theme,
                 "root_theme": self.state.selected_root_theme,
@@ -288,10 +279,12 @@ class OmegaApp(App):
             }
 
             if generator.generate_zshrc(self.context.zshrc_path, context_data):
-                self.notify("Configuración actualizada con éxito (A).", severity="information")
-                # Ya no cerramos la app automáticamente (Mejora UX)
+                self.notify("Configuración actualizada con éxito (A).")
             else:
-                self.notify("Error al generar .zshrc. Revisa el log para detalles.", severity="error")
+                self.notify(
+                    "Error al generar .zshrc. Revisa el log para detalles.",
+                    severity="error",
+                )
         except Exception as e:
             logging.error(f"Fallo en Apply: {e}", exc_info=True)
             self.notify(f"Error al aplicar: {e}", severity="error")
@@ -303,12 +296,10 @@ class OmegaApp(App):
 
     def _handle_install_finished(self, success: bool) -> None:
         if success:
-            # Una vez instalados los paquetes, aplicar la config
             self.action_apply_changes()
         else:
             self.notify("La instalación fue cancelada o falló.", severity="warning")
 
-    # --- Worker de Instalación ---
     def run_installation(self, on_message: Callable) -> None:
         """Ejecuta el proceso de instalación en un hilo secundario."""
         self.install_cancel_event.clear()
@@ -329,13 +320,13 @@ class OmegaApp(App):
             self.call_from_thread(on_message, msg)
 
         try:
-            # 1. Asegurar directorios
-            if self.install_cancel_event.is_set(): return
+            if self.install_cancel_event.is_set():
+                return
             safe_msg("Preparando directorios del sistema...")
             self.context.omega_dir.mkdir(parents=True, exist_ok=True)
 
-            # 2. Instalar binarios faltantes
-            if self.install_cancel_event.is_set(): return
+            if self.install_cancel_event.is_set():
+                return
             installer = PluginInstaller(self.platform, self.context.home)
             current_state = AppState(
                 selected_plugins=self.state.selected_plugins,
@@ -356,8 +347,8 @@ class OmegaApp(App):
             else:
                 safe_msg("Todos los binarios requeridos ya están en el sistema.")
 
-            # 3. Descargar plugins ZSH faltantes
-            if self.install_cancel_event.is_set(): return
+            if self.install_cancel_event.is_set():
+                return
             zsh_missing = installer.get_missing_zsh_plugins(current_state.selected_plugins)
             if zsh_missing:
                 for plugin in zsh_missing:
@@ -372,7 +363,8 @@ class OmegaApp(App):
             else:
                 safe_msg("Todos los plugins de Zsh ya están descargados.")
 
-            if self.install_cancel_event.is_set(): return
+            if self.install_cancel_event.is_set():
+                return
             safe_msg("Finalizando instalación...")
             self.call_from_thread(self._installation_complete, True)
 
@@ -386,7 +378,9 @@ class OmegaApp(App):
         if isinstance(self.screen, InstallScreen):
             self.screen.on_installation_finished(success)
         else:
-            logging.warning("La instalación finalizó pero InstallScreen ya no es la pantalla activa.")
+            logging.warning(
+                "La instalación finalizó pero InstallScreen ya no es la pantalla activa."
+            )
 
 
 def main():
