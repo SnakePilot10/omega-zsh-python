@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Callable
 
@@ -23,6 +24,13 @@ from .screens import (
     PluginSelectScreen,
     ThemeSelectScreen,
 )
+
+
+def get_app_version() -> str:
+    try:
+        return version("omega-zsh")
+    except PackageNotFoundError:
+        return "dev"
 
 
 class OmegaApp(App):
@@ -155,6 +163,7 @@ class OmegaApp(App):
         omega_themes = []
         omz_themes = []
         user_themes = []
+        builtin_theme_ids = {theme.id for theme in THEMES_OMZ_BUILTIN}
 
         # 1. Temas de Omega (Assets locales convertidos a Path real)
         omega_dir = Path(str(self.context.assets_dir / "themes"))
@@ -172,7 +181,7 @@ class OmegaApp(App):
         user_custom_dir = self.context.omz_dir / "custom" / "themes"
         if user_custom_dir.exists():
             for f in user_custom_dir.glob("*.zsh-theme"):
-                if f.stem not in THEMES_OMZ_BUILTIN:
+                if f.stem not in builtin_theme_ids:
                     user_themes.append(ThemeDef(f.stem, "User Custom", str(f)))
 
         # 4. Combinar todo en un mapa para unicidad (ID -> ThemeDef)
@@ -250,7 +259,6 @@ class OmegaApp(App):
                 header_cmd = "fastfetch"
 
             # Separar plugins OMZ reales de herramientas binarias
-            from ..core.constants import BIN_PLUGINS
             bin_set = set(BIN_PLUGINS)
             omz_plugins = [p for p in self.state.selected_plugins if p not in bin_set]
             active_tools = [p for p in self.state.selected_plugins if p in bin_set]
@@ -274,7 +282,7 @@ class OmegaApp(App):
                         logging.warning(f"No se pudo crear symlink para {tf.name}: {e}")
 
             context_data = {
-                "version": "2.2.0",
+                "version": get_app_version(),
                 "omz_dir": str(self.context.omz_dir),
                 "user_theme": self.state.selected_theme,
                 "root_theme": self.state.selected_root_theme,
