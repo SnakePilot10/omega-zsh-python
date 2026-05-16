@@ -29,8 +29,10 @@ class StateManager:
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 return AppState(**data)
-            except Exception:
-                pass  # Si falla, fallback
+            except Exception as e:
+                logging.warning(
+                    "No se pudo cargar state.json, usando .zshrc como fallback: %s", e
+                )
 
         # 2. Fallback: Intentar leer el .zshrc existente
         return self._import_from_zshrc()
