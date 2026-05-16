@@ -1,3 +1,4 @@
+from shutil import which
 from typing import Callable, List, Optional
 
 from .base import BasePlatform
@@ -18,17 +19,13 @@ class TermuxPlatform(BasePlatform):
         if package_name == "fd":
             resolved_name = "fd"  # Termux usa fd directamente
 
-        # FIX: lolcat no está en repositorios de Termux, instalar vía pip del sistema
+        # lolcat en Termux suele instalarse de forma más confiable vía Ruby Gem.
         if package_name == "lolcat":
-            cmd = [
-                "/data/data/com.termux/files/usr/bin/python3",
-                "-m",
-                "pip",
-                "install",
-                "lolcat",
-                "--break-system-packages",
-            ]
-            return self._run_command(cmd, on_progress)
+            if which("gem") is None:
+                if not self._run_command([self.pkg_mgr, "install", "-y", "ruby"], on_progress):
+                    return False
+
+            return self._run_command(["gem", "install", "lolcat", "--no-document"], on_progress)
 
         cmd = [self.pkg_mgr, "install", "-y", resolved_name]
         return self._run_command(cmd, on_progress)
