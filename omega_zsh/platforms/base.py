@@ -29,7 +29,6 @@ class BasePlatform(ABC):
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
-                universal_newlines=True,
             )
 
             if process.stdout:
@@ -41,6 +40,12 @@ class BasePlatform(ABC):
                 return process.wait(timeout=self.COMMAND_TIMEOUT_SECONDS) == 0
             except subprocess.TimeoutExpired:
                 process.kill()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    if on_progress:
+                        on_progress("No se pudo confirmar cierre del proceso tras kill().")
+
                 if on_progress:
                     on_progress(
                         f"Timeout ejecutando comando tras {self.COMMAND_TIMEOUT_SECONDS}s: {' '.join(cmd)}"
