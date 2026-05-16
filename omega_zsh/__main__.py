@@ -7,16 +7,17 @@ from pathlib import Path
 # --- CONFIGURACIÓN DE LOGGING ---
 # Ubicación del log en el home del usuario para asegurar permisos de escritura
 LOG_FILE = Path.home() / ".omega-zsh" / "omega_crash.log"
-LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    filemode="w",
-)
-
+def configure_logging() -> None:
+    """Configura logging sin efectos secundarios al importar el módulo."""
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(
+        filename=str(LOG_FILE),
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filemode="w",
+    )
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -30,11 +31,10 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     sys.__stderr__.write("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
 
-sys.excepthook = handle_exception
-
-
-
 def main():
+    configure_logging()
+    sys.excepthook = handle_exception
+
     # Si hay argumentos (ej: oz stats), delegar a la herramienta CLI oz_tool.py
     if len(sys.argv) > 1:
         logging.info(f"Delegando comando CLI: {sys.argv[1:]}")
