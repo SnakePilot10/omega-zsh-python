@@ -42,7 +42,6 @@ class DashboardScreen(Static):
 
         yield Static(header_art, id="dashboard-title")
 
-        # Telemetría del sistema
         telemetry = (
             f"[bold #00f5ff]SISTEMA:[/] [white]{stats['os']}[/]\n"
             f"[bold #ff006e]MEMORIA:[/] [white]{stats['mem_usage']}[/]\n"
@@ -54,10 +53,10 @@ class DashboardScreen(Static):
             id="dashboard-telemetry"
         )
 
-        # Atajos rápidos
         help_text = (
             "• [bold #00ff9f]A[/]: Apply config (Fast)\n"
             "• [bold #00ff9f]I[/]: Full Installation\n"
+            "• [bold #00ff9f]R[/]: Recovery / Nuclear Fix\n"
             "• [bold #00ff9f]Q[/]: Exit"
         )
         yield Static(
@@ -68,7 +67,6 @@ class DashboardScreen(Static):
     def _get_stats(self):
         """Obtiene estadísticas del sistema sin depender de psutil."""
         try:
-            # Memoria (Termux/Linux)
             mem_p = "N/A"
             if os.path.exists("/proc/meminfo"):
                 with open("/proc/meminfo", encoding="utf-8") as f:
@@ -83,7 +81,6 @@ class DashboardScreen(Static):
                 used = total - free
                 mem_p = f"{int((used / total) * 100)}%"
 
-            # Disco
             disk_p = "N/A"
             try:
                 st = os.statvfs("/")
@@ -94,7 +91,6 @@ class DashboardScreen(Static):
             except Exception:
                 pass
 
-            # Uptime
             uptime_str = "N/A"
             if os.path.exists("/proc/uptime"):
                 with open("/proc/uptime", "r", encoding="utf-8") as f:
@@ -113,21 +109,87 @@ class DashboardScreen(Static):
             return {"os": "Unknown", "mem_usage": "N/A", "disk_usage": "N/A", "uptime": "N/A"}
 
 
-# --- PANTALLA DE SELECCIÓN DE PLUGINS ---
+class RecoveryScreen(Vertical):
+    """Pantalla para ejecutar desinstalación segura y fix nuclear."""
+
+    def compose(self) -> ComposeResult:
+        yield Label("[bold #ff006e]RECOVERY / NUCLEAR FIX[/]")
+        yield Static(
+            "[bold #00f5ff]Modo seguro:[/] prueba primero con Dry Run.\n"
+            "[bold yellow]Nuclear Fix:[/] reconstruye .zshrc, .bashrc y .profile con valores mínimos.\n"
+            "[dim]Los respaldos usan una sola carpeta rotativa: ~/.omega-zsh-recovery[/]",
+            id="recovery-help",
+        )
+        with Horizontal(id="recovery-actions"):
+            yield Button("Dry Run", variant="primary", id="btn-recovery-dry-run")
+            yield Button("Uninstall", variant="warning", id="btn-recovery-uninstall")
+            yield Button("Nuclear Fix", variant="error", id="btn-recovery-nuclear")
+        yield Log(id="recovery-log")
+
+    def _script_path(self) -> Path:
+        return Path(__file__).resolve().parents[2] / "scripts" / "uninstall.sh"
+
+    def _write_log(self, message: str) -> None:
+        self.query_one("#recovery-log", Log).write(message)
+
+    def _run_recovery(self, *args: str) -> None:
+        script = self._script_path()
+        if not script.exists():
+            self._write_log(f"[ERROR] Script not found: {script}\n")
+            self.app.notify("scripts/uninstall.sh no existe.", severity="error")
+            return
+
+        cmd = ["bash", str(script), "--yes", *args]
+        self._write_log(f"$ {' '.join(cmd)}\n")
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            if result.stdout:
+                self._write_log(result.stdout)
+            if result.stderr:
+                self._write_log(result.stderr)
+            if result.returncode == 0:
+                self.app.notify("Recovery command finished.")
+            else:
+                self.app.notify(
+                    f"Recovery command failed: exit {result.returncode}",
+                    severity="error",
+                )
+        except subprocess.TimeoutExpired:
+            self._write_log("[ERROR] Recovery command timed out.\n")
+            self.app.notify("Recovery command timed out.", severity="error")
+        except Exception as e:
+            self._write_log(f"[ERROR] {e}\n")
+            self.app.notify(f"Recovery error: {e}", severity="error")
+
+    @on(Button.Pressed, "#btn-recovery-dry-run")
+    @work(exclusive=True, thread=True)
+    def run_dry_run(self) -> None:
+        self._run_recovery("--dry-run", "--purge", "--nuclear-fix")
+
+    @on(Button.Pressed, "#btn-recovery-uninstall")
+    @work(exclusive=True, thread=True)
+    def run_uninstall(self) -> None:
+        self._run_recovery("--purge")
+
+    @on(Button.Pressed, "#btn-recovery-nuclear")
+    @work(exclusive=True, thread=True)
+    def run_nuclear_fix(self) -> None:
+        self._run_recovery("--purge", "--nuclear-fix")
+
+
 class PluginSelectScreen(Vertical):
     """Interfaz para activar/desactivar plugins y herramientas binarias."""
 
     def __init__(self, all_plugins, bin_plugins, selected_plugins):
         super().__init__()
-        self.all_plugins = all_plugins  # List[PluginDef]
-        self.bin_plugins = bin_plugins  # List[PluginDef]
-        self.selected_plugins = selected_plugins  # List[str]
+        self.all_plugins = all_plugins
+        self.bin_plugins = bin_plugins
+        self.selected_plugins = selected_plugins
 
     def compose(self) -> ComposeResult:
         yield Label("[bold #ff006e]SELECCIÓN DE PLUGINS Y BINARIOS[/]")
         yield Label("[dim]Usa [bold]Espacio[/] para marcar/desmarcar[/]", id="plugin-hint")
 
-        # Construir opciones para la lista asegurando unicidad
         options = []
         seen_ids = set()
 
@@ -148,23 +210,20 @@ class PluginSelectScreen(Vertical):
         return self.query_one(SelectionList).selected
 
 
-# --- PANTALLA DE SELECCIÓN DE TEMAS ---
 class ThemeSelectScreen(Horizontal):
     """Interfaz dividida para elegir temas con previsualización en vivo."""
 
     def __init__(self, all_themes, selected_theme):
         super().__init__()
-        self.all_themes = all_themes  # List[ThemeDef]
+        self.all_themes = all_themes
         self.selected_theme = selected_theme
 
     def compose(self) -> ComposeResult:
-        # Columna Izquierda: Lista
         with Vertical(id="theme-list-container"):
             yield Label("[bold #ff006e]TEMAS DISPONIBLES[/]")
             items = []
             selected_index = 0
             for i, t in enumerate(self.all_themes):
-                # Prefijar ID con 't-' para cumplir reglas de Textual (no empezar con número)
                 items.append(ListItem(Label(f"{t.id} [dim]({t.desc})[/]"), id=f"t-{i}"))
                 if t.id == self.selected_theme:
                     selected_index = i
@@ -173,7 +232,6 @@ class ThemeSelectScreen(Horizontal):
             lv.index = selected_index
             yield lv
 
-        # Columna Derecha: Preview
         with Vertical(id="theme-preview-container"):
             yield Label("[bold #00f5ff]PREVISUALIZACIÓN[/]")
             yield Static("Select a theme to see preview...", id="preview-area")
@@ -187,7 +245,6 @@ class ThemeSelectScreen(Horizontal):
     @on(ListView.Highlighted)
     @work(exclusive=True, thread=True)
     def update_preview(self, event: ListView.Highlighted) -> None:
-        """Lanza la previsualización del tema usando un subproceso de Zsh (Worker asíncrono)."""
         idx = self.query_one(ListView).index
         if idx is None:
             return
@@ -207,10 +264,6 @@ class ThemeSelectScreen(Horizontal):
             return
 
         try:
-            # Comando mágico para previsualizar tema sin cambiar el shell actual
-            # 1. Sourcear el tema
-            # 2. Forzar expansión de PROMPT
-            # 3. Imprimir el prompt renderizado
             omz_dir = os.environ.get('ZSH', str(Path.home() / '.oh-my-zsh'))
             omz_lib = f'{omz_dir}/lib'
             cmd = (
@@ -224,16 +277,10 @@ class ThemeSelectScreen(Horizontal):
                 f'source {theme.path} && '
                 f'print -P "$PROMPT" && print -P "$RPROMPT"'
             )
-            result = subprocess.run(
-                [zsh_bin, "-c", cmd], capture_output=True, text=True, timeout=1.5
-            )
-
-            # Mostrar stdout si existe, independiente del returncode
-            # (los temas OMZ suelen generar warnings no fatales)
+            result = subprocess.run([zsh_bin, "-c", cmd], capture_output=True, text=True, timeout=1.5)
             if result.stdout.strip():
                 try:
-                    ansi_text = Text.from_ansi(result.stdout)
-                    preview_box.update(ansi_text)
+                    preview_box.update(Text.from_ansi(result.stdout))
                 except Exception as e:
                     preview_box.update(Text(f"Error parsing ANSI: {e}", style="red"))
             elif result.stderr:
@@ -246,11 +293,9 @@ class ThemeSelectScreen(Horizontal):
             preview_box.update(Text(f"Execution Error: {e}", style="red"))
 
     def _sanitize_id(self, text: str) -> str:
-        """Sanitiza un string para que sea un ID válido de Textual."""
         return re.sub(r"[^a-zA-Z0-9_-]", "_", text)
 
 
-# --- PANTALLA DE CONFIGURACIÓN DE HEADER ---
 class HeaderSelectScreen(Vertical):
     """Configuración estética del Banner de bienvenida."""
 
@@ -278,7 +323,6 @@ class HeaderSelectScreen(Vertical):
             with Vertical(id="header-text-col"):
                 yield Label("Texto / Fuentes (solo Figlet):")
                 yield Input(value=self.header_text, placeholder="Banner Text", id="header-input")
-                # Lista de fuentes figlet
                 fonts = self.figlet.get_fonts()
                 selected_idx = 0
                 items = []
@@ -295,7 +339,6 @@ class HeaderSelectScreen(Vertical):
         yield Static("", id="preview-area")
 
     def get_selected(self) -> tuple[str, str, str]:
-        # Obtener tipo
         h_set = self.query_one("#header-type-set")
         btn = h_set.pressed_button
         if btn is None:
@@ -321,7 +364,6 @@ class HeaderSelectScreen(Vertical):
     @on(ListView.Highlighted)
     @work(exclusive=True, thread=True)
     def update_header_preview(self) -> None:
-        """Actualiza la previsualización del banner en tiempo real (Worker asíncrono)."""
         h_type, text, font = self.get_selected()
         preview_area = self.query_one("#preview-area")
 
@@ -330,8 +372,7 @@ class HeaderSelectScreen(Vertical):
             return
 
         if h_type == "figlet":
-            art = self.figlet.render(text, font)
-            preview_area.update(Text(art))
+            preview_area.update(Text(self.figlet.render(text, font)))
             return
 
         if h_type == "cowsay":
@@ -355,20 +396,14 @@ class HeaderSelectScreen(Vertical):
             preview_area.update(Text("Rendering live preview...", style="yellow"))
             ff_bin = shutil.which("fastfetch")
             if not ff_bin:
-                preview_area.update(
-                    Text("Fastfetch not found. Please install it first.", style="red")
-                )
+                preview_area.update(Text("Fastfetch not found. Please install it first.", style="red"))
                 return
 
             try:
-                # Fastfetch puede tardar, lo ejecutamos con pipe
-                result = subprocess.run(
-                    [ff_bin, "--pipe"], capture_output=True, text=True, timeout=2.0
-                )
+                result = subprocess.run([ff_bin, "--pipe"], capture_output=True, text=True, timeout=2.0)
                 if result.returncode == 0:
                     try:
-                        ansi_text = Text.from_ansi(result.stdout)
-                        preview_area.update(ansi_text)
+                        preview_area.update(Text.from_ansi(result.stdout))
                     except Exception as e:
                         preview_area.update(Text(f"ANSI Parse Error: {e}", style="red"))
                 else:
@@ -380,7 +415,6 @@ class HeaderSelectScreen(Vertical):
                 preview_area.update(Text(f"Preview Error: {e}", style="red"))
 
 
-# --- PANTALLA DE INSTALACIÓN (MODAL-LIKE) ---
 class InstallScreen(Screen):
     """Pantalla de progreso de instalación."""
 
@@ -412,11 +446,9 @@ class InstallScreen(Screen):
 
     @on(Button.Pressed, "#btn-finish")
     def on_finish_pressed(self) -> None:
-        """Cierra la pantalla tras una instalación exitosa."""
         self.dismiss(True)
 
     @on(Button.Pressed, "#btn-cancel")
     def on_cancel_pressed(self) -> None:
-        """Cierra la pantalla tras una cancelación o fallo."""
         self.app.install_cancel_event.set()
         self.dismiss(False)
