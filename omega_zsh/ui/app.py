@@ -22,6 +22,7 @@ from .screens import (
     HeaderSelectScreen,
     InstallScreen,
     PluginSelectScreen,
+    RecoveryScreen,
     ThemeSelectScreen,
 )
 
@@ -97,12 +98,30 @@ class OmegaApp(App):
         padding: 1 2;
         margin: 1 0;
     }
+    #recovery-help {
+        border: double #ff006e;
+        padding: 1 2;
+        margin-bottom: 1;
+    }
+    #recovery-actions {
+        height: 3;
+        margin-bottom: 1;
+    }
+    #recovery-actions Button {
+        margin-right: 1;
+    }
+    #recovery-log {
+        height: 1fr;
+        border: solid #00f5ff;
+        background: #000000;
+    }
     """
 
     BINDINGS = [
         Binding("q", "quit", "Exit"),
         Binding("a", "apply_changes", "Apply (Fast)"),
         Binding("i", "install_full", "Install (Complete)"),
+        Binding("r", "switch_tab('tab-recovery')", "Recovery"),
     ]
 
     def __init__(self, **kwargs):
@@ -153,6 +172,8 @@ class OmegaApp(App):
                     header_text=self.state.header_text,
                     selected_font=self.state.header_font,
                 )
+            with TabPane("Recovery", id="tab-recovery"):
+                yield RecoveryScreen()
         yield Footer()
 
     def _get_all_themes(self) -> list[ThemeDef]:
