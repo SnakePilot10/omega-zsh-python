@@ -1,9 +1,7 @@
 import logging
 import os
-import threading
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Callable
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -13,14 +11,10 @@ from ..core.constants import BIN_PLUGINS, DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeD
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
 from ..core.generator import ConfigGenerator
-from ..core.installer import PluginInstaller
 from ..core.state import AppState, StateManager
-from ..platforms.debian import DebianPlatform
-from ..platforms.termux import TermuxPlatform
 from .screens import (
     DashboardScreen,
     HeaderSelectScreen,
-    InstallScreen,
     PluginSelectScreen,
     RecoveryScreen,
     ThemeSelectScreen,
@@ -84,8 +78,8 @@ class OmegaApp(App):
     #header-text-col {
         width: 1fr;
     }
-    #font-list {
-        height: 9;
+    #font-list, #theme-list, #plugin-list {
+        height: 1fr;
         border: solid #00f5ff;
     }
     #header-input {
@@ -119,24 +113,19 @@ class OmegaApp(App):
 
     BINDINGS = [
         Binding("q", "quit", "Exit"),
-        Binding("a", "apply_changes", "Apply (Fast)"),
-        Binding("i", "install_full", "Install (Complete)"),
-        Binding("r", "switch_tab('tab-recovery')", "Recovery"),
+        Binding("a", "apply_changes", "Apply"),
+        Binding("d,1", "switch_tab('tab-dashboard')", "Dashboard"),
+        Binding("p,2", "switch_tab('tab-plugins')", "Plugins"),
+        Binding("t,3", "switch_tab('tab-themes')", "Themes"),
+        Binding("h,4", "switch_tab('tab-headers')", "Headers"),
+        Binding("r,5", "switch_tab('tab-recovery')", "Recovery"),
     ]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         logging.info("Inicializando OmegaApp...")
         self.context = SystemContext()
-        self.install_cancel_event = threading.Event()
-
-        if self.context.os_type == "android":
-            self.platform = TermuxPlatform()
-        else:
-            self.platform = DebianPlatform()
-
         self.state_manager = StateManager(self.context.omega_dir)
-        self.install_screen(InstallScreen(), name="InstallScreen")
 
         try:
             self.state = self.state_manager.load()
@@ -146,7 +135,7 @@ class OmegaApp(App):
                 self.state.selected_theme,
             )
         except Exception as e:
-            logging.error(f"Fallo al cargar estado: {e}")
+            logging.error("Fallo al cargar estado: %s", e)
             self.state = AppState()
 
     def compose(self) -> ComposeResult:
@@ -214,7 +203,7 @@ class OmegaApp(App):
         try:
             self.query_one(TabbedContent).active = tab_id
         except Exception:
-            logging.warning("No se pudo cambiar de tab: TabbedContent no encontrado.")
+            logging.warning("No se pudo cambiar de tab: %s", tab_id)
 
     def save_state(self) -> None:
         """Sincroniza el estado actual de la UI con AppState y el archivo JSON."""
@@ -251,10 +240,10 @@ class OmegaApp(App):
             self.state = current_state
             self.state_manager.save(current_state)
         except Exception as e:
-            logging.warning(f"Fallo al guardar auto-save: {e}")
+            logging.warning("Fallo al guardar auto-save: %s", e)
 
     def action_apply_changes(self) -> None:
-        """Genera .zshrc sin reinstalar paquetes. Rápido."""
+        """Genera .zshrc sin instalar paquetes."""
         self.save_state()
         try:
             generator = ConfigGenerator(self.context.assets_dir / "templates")
@@ -283,7 +272,7 @@ class OmegaApp(App):
                             os.unlink(link)
                         os.symlink(tf, link)
                     except Exception as e:
-                        logging.warning(f"No se pudo crear symlink para {tf.name}: {e}")
+                        logging.warning("No se pudo crear symlink para %s: %s", tf.name, e)
 
             context_data = {
                 "version": get_app_version(),
@@ -300,108 +289,15 @@ class OmegaApp(App):
             }
 
             if generator.generate_zshrc(self.context.zshrc_path, context_data):
-                self.notify("Configuración actualizada con éxito (A).")
+                self.notify("Configuración actualizada con éxito.")
             else:
                 self.notify(
                     "Error al generar .zshrc. Revisa el log para detalles.",
                     severity="error",
                 )
         except Exception as e:
-            logging.error(f"Fallo en Apply: {e}", exc_info=True)
+            logging.error("Fallo en Apply: %s", e, exc_info=True)
             self.notify(f"Error al aplicar: {e}", severity="error")
-
-    def action_install_full(self) -> None:
-        """Inicia el flujo de instalación completa (paquetes + config)."""
-        self.save_state()
-        self.push_screen(InstallScreen(), callback=self._handle_install_finished)
-
-    def _handle_install_finished(self, success: bool) -> None:
-        if success:
-            self.action_apply_changes()
-        else:
-            self.notify("La instalación fue cancelada o falló.", severity="warning")
-
-    def run_installation(self, on_message: Callable) -> None:
-        """Ejecuta el proceso de instalación en un hilo secundario."""
-        self.install_cancel_event.clear()
-        self.install_thread = threading.Thread(
-            target=self._installation_worker, args=(on_message,)
-        )
-        self.install_thread.start()
-
-    def on_unmount(self) -> None:
-        """Cleanup al cerrar la aplicación."""
-        self.install_cancel_event.set()
-        if hasattr(self, "install_thread") and self.install_thread.is_alive():
-            logging.info("Esperando a que finalice el hilo de instalación...")
-            self.install_thread.join(timeout=2)
-
-    def _installation_worker(self, on_message: Callable) -> None:
-        def safe_msg(msg: str):
-            self.call_from_thread(on_message, msg)
-
-        try:
-            if self.install_cancel_event.is_set():
-                return
-            safe_msg("Preparando directorios del sistema...")
-            self.context.omega_dir.mkdir(parents=True, exist_ok=True)
-
-            if self.install_cancel_event.is_set():
-                return
-            installer = PluginInstaller(self.platform, self.context.home)
-            current_state = AppState(
-                selected_plugins=self.state.selected_plugins,
-                selected_theme=self.state.selected_theme,
-            )
-
-            missing = installer.get_missing_binaries(current_state.selected_plugins)
-            if missing:
-                for plugin in missing:
-                    if self.install_cancel_event.is_set():
-                        safe_msg("Instalación cancelada por el usuario.")
-                        return
-                    safe_msg(f"Instalando binario: {plugin}...")
-                    if installer.install_binary(plugin):
-                        safe_msg(f"✅ {plugin} instalado correctamente.")
-                    else:
-                        safe_msg(f"❌ Error al instalar {plugin}.")
-            else:
-                safe_msg("Todos los binarios requeridos ya están en el sistema.")
-
-            if self.install_cancel_event.is_set():
-                return
-            zsh_missing = installer.get_missing_zsh_plugins(current_state.selected_plugins)
-            if zsh_missing:
-                for plugin in zsh_missing:
-                    if self.install_cancel_event.is_set():
-                        safe_msg("Instalación cancelada por el usuario.")
-                        return
-                    safe_msg(f"Descargando plugin Zsh: {plugin}...")
-                    if installer.download_zsh_plugin(plugin):
-                        safe_msg(f"✅ {plugin} descargado.")
-                    else:
-                        safe_msg(f"❌ Error al descargar {plugin}.")
-            else:
-                safe_msg("Todos los plugins de Zsh ya están descargados.")
-
-            if self.install_cancel_event.is_set():
-                return
-            safe_msg("Finalizando instalación...")
-            self.call_from_thread(self._installation_complete, True)
-
-        except Exception as e:
-            logging.error(f"Error en hilo de instalación: {e}", exc_info=True)
-            safe_msg(f"ERROR FATAL: {e}")
-            self.call_from_thread(self._installation_complete, False)
-
-    def _installation_complete(self, success: bool) -> None:
-        """Notifica a la pantalla activa el fin de la instalación si es la correcta."""
-        if isinstance(self.screen, InstallScreen):
-            self.screen.on_installation_finished(success)
-        else:
-            logging.warning(
-                "La instalación finalizó pero InstallScreen ya no es la pantalla activa."
-            )
 
 
 def main():
