@@ -8,7 +8,6 @@ from rich.text import Text
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import (
     Button,
     Input,
@@ -16,7 +15,6 @@ from textual.widgets import (
     ListItem,
     ListView,
     Log,
-    ProgressBar,
     RadioButton,
     RadioSet,
     SelectionList,
@@ -26,6 +24,9 @@ from textual.widgets.selection_list import Selection
 
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
+
+
+NAV_HINT = "[dim]Tabs: [bold]1-5[/] / [bold]D P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
 
 
 class DashboardScreen(Static):
@@ -54,9 +55,9 @@ class DashboardScreen(Static):
         )
 
         help_text = (
-            "• [bold #00ff9f]A[/]: Apply config (Fast)\n"
-            "• [bold #00ff9f]I[/]: Full Installation\n"
-            "• [bold #00ff9f]R[/]: Recovery / Nuclear Fix\n"
+            "• [bold #00ff9f]A[/]: Apply config only\n"
+            "• [bold #00ff9f]D/P/T/H/R[/]: Dashboard, Plugins, Themes, Headers, Recovery\n"
+            "• [bold #00ff9f]1-5[/]: Same tab navigation\n"
             "• [bold #00ff9f]Q[/]: Exit"
         )
         yield Static(
@@ -110,10 +111,11 @@ class DashboardScreen(Static):
 
 
 class RecoveryScreen(Vertical):
-    """Pantalla para ejecutar desinstalación segura y fix nuclear."""
+    """Pantalla para ejecutar limpieza segura y fix nuclear."""
 
     def compose(self) -> ComposeResult:
         yield Label("[bold #ff006e]RECOVERY / NUCLEAR FIX[/]")
+        yield Label(NAV_HINT, id="recovery-nav-hint")
         yield Static(
             "[bold #00f5ff]Modo seguro:[/] prueba primero con Dry Run.\n"
             "[bold yellow]Nuclear Fix:[/] reconstruye .zshrc, .bashrc y .profile con valores mínimos.\n"
@@ -122,7 +124,7 @@ class RecoveryScreen(Vertical):
         )
         with Horizontal(id="recovery-actions"):
             yield Button("Dry Run", variant="primary", id="btn-recovery-dry-run")
-            yield Button("Uninstall", variant="warning", id="btn-recovery-uninstall")
+            yield Button("Cleanup", variant="warning", id="btn-recovery-uninstall")
             yield Button("Nuclear Fix", variant="error", id="btn-recovery-nuclear")
         yield Log(id="recovery-log")
 
@@ -168,7 +170,7 @@ class RecoveryScreen(Vertical):
 
     @on(Button.Pressed, "#btn-recovery-uninstall")
     @work(exclusive=True, thread=True)
-    def run_uninstall(self) -> None:
+    def run_cleanup(self) -> None:
         self._run_recovery("--purge")
 
     @on(Button.Pressed, "#btn-recovery-nuclear")
@@ -188,6 +190,7 @@ class PluginSelectScreen(Vertical):
 
     def compose(self) -> ComposeResult:
         yield Label("[bold #ff006e]SELECCIÓN DE PLUGINS Y BINARIOS[/]")
+        yield Label(NAV_HINT, id="plugin-nav-hint")
         yield Label("[dim]Usa [bold]Espacio[/] para marcar/desmarcar[/]", id="plugin-hint")
 
         options = []
@@ -221,6 +224,7 @@ class ThemeSelectScreen(Horizontal):
     def compose(self) -> ComposeResult:
         with Vertical(id="theme-list-container"):
             yield Label("[bold #ff006e]TEMAS DISPONIBLES[/]")
+            yield Label(NAV_HINT, id="theme-nav-hint")
             items = []
             selected_index = 0
             for i, t in enumerate(self.all_themes):
@@ -308,6 +312,7 @@ class HeaderSelectScreen(Vertical):
 
     def compose(self) -> ComposeResult:
         yield Label("[bold #ff006e]CONFIGURACIÓN DE HEADER[/]")
+        yield Label(NAV_HINT, id="header-nav-hint")
 
         with Horizontal(id="header-config-row"):
             with Vertical(id="header-type-col"):
@@ -413,42 +418,3 @@ class HeaderSelectScreen(Vertical):
                 preview_area.update(Text("Preview timed out (Command took too long)", style="orange"))
             except Exception as e:
                 preview_area.update(Text(f"Preview Error: {e}", style="red"))
-
-
-class InstallScreen(Screen):
-    """Pantalla de progreso de instalación."""
-
-    def compose(self) -> ComposeResult:
-        with Vertical(id="install-container"):
-            yield Label("[bold #ff006e]PROCESO DE INSTALACIÓN OMEGA[/]")
-            yield ProgressBar(total=100, show_eta=False, id="install-progress")
-            yield Log(id="install-log")
-            yield Button("Cancelar", variant="error", id="btn-cancel")
-            yield Button("Finalizar", variant="success", id="btn-finish", disabled=True)
-
-    def on_mount(self) -> None:
-        self.query_one("#install-log").write("Iniciando instalador...\n")
-        self.app.run_installation(self.on_installation_message)
-
-    def on_installation_message(self, message: str) -> None:
-        self.query_one("#install-log").write(message + "\n")
-
-    def on_installation_finished(self, success: bool) -> None:
-        log = self.query_one("#install-log")
-        if success:
-            log.write("\n[ OK ] ¡INSTALACIÓN COMPLETADA CON ÉXITO!\n")
-            self.query_one("#install-progress").progress = 100
-            self.query_one("#btn-finish").disabled = False
-            self.query_one("#btn-cancel").disabled = True
-        else:
-            log.write("\n[FAIL] LA INSTALACIÓN HA FALLADO O SE CANCELÓ.\n")
-            self.query_one("#btn-cancel").label = "Volver"
-
-    @on(Button.Pressed, "#btn-finish")
-    def on_finish_pressed(self) -> None:
-        self.dismiss(True)
-
-    @on(Button.Pressed, "#btn-cancel")
-    def on_cancel_pressed(self) -> None:
-        self.app.install_cancel_event.set()
-        self.dismiss(False)
