@@ -18,6 +18,13 @@ ERROR="[FAIL]"
 INFO="[INFO]"
 STAR="***"
 
+# --- Parsear argumentos ---
+UNATTENDED=false
+if [[ "$1" == "-y" || "$1" == "--unattended" ]]; then
+    UNATTENDED=true
+    echo -e "${INFO} Modo desatendido activado."
+fi
+
 # --- Configuración Omega ---
 OMEGA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/omega-zsh"
 mkdir -p "$OMEGA_CONFIG_DIR"
@@ -202,9 +209,15 @@ if [ "$OS_ID" != "unknown" ]; then
 
     if [ -n "$MISSING_EXTRAS" ] && [ ! -f "$SKIP_EXTRAS_FLAG" ]; then
         echo -e "   ${INFO} Herramientas opcionales disponibles:${BOLD}${YELLOW}$MISSING_EXTRAS${NC}"
-        ask_question "¿Deseas instalarlas ahora?" "S/n"
-        read -r -n 1 opt_choice
-        echo ""
+        
+        if [ "$UNATTENDED" = true ]; then
+            echo -e "   ${INFO} Modo desatendido: Omitiendo instalación de herramientas opcionales."
+            opt_choice="n"
+        else
+            ask_question "¿Deseas instalarlas ahora?" "S/n"
+            read -r -n 1 opt_choice
+            echo ""
+        fi
 
         if [[ $opt_choice =~ ^[SsYy]$ ]] || [ -z "$opt_choice" ]; then
             # Forzar actualización si no se ha hecho
@@ -356,13 +369,19 @@ echo -e "   ${CHECK} Binarios en: ${BOLD}$BIN_DEST${NC}"
 # --- 11. CONFIGURACIÓN DE SHELL ---
 print_step 9 9 "Finalización y configuración de Shell..."
 
-CURRENT_SHELL=$(basename "$SHELL")
-if [ "$CURRENT_SHELL" != "zsh" ]; then
-    ask_question "¿Deseas establecer Zsh como tu shell predeterminada?" "S/n"
-    read -r -n 1 shell_choice
-    echo ""
+    CURRENT_SHELL=$(basename "$SHELL")
+    if [ "$CURRENT_SHELL" != "zsh" ]; then
+        if [ "$UNATTENDED" = true ]; then
+            echo -e "   ${INFO} Modo desatendido: Omitiendo cambio de shell predeterminada."
+            shell_choice="n"
+        else
+            ask_question "¿Deseas establecer Zsh como tu shell predeterminada?" "S/n"
+            read -r -n 1 shell_choice
+            echo ""
+        fi
 
-    if [[ $shell_choice =~ ^[SsYy]$ ]] || [ -z "$shell_choice" ]; then
+        if [[ $shell_choice =~ ^[SsYy]$ ]] || [ -z "$shell_choice" ]; then
+
         echo -e "   ${INFO} Cambiando shell predeterminada a Zsh..."
         if [ "$OS_ID" = "termux" ]; then
             chsh -s zsh
@@ -373,13 +392,19 @@ if [ "$CURRENT_SHELL" != "zsh" ]; then
     fi
 fi
 
-echo -e "\n${BOLD}${GREEN}${STAR} ¡Instalación de Omega-ZSH completada con éxito! ${STAR}${NC}"
+    echo -e "\n${BOLD}${GREEN}${STAR} ¡Instalación de Omega-ZSH completada con éxito! ${STAR}${NC}"
 
-ask_question "¿Deseas iniciar la interfaz visual (omega) ahora?" "S/n"
-read -r -n 1 launch_choice
-echo ""
+    if [ "$UNATTENDED" = true ]; then
+        echo -e "${CYAN}Modo desatendido: Omitiendo lanzamiento de TUI.${NC}"
+        launch_choice="n"
+    else
+        ask_question "¿Deseas iniciar la interfaz visual (omega) ahora?" "S/n"
+        read -r -n 1 launch_choice
+        echo ""
+    fi
 
-if [[ $launch_choice =~ ^[SsYy]$ ]] || [ -z "$launch_choice" ]; then
+    if [[ $launch_choice =~ ^[SsYy]$ ]] || [ -z "$launch_choice" ]; then
+
     # Lanzar inmediatamente
     if [ -f "$BIN_DEST/omega" ]; then
         export PATH="$PATH:$BIN_DEST"

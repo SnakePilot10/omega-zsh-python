@@ -18,6 +18,8 @@ El proyecto utiliza un script de bootstrap (`install.sh`) para automatizar la cr
     Aunque `install.sh` está pensado para usuarios finales, también configura el entorno necesario.
     ```bash
     ./install.sh
+    # O para instalación rápida desatendida:
+    ./install.sh -y
     ```
     *Nota: Esto creará una carpeta `.venv` y preparará el sistema.*
 

@@ -43,16 +43,20 @@ omega-zsh-python/
 
 ## Instalación Inteligente
 
-El nuevo instalador v2.3.0 es **State-Aware** y **Self-Healing**:
+El nuevo instalador v2.3.0 es **State-Aware**, **Self-Healing** y soporta **modo desatendido**:
 
 ```bash
 git clone https://github.com/SnakePilot10/omega-zsh-python.git
 cd omega-zsh-python
 chmod +x install.sh
+# Instalación estándar
 ./install.sh
+# Instalación desatendida (sin interacción)
+./install.sh -y
 ```
 
 **Capacidades del Instalador:**
+- **Modo Desatendido:** Usa `-y` o `--unattended` para saltar todas las preguntas.
 - **Auto-Bootstrap:** Si no tienes Oh My Zsh, lo instala y configura automáticamente.
 - **Caché de Hash:** Detecta cambios en `pyproject.toml` y código fuente para evitar sincronizaciones de `pip` innecesarias (arranque instantáneo).
 - **Inmunidad a Fallos:** Implementa fallbacks (ej: `gem install lolcat`) si el gestor de paquetes del sistema falla.
