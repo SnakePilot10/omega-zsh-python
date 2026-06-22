@@ -40,6 +40,7 @@ def test_context_data_claves_correctas(mock_app):
     Este test habría detectado el bug donde se pasaba 'theme' en vez de 'user_theme'."""
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager"), \
+         patch("omega_zsh.ui.app.link_omega_themes"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", ["zoxide", "eza"]):
         mock_gen = mock_gen_class.return_value
         mock_gen.generate_zshrc.return_value = True
@@ -69,6 +70,7 @@ def test_plugins_separados_omz_vs_binarios(mock_app):
     Este test habría detectado el bug donde yazi, fd, etc. aparecían como plugins OMZ."""
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager"), \
+         patch("omega_zsh.ui.app.link_omega_themes"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", ["zoxide", "eza"]):
         mock_gen = mock_gen_class.return_value
         mock_gen.generate_zshrc.return_value = True
@@ -98,6 +100,7 @@ def test_header_cmd_figlet(mock_app):
 
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager") as mock_figlet, \
+         patch("omega_zsh.ui.app.link_omega_themes"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", []):
         mock_figlet.return_value.generate_safe_command.return_value = "figlet -f 'ANSI Shadow' S23"
         mock_gen = mock_gen_class.return_value
@@ -115,13 +118,14 @@ def test_header_cmd_fastfetch(mock_app):
 
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager"), \
+         patch("omega_zsh.ui.app.link_omega_themes"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", []):
         mock_gen = mock_gen_class.return_value
         mock_gen.generate_zshrc.return_value = True
         mock_app.action_apply_changes()
 
         context_data = mock_gen.generate_zshrc.call_args[0][1]
-        assert context_data["header_cmd"] == "fastfetch"
+        assert context_data["header_cmd"] == "(( $+commands[fastfetch] )) && fastfetch"
 
 
 def test_header_cmd_none(mock_app):
@@ -130,6 +134,7 @@ def test_header_cmd_none(mock_app):
 
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager"), \
+         patch("omega_zsh.ui.app.link_omega_themes"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", []):
         mock_gen = mock_gen_class.return_value
         mock_gen.generate_zshrc.return_value = True
@@ -143,18 +148,20 @@ def test_apply_success_no_cierra_app(mock_app):
     """Verifica que tras generar .zshrc exitosamente la app NO se cierra (Mejora UX)."""
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager"), \
+         patch("omega_zsh.ui.app.link_omega_themes"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", []):
         mock_gen = mock_gen_class.return_value
         mock_gen.generate_zshrc.return_value = True
         mock_app.action_apply_changes()
         mock_app.exit.assert_not_called()
-        mock_app.notify.assert_called_with("Configuración actualizada con éxito (A).", severity="information")
+        mock_app.notify.assert_called_with("Configuración actualizada con éxito.")
 
 
 def test_apply_failure_notifica_error(mock_app):
     """Verifica que si generate_zshrc falla, se notifica con severity=error."""
     with patch("omega_zsh.ui.app.ConfigGenerator") as mock_gen_class, \
          patch("omega_zsh.ui.app.FigletManager"), \
+         patch("omega_zsh.ui.app.link_omega_themes"), \
          patch("omega_zsh.ui.app.BIN_PLUGINS", []):
         mock_gen = mock_gen_class.return_value
         mock_gen.generate_zshrc.side_effect = Exception("disk full")

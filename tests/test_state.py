@@ -34,6 +34,7 @@ def test_save_state(manager, tmp_path):
     data = json.loads(expected_file.read_text())
     assert data["selected_plugins"] == ["git", "python"]
     assert data["header_text"] == "TEST"
+    assert not expected_file.with_suffix(".tmp").exists()
 
 
 def test_load_existing_state(manager, tmp_path):

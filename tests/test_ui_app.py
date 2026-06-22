@@ -1,7 +1,8 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from omega_zsh.ui.app import OmegaApp
+from omega_zsh.core.manifest import record_managed_file
+from omega_zsh.ui.app import OmegaApp, link_omega_themes
 
 
 def test_get_all_themes_discovery():
@@ -62,3 +63,72 @@ def test_get_all_themes_discovery():
             assert "omega_theme" in ids
             assert "robbyrussell" in ids
             assert "my_custom" in ids
+
+
+def test_link_omega_themes_preserva_archivo_ajeno(tmp_path):
+    assets = tmp_path / "assets"
+    themes = assets / "themes"
+    themes.mkdir(parents=True)
+    (themes / "same.zsh-theme").write_text("# omega", encoding="utf-8")
+
+    omz = tmp_path / ".oh-my-zsh"
+    foreign = omz / "custom/themes/same.zsh-theme"
+    foreign.parent.mkdir(parents=True)
+    foreign.write_text("# user", encoding="utf-8")
+
+    link_omega_themes(assets, omz, tmp_path / ".omega-zsh/manifest.json")
+
+    assert foreign.read_text(encoding="utf-8") == "# user"
+    assert not foreign.is_symlink()
+
+
+def test_link_omega_themes_preserva_symlink_ajeno_con_manifest_corrupto(tmp_path):
+    assets = tmp_path / "assets"
+    themes = assets / "themes"
+    themes.mkdir(parents=True)
+    (themes / "same.zsh-theme").write_text("# omega", encoding="utf-8")
+
+    omz = tmp_path / ".oh-my-zsh"
+    foreign_target = tmp_path / "foreign.zsh-theme"
+    foreign_target.write_text("# foreign", encoding="utf-8")
+    foreign_link = omz / "custom/themes/same.zsh-theme"
+    foreign_link.parent.mkdir(parents=True)
+    foreign_link.symlink_to(foreign_target)
+
+    manifest = tmp_path / ".omega-zsh/manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text("{broken json", encoding="utf-8")
+
+    link_omega_themes(assets, omz, manifest)
+
+    assert foreign_link.is_symlink()
+    assert foreign_link.resolve(strict=False) == foreign_target
+
+
+def test_link_omega_themes_reemplaza_symlink_propio(tmp_path):
+    assets = tmp_path / "assets"
+    themes = assets / "themes"
+    themes.mkdir(parents=True)
+    new_source = themes / "same.zsh-theme"
+    new_source.write_text("# omega", encoding="utf-8")
+
+    omz = tmp_path / ".oh-my-zsh"
+    old_source = tmp_path / "old.zsh-theme"
+    old_source.write_text("# old", encoding="utf-8")
+    owned_link = omz / "custom/themes/same.zsh-theme"
+    owned_link.parent.mkdir(parents=True)
+    owned_link.symlink_to(old_source)
+
+    manifest = tmp_path / ".omega-zsh/manifest.json"
+    record_managed_file(
+        manifest,
+        owned_link,
+        "theme_symlink",
+        "created",
+        {"source": str(new_source)},
+    )
+
+    link_omega_themes(assets, omz, manifest)
+
+    assert owned_link.is_symlink()
+    assert owned_link.resolve(strict=False) == new_source

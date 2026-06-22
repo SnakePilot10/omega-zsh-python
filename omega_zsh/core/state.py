@@ -42,8 +42,12 @@ class StateManager:
     def save(self, state: AppState):
         """Guarda el estado actual en JSON."""
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.config_path, "w", encoding="utf-8") as f:
-            json.dump(asdict(state), f, indent=4)
+        temp_path = self.config_path.with_suffix(".tmp")
+        temp_path.write_text(
+            json.dumps(asdict(state), indent=4, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        temp_path.replace(self.config_path)
 
     def _import_from_zshrc(self) -> AppState:
         """Intenta adivinar la configuración leyendo el .zshrc."""

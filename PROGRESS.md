@@ -177,3 +177,36 @@
   - Recovery currently preserves `~/.omega-zsh` entirely. A future purge-total mode may need a snapshot-before-delete flow if the user explicitly wants complete removal.
 - Next:
   - Continue with Item 06: atomic writes for `state.json`.
+
+### 2026-06-21 - Item 06
+
+- TODO item: `06. Add atomic writes for state.json`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `tests/test_state.py`
+  - `tests/test_ui_apply.py`
+  - `tests/test_ui_app.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `StateManager.save()` now writes state to `state.tmp` first and atomically replaces `state.json`.
+  - Existing UI apply tests were updated to match the current runtime behavior for safe `fastfetch` command generation and success notification text.
+  - `link_omega_themes()` ownership behavior now has versioned test coverage for foreign file preservation, corrupt manifest behavior, and owned symlink replacement.
+- Verification commands:
+  - `python3 -m compileall omega_zsh`
+  - Runtime smoke script covering atomic state save, absence of leftover `.tmp`, and successful reload.
+  - `python3 -m compileall tests`
+  - `python3 -m pytest -q` attempted conditionally.
+- Verification result:
+  - Passed: `state_atomic_smoke: ok`.
+  - Passed: test files compiled successfully.
+  - Pytest not executed because `pytest` is not installed in the current environment (`pytest unavailable; skipped pytest`).
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 469 nodes, 783 edges, 29 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Full pytest suite execution remains pending until a dev environment with pytest is available.
+  - `pyproject.toml` currently does not include pytest in dev dependencies by project choice, so this is recorded rather than silently fixed.
+- Next:
+  - Continue with Item 07: normalize and validate `state.json` schema.

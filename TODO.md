@@ -34,7 +34,7 @@
   - Impact: high
   - Verification: existing non-symlink theme/config files remain unchanged.
 
-- [ ] 06. Add atomic writes for `state.json`
+- [x] 06. Add atomic writes for `state.json`
   - Impact: high
   - Verification: interrupted write cannot leave partially written JSON.
 
