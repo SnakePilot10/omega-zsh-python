@@ -27,8 +27,10 @@ alias {{ name }}='{{ cmd }}' # Desc: Alias generado dinámicamente
 {% endfor %}
 
 # --- 4. DASHBOARD INTELIGENTE (NATIVO) ---
-# Ejecutado por oz_tool.py (Python)
-oz --banner
+# Solo en shells interactivos y si el comando existe; evita romper arranques mínimos.
+if [[ -o interactive ]] && command -v oz >/dev/null 2>&1; then
+    oz --banner
+fi
 
 
 

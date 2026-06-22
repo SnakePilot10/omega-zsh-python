@@ -19,9 +19,13 @@ function omega_zcompile() {
     fi
 }
 
-# Aplicar a los archivos base de Oh My Zsh
 export ZSH="{{ omz_dir }}"
-for _f in $ZSH/oh-my-zsh.sh $ZSH/lib/*.zsh; do omega_zcompile $_f; done
+if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
+    # Aplicar a los archivos base de Oh My Zsh solo si la instalación existe.
+    for _f in "$ZSH"/oh-my-zsh.sh "$ZSH"/lib/*.zsh; do omega_zcompile "$_f"; done
+else
+    echo "[omega-zsh] Oh My Zsh no encontrado en $ZSH. Ejecuta omega para reparar la instalación." >&2
+fi
 
 export TERM=xterm-256color
 export COLORTERM=truecolor
@@ -44,7 +48,9 @@ fi
 # Plugins selection
 plugins=({% for plugin in plugins %}{{ plugin }} {% endfor %})
 
-source $ZSH/oh-my-zsh.sh
+if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
+    source "$ZSH/oh-my-zsh.sh"
+fi
 
 # --- Optimización de arranque ---
 # compinit con caché: evita compaudit en cada inicio (ahorra ~60ms)
@@ -61,13 +67,17 @@ export DEFAULT_USER="{{ default_user }}"
 
 # --- Modern Tools Configuration ---
 {% if 'zoxide' in active_tools %}
-eval "$(zoxide init zsh)"
+if (( $+commands[zoxide] )); then
+    eval "$(zoxide init zsh)"
+fi
 {% endif %}
 
 {% if 'eza' in active_tools %}
-alias ls="eza --icons --group-directories-first"
-alias ll="eza -lh --icons --group-directories-first"
-alias la="eza -lah --icons --group-directories-first"
+if (( $+commands[eza] )); then
+    alias ls="eza --icons --group-directories-first"
+    alias ll="eza -lh --icons --group-directories-first"
+    alias la="eza -lah --icons --group-directories-first"
+fi
 {% endif %}
 
 # --- DEFAULT EDITOR ---
@@ -76,14 +86,16 @@ export VISUAL='nano'
 
 
 {% if 'yazi' in active_tools %}
-function yy() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
-}
+if (( $+commands[yazi] )); then
+    function yy() {
+        local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+        yazi "$@" --cwd-file="$tmp"
+        if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+            builtin cd -- "$cwd"
+        fi
+        rm -f -- "$tmp"
+    }
+fi
 {% endif %}
 
 # --- Root/Sudo Logic ---

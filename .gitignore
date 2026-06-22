@@ -53,4 +53,6 @@ custom.zsh
 .zshrc
 .zshrc.bak.*
 GEMINI.md
-TODO.md
+
+# Graphify local analysis output
+graphify-out/

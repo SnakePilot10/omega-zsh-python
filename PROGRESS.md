@@ -1,0 +1,179 @@
+# Progress
+
+## Run Metadata
+
+- Started: 2026-06-21
+- Goal: make Omega-ZSH simpler, safer, and more robust.
+- Policy: real runtime functionality over artificial tests.
+- Audit files: `TODO.md`, `PROGRESS.md`, `graphify-out/`.
+
+## Execution Rules
+
+- No item is marked completed without runtime verification.
+- Failures and partial work must be recorded, not hidden.
+- Tests are not modified to justify code changes.
+- If verification cannot run, the reason and residual risk are recorded.
+- `graphify update` runs after every completed item.
+
+## Log
+
+### 2026-06-21 - Initialization
+
+- TODO item: setup audit loop
+- Status: completed
+- Files changed:
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added an auditable backlog and progress protocol for future work.
+- Verification commands:
+  - Not applicable for documentation-only initialization.
+- Verification result:
+  - Files created.
+- Graphify update:
+  - Pending. Will run after first functional item completion.
+- Risks:
+  - None for runtime behavior.
+- Next:
+  - Start Item 01: rotating backups before writing `.zshrc`.
+
+### 2026-06-21 - Item 01
+
+- TODO item: `01. Implement rotating backups before writing .zshrc`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/backup.py`
+  - `omega_zsh/core/generator.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `ConfigGenerator.generate_zshrc()` now creates a timestamped backup before replacing an existing `.zshrc`.
+  - Backups are stored in `.omega-backups` next to the target file.
+  - Only the newest 10 backups for `.zshrc` are kept.
+  - No backup directory is created when there is no existing `.zshrc` to protect.
+- Verification commands:
+  - `python3 -m compileall omega_zsh`
+  - Runtime smoke script covering first write, backup creation, backup content, and pruning to 10 backups.
+- Verification result:
+  - Passed: `backup_smoke: ok`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 434 nodes, 710 edges, 21 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Backup location is currently next to the target file. This is simple and local, but a future manifest may move or also record backups under `~/.omega-zsh`.
+- Next:
+  - Continue with Item 02: validate generated `.zshrc` with `zsh -n` before replacing the real file.
+
+### 2026-06-21 - Item 02
+
+- TODO item: `02. Validate generated .zshrc with zsh -n before replacing the real file`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/shell.py`
+  - `omega_zsh/core/generator.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Generated `.zshrc` content is written to a temporary file first.
+  - The temporary file is validated with `zsh -n` when `zsh` is available.
+  - Invalid generated config is deleted and does not replace the existing `.zshrc`.
+  - Backup creation happens only after validation passes.
+- Verification commands:
+  - `python3 -m compileall omega_zsh`
+  - Runtime smoke script covering valid config replacement and invalid config preservation.
+- Verification result:
+  - Passed: `zsh_validation_smoke: ok`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 439 nodes, 717 edges, 23 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - If `zsh` is not installed, validation is skipped so initial bootstrap flows are not blocked. This should be surfaced later by `omega doctor`.
+- Next:
+  - Continue with Item 03: rollback support for failed config writes.
+
+### 2026-06-21 - Item 03
+
+- TODO item: `03. Add rollback support for failed config writes`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/backup.py`
+  - `omega_zsh/core/generator.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `restore_backup()` for restoring a backup over a target file.
+  - If atomic replace fails during `.zshrc` generation, the temporary file is removed and the previous backup is restored.
+  - Backup pruning now happens only after replacement succeeds.
+- Verification commands:
+  - `python3 -m compileall omega_zsh`
+  - Runtime smoke script with mocked `os.replace` failure.
+- Verification result:
+  - Passed: `rollback_smoke: ok`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 442 nodes, 723 edges, 21 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Current rollback handles replacement failure. A future apply orchestrator should also validate post-write shell startup behavior and rollback if runtime load fails.
+- Next:
+  - Continue with Item 04: manifest of files managed by Omega.
+
+### 2026-06-21 - Item 04
+
+- TODO item: `04. Add a manifest of files created or managed by Omega`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/manifest.py`
+  - `omega_zsh/core/generator.py`
+  - `omega_zsh/ui/app.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `~/.omega-zsh/manifest.json` support through `core/manifest.py`.
+  - Generated `.zshrc` files are recorded as managed config files.
+  - Created backups are recorded as managed backup files with their source path.
+  - Omega theme symlinks are recorded as managed theme symlinks with their source theme path.
+- Verification commands:
+  - `python3 -m compileall omega_zsh`
+  - Runtime smoke script covering config entry, backup entry, and theme symlink entry in manifest.
+- Verification result:
+  - Passed: `manifest_smoke: ok`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 450 nodes, 745 edges, 21 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Manifest currently records ownership but does not yet enforce it. Enforcement belongs to Item 05.
+- Next:
+  - Continue with Item 05: never touch files Omega does not own.
+
+### 2026-06-21 - Item 05
+
+- TODO item: `05. Never touch files that Omega did not create or does not own`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/manifest.py`
+  - `omega_zsh/ui/app.py`
+  - `scripts/uninstall.sh`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added manifest ownership helpers: `get_managed_file()`, `is_managed_file()`, `path_exists_or_is_symlink()`, and `require_managed_or_absent()`.
+  - Theme symlink creation now refuses to overwrite/remove any existing path unless it is absent or registered in manifest as the expected Omega-managed `theme_symlink` with matching source metadata.
+  - Existing foreign files are preserved.
+  - Existing foreign symlinks are preserved.
+  - Missing or corrupt manifest does not authorize replacement of existing paths.
+  - Recovery/purge now preserves `~/.omega-zsh` by default, protecting manifest, state, backups, and future logs.
+- Verification commands:
+  - `python3 -m compileall omega_zsh`
+  - Runtime smoke script covering foreign file preservation, foreign symlink preservation, corrupt manifest behavior, owned symlink replacement, and manifest recording.
+  - `bash -n scripts/uninstall.sh`
+  - Recovery dry-run smoke with `HOME=<tmp>` and `--dry-run --yes --purge`, asserting `~/.omega-zsh/manifest.json` remains present.
+- Verification result:
+  - Passed: `ownership_smoke: ok` and shell syntax check passed.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 455 nodes, 764 edges, 22 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `~/.zshrc` is still a special case: Omega intentionally manages it with backup, validation, rollback, and manifest recording. Future apply orchestration should distinguish first-time adoption from already-managed config more explicitly.
+  - Recovery currently preserves `~/.omega-zsh` entirely. A future purge-total mode may need a snapshot-before-delete flow if the user explicitly wants complete removal.
+- Next:
+  - Continue with Item 06: atomic writes for `state.json`.

@@ -7,20 +7,17 @@ from shutil import which
 
 
 class SystemContext:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(SystemContext, cls).__new__(cls)
-            cls._instance._detect()
-        return cls._instance
+    def __init__(self, home: Path | None = None, env: dict[str, str] | None = None):
+        self._home_override = home
+        self._env = env if env is not None else os.environ
+        self._detect()
 
     def _detect(self):
         """Analiza el sistema para determinar el entorno operativo."""
         self.os_type = platform.system().lower()
-        self.home = Path.home()
-        self.is_android = "ANDROID_ROOT" in os.environ or "ANDROID_DATA" in os.environ
-        self.is_termux = "com.termux" in os.environ.get("PREFIX", "")
+        self.home = self._home_override or Path.home()
+        self.is_android = "ANDROID_ROOT" in self._env or "ANDROID_DATA" in self._env
+        self.is_termux = "com.termux" in self._env.get("PREFIX", "")
         self.distro_id = "unknown"
         self.distro_version = ""
         self.is_gsi = False
@@ -50,10 +47,11 @@ class SystemContext:
         self.omega_dir = self.home / ".omega-zsh"
 
         # Directorio de Oh My Zsh (respeta variable de entorno $ZSH si existe)
-        self.omz_dir = Path(os.environ.get("ZSH", str(self.home / ".oh-my-zsh")))
+        self.omz_dir = Path(self._env.get("ZSH", str(self.home / ".oh-my-zsh")))
 
         # Ruta al .zshrc del usuario
         self.zshrc_path = self.home / ".zshrc"
+
     def _detect_android_context(self):
         """Detección específica para entornos Android/Termux."""
         self.distro_id = "android"

@@ -132,13 +132,31 @@ class RecoveryScreen(Vertical):
         return Path(__file__).resolve().parents[2] / "scripts" / "uninstall.sh"
 
     def _write_log(self, message: str) -> None:
-        self.query_one("#recovery-log", Log).write(message)
+        def write() -> None:
+            self.query_one("#recovery-log", Log).write(message)
+
+        try:
+            self.app.call_from_thread(write)
+        except RuntimeError:
+            write()
+
+    def _notify(self, message: str, severity: str | None = None) -> None:
+        def notify() -> None:
+            if severity:
+                self.app.notify(message, severity=severity)
+            else:
+                self.app.notify(message)
+
+        try:
+            self.app.call_from_thread(notify)
+        except RuntimeError:
+            notify()
 
     def _run_recovery(self, *args: str) -> None:
         script = self._script_path()
         if not script.exists():
             self._write_log(f"[ERROR] Script not found: {script}\n")
-            self.app.notify("scripts/uninstall.sh no existe.", severity="error")
+            self._notify("scripts/uninstall.sh no existe.", severity="error")
             return
 
         cmd = ["bash", str(script), "--yes", *args]
@@ -150,18 +168,18 @@ class RecoveryScreen(Vertical):
             if result.stderr:
                 self._write_log(result.stderr)
             if result.returncode == 0:
-                self.app.notify("Recovery command finished.")
+                self._notify("Recovery command finished.")
             else:
-                self.app.notify(
+                self._notify(
                     f"Recovery command failed: exit {result.returncode}",
                     severity="error",
                 )
         except subprocess.TimeoutExpired:
             self._write_log("[ERROR] Recovery command timed out.\n")
-            self.app.notify("Recovery command timed out.", severity="error")
+            self._notify("Recovery command timed out.", severity="error")
         except Exception as e:
             self._write_log(f"[ERROR] {e}\n")
-            self.app.notify(f"Recovery error: {e}", severity="error")
+            self._notify(f"Recovery error: {e}", severity="error")
 
     @on(Button.Pressed, "#btn-recovery-dry-run")
     @work(exclusive=True, thread=True)

@@ -45,8 +45,6 @@ PROJECT_THEMES = PROJECT_ROOT / "omega_zsh/assets/themes"
 OMEGA_CONFIG_DIR = HOME / ".omega-zsh"
 COMMAND_TIMEOUT = 15
 
-state_manager = StateManager(OMEGA_CONFIG_DIR) if StateManager else None
-
 
 def get_app_version() -> str:
     try:
@@ -157,17 +155,26 @@ def get_system_stats() -> dict[str, str]:
     }
 
 
+def _parse_zshrc_plugins(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+    content = path.read_text(errors="ignore")
+    match = re.search(r"^plugins=\((.*?)\)", content, re.MULTILINE | re.DOTALL)
+    if not match:
+        return []
+    cleaned = re.sub(r"#.*", "", match.group(1))
+    return cleaned.split()
+
+
 def get_omega_active_items() -> list[str]:
     """Lee el estado oficial de Omega para saber qué está activado."""
-    if not state_manager:
-        if not ZSHRC.exists():
-            return []
-        content = ZSHRC.read_text(errors="ignore")
-        match = re.search(r"^plugins=\((.*?)\)", content, re.MULTILINE | re.DOTALL)
-        return match.group(1).split() if match else []
+    if StateManager:
+        try:
+            return StateManager(OMEGA_CONFIG_DIR).load().selected_plugins
+        except Exception as exc:
+            console.print(f"[dim yellow]No se pudo leer state.json, usando .zshrc: {exc}[/]")
 
-    state = state_manager.load()
-    return state.selected_plugins
+    return _parse_zshrc_plugins(ZSHRC)
 
 
 def inspect_plugin(plugin_name: str) -> dict:

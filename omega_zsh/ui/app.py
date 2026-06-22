@@ -1,7 +1,7 @@
 import logging
-import os
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
+from typing import Any
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -11,6 +11,7 @@ from ..core.constants import BIN_PLUGINS, DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeD
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
 from ..core.generator import ConfigGenerator
+from ..core.manifest import record_managed_file, require_managed_or_absent
 from ..core.state import AppState, StateManager
 from .screens import (
     DashboardScreen,
@@ -26,6 +27,78 @@ def get_app_version() -> str:
         return version("omega-zsh")
     except PackageNotFoundError:
         return "dev"
+
+
+def build_header_command(state: AppState) -> str:
+    if state.selected_header == "figlet":
+        return FigletManager().generate_safe_command(state.header_text, state.header_font)
+    if state.selected_header == "fastfetch":
+        return "(( $+commands[fastfetch] )) && fastfetch"
+    if state.selected_header == "cowsay":
+        return "(( $+commands[cowsay] )) && cowsay Omega-ZSH"
+    return ""
+
+
+def build_config_context(context: SystemContext, state: AppState) -> dict[str, Any]:
+    bin_set = set(BIN_PLUGINS)
+    return {
+        "version": get_app_version(),
+        "omz_dir": str(context.omz_dir),
+        "user_theme": state.selected_theme,
+        "root_theme": state.selected_root_theme,
+        "plugins": [p for p in state.selected_plugins if p not in bin_set],
+        "header_cmd": build_header_command(state),
+        "is_termux": context.is_termux,
+        "active_tools": [p for p in state.selected_plugins if p in bin_set],
+        "default_user": "",
+        "personal_zsh": str(context.home / ".omega-zsh" / "personal.zsh"),
+        "custom_zsh": str(context.home / ".omega-zsh" / "custom.zsh"),
+    }
+
+
+def link_omega_themes(assets_dir: Path, omz_dir: Path, manifest_path: Path | None = None) -> None:
+    omega_themes_dir = assets_dir / "themes"
+    if not omega_themes_dir.exists():
+        return
+
+    custom_themes = omz_dir / "custom" / "themes"
+    custom_themes.mkdir(parents=True, exist_ok=True)
+
+    for theme_file in omega_themes_dir.glob("*.zsh-theme"):
+        link = custom_themes / theme_file.name
+        metadata = {"source": str(theme_file)}
+        try:
+            if manifest_path and not require_managed_or_absent(
+                manifest_path,
+                link,
+                "theme_symlink",
+                metadata,
+            ):
+                logging.warning("Tema existente no gestionado por Omega; se omite: %s", link)
+                continue
+            if link.is_symlink():
+                if link.resolve(strict=False) == theme_file.resolve(strict=False):
+                    if manifest_path:
+                        record_managed_file(
+                            manifest_path,
+                            link,
+                            "theme_symlink",
+                            "verified",
+                            metadata,
+                        )
+                    continue
+                link.unlink()
+            link.symlink_to(theme_file)
+            if manifest_path:
+                record_managed_file(
+                    manifest_path,
+                    link,
+                    "theme_symlink",
+                    "created",
+                    metadata,
+                )
+        except Exception as e:
+            logging.warning("No se pudo crear symlink para %s: %s", theme_file.name, e)
 
 
 class OmegaApp(App):
@@ -233,6 +306,7 @@ class OmegaApp(App):
             current_state = AppState(
                 selected_plugins=selected_plugins,
                 selected_theme=selected_theme,
+                selected_root_theme=self.state.selected_root_theme,
                 selected_header=h_type,
                 header_text=h_text,
                 header_font=h_font,
@@ -247,46 +321,12 @@ class OmegaApp(App):
         self.save_state()
         try:
             generator = ConfigGenerator(self.context.assets_dir / "templates")
-
-            header_cmd = ""
-            if self.state.selected_header == "figlet":
-                header_cmd = FigletManager().generate_safe_command(
-                    self.state.header_text, self.state.header_font
-                )
-            elif self.state.selected_header == "fastfetch":
-                header_cmd = "fastfetch"
-
-            bin_set = set(BIN_PLUGINS)
-            omz_plugins = [p for p in self.state.selected_plugins if p not in bin_set]
-            active_tools = [p for p in self.state.selected_plugins if p in bin_set]
-
-            custom_themes = self.context.omz_dir / "custom" / "themes"
-            custom_themes.mkdir(parents=True, exist_ok=True)
-            omega_themes_dir = Path(str(self.context.assets_dir / "themes"))
-
-            if omega_themes_dir.exists():
-                for tf in omega_themes_dir.glob("*.zsh-theme"):
-                    link = custom_themes / tf.name
-                    try:
-                        if os.lexists(link):
-                            os.unlink(link)
-                        os.symlink(tf, link)
-                    except Exception as e:
-                        logging.warning("No se pudo crear symlink para %s: %s", tf.name, e)
-
-            context_data = {
-                "version": get_app_version(),
-                "omz_dir": str(self.context.omz_dir),
-                "user_theme": self.state.selected_theme,
-                "root_theme": self.state.selected_root_theme,
-                "plugins": omz_plugins,
-                "header_cmd": header_cmd,
-                "is_termux": self.context.is_termux,
-                "active_tools": active_tools,
-                "default_user": "",
-                "personal_zsh": str(self.context.home / ".omega-zsh" / "personal.zsh"),
-                "custom_zsh": str(self.context.home / ".omega-zsh" / "custom.zsh"),
-            }
+            link_omega_themes(
+                self.context.assets_dir,
+                self.context.omz_dir,
+                self.context.omega_dir / "manifest.json",
+            )
+            context_data = build_config_context(self.context, self.state)
 
             if generator.generate_zshrc(self.context.zshrc_path, context_data):
                 self.notify("Configuración actualizada con éxito.")

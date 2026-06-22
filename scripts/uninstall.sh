@@ -54,11 +54,12 @@ RECOVERY_DIR="$HOME/.omega-zsh-recovery"
 OMEGA_RE='omega[-_]?zsh|omega_zsh|omegazsh|omega-zsh-python'
 CONFIG_FILES=("$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.profile" "$HOME/.bash_profile")
 CANDIDATE_DIRS=(
-  "$HOME/.omega-zsh" "$HOME/.omega_zsh" "$HOME/.config/omega-zsh" "$HOME/.config/omega_zsh"
+  "$HOME/.omega_zsh" "$HOME/.config/omega-zsh" "$HOME/.config/omega_zsh"
   "$HOME/.cache/omega-zsh" "$HOME/.cache/omega_zsh" "$HOME/.local/share/omega-zsh" "$HOME/.local/share/omega_zsh"
   "$HOME/omega-zsh" "$HOME/omega-zsh-python"
 )
 CANDIDATE_BINS=("$HOME/.local/bin/omega" "$HOME/.local/bin/omega-zsh" "$HOME/.local/bin/omegazsh" "$HOME/.local/bin/omega-zsh-python")
+PRESERVED_DIRS=("$HOME/.omega-zsh")
 
 if [[ -n "${PREFIX:-}" ]]; then
   CANDIDATE_BINS+=("$PREFIX/bin/omega" "$PREFIX/bin/omega-zsh" "$PREFIX/bin/omegazsh" "$PREFIX/bin/omega-zsh-python")
@@ -91,6 +92,12 @@ backup_file() {
 remove_path() {
   local target="$1"
   [[ -e "$target" || -L "$target" ]] || return 0
+  for preserved in "${PRESERVED_DIRS[@]}"; do
+    if [[ "$target" == "$preserved" || "$target" == "$preserved"/* ]]; then
+      warn "Preserving Omega state directory: $target"
+      return 0
+    fi
+  done
   log "Removing: $target"
   if [[ "$DRY_RUN" == true ]]; then dry "rm -rf -- $target"; else rm -rf -- "$target" && ok "Removed: $target"; fi
 }
@@ -245,6 +252,7 @@ ${C_INFO}OMEGA-ZSH CLEANUP / NUCLEAR FIX${C_RESET}
 Safety model:
   - Default recovery is a single rotating folder: ~/.omega-zsh-recovery
   - Use --no-backup to disable recovery copies completely.
+  - ~/.omega-zsh is preserved by default (manifest, state, backups, logs).
   - zsh, oh-my-zsh, powerlevel10k, and external themes are not removed directly.
 
 EOF

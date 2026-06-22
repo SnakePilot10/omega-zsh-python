@@ -6,6 +6,10 @@ from typing import Any, Dict
 
 from jinja2 import Environment, FileSystemLoader
 
+from .backup import create_backup, prune_backups, restore_backup
+from .manifest import default_manifest_path, record_managed_file
+from .shell import validate_zsh_syntax
+
 
 class ConfigGenerator:
     def __init__(self, templates_dir: Path):
@@ -24,7 +28,31 @@ class ConfigGenerator:
             with open(temp_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            os.replace(temp_path, output_path)
+            valid, message = validate_zsh_syntax(temp_path)
+            if not valid:
+                temp_path.unlink(missing_ok=True)
+                logging.error("Generated .zshrc failed validation: %s", message)
+                return False
+
+            backup_dir = output_path.parent / ".omega-backups"
+            backup_path = create_backup(output_path, backup_dir)
+            try:
+                os.replace(temp_path, output_path)
+            except Exception:
+                temp_path.unlink(missing_ok=True)
+                restore_backup(backup_path, output_path)
+                raise
+            prune_backups(backup_dir, output_path.name)
+            manifest_path = default_manifest_path(output_path.parent)
+            record_managed_file(manifest_path, output_path, "config", "generated")
+            if backup_path:
+                record_managed_file(
+                    manifest_path,
+                    backup_path,
+                    "backup",
+                    "created",
+                    {"source": str(output_path)},
+                )
             return True
         except Exception as e:
             logging.error(f"Error generando .zshrc: {e}", exc_info=True)

@@ -94,4 +94,8 @@ class FigletManager:
         # 3. Generar comando con verificación de runtime (Zsh native)
         # Esto evita el lag de 'command not found' si lolcat desaparece
         base_cmd = f"figlet -f {safe_font} -c {safe_text}"
-        return f"(( $+commands[lolcat] )) && {base_cmd} | lolcat || {base_cmd}"
+        return (
+            f"if (( $+commands[figlet] )); then "
+            f"(( $+commands[lolcat] )) && {base_cmd} | lolcat || {base_cmd}; "
+            "fi"
+        )

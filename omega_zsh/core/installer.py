@@ -6,6 +6,17 @@ from typing import Callable, List
 from .constants import BIN_PLUGINS, EXTERNAL_URLS
 
 
+BINARY_COMMANDS = {
+    "bat": ["bat", "batcat"],
+    "fd": ["fd", "fdfind"],
+    "ripgrep": ["rg", "ripgrep"],
+}
+
+
+def _binary_available(plugin_id: str) -> bool:
+    return any(which(cmd) for cmd in BINARY_COMMANDS.get(plugin_id, [plugin_id]))
+
+
 class PluginInstaller:
     """
     Gestiona la instalación de plugins, temas y paquetes del sistema.
@@ -37,7 +48,7 @@ class PluginInstaller:
         Returns:
             List[str]: Subconjunto de binarios no encontrados en el PATH.
         """
-        return [p for p in plugins if p in BIN_PLUGINS and not which(p)]
+        return [p for p in plugins if p in BIN_PLUGINS and not _binary_available(p)]
 
     def install_binary(self, plugin: str) -> bool:
         """
@@ -89,7 +100,7 @@ class PluginInstaller:
         target = self.custom_dir / "plugins" / plugin_id
         return self._git_clone(url, target, lambda msg: None)
 
-    def install_all(self, selected_ids: List[str], on_progress: Callable[[str], None]):
+    def install_all(self, selected_ids: List[str], on_progress: Callable[[str], None]) -> bool:
 
         """
         Orquestador principal de instalación de plugins.
@@ -102,12 +113,14 @@ class PluginInstaller:
             on_progress (Callable[[str], None]): Función de callback para reportar progreso.
                                                 Debe aceptar un string (mensaje).
         """
+        failed = []
         for plugin_id in selected_ids:
             # 1. ¿Es un paquete binario del sistema?
             if plugin_id in BIN_PLUGINS:
                 on_progress(f"Instalando paquete binario: {plugin_id}")
                 if not self.platform.install_package(plugin_id, on_progress=on_progress):
                     on_progress(f"Error instalando paquete binario: {plugin_id}")
+                    failed.append(plugin_id)
 
             # 2. ¿Es un plugin externo de Git?
             elif plugin_id in EXTERNAL_URLS:
@@ -118,6 +131,7 @@ class PluginInstaller:
                     on_progress(f"Clonando plugin Git: {plugin_id}")
                     if not self._git_clone(url, target_path, on_progress):
                         on_progress(f"Error clonando plugin Git: {plugin_id}")
+                        failed.append(plugin_id)
                 else:
                     on_progress(f"Plugin Git ya existe: {plugin_id}")
 
@@ -125,6 +139,11 @@ class PluginInstaller:
             # No requiere instalación física, solo estar en la lista del .zshrc
             else:
                 on_progress(f"Activando plugin nativo: {plugin_id}")
+
+        if failed:
+            on_progress("Fallaron: " + ", ".join(failed))
+            return False
+        return True
 
     def _git_clone(self, url: str, target: Path, on_progress: Callable[[str], None]) -> bool:
         """
