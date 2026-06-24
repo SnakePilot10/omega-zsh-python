@@ -17,7 +17,7 @@ def test_doctor_reports_expected_installation_checks(tmp_path, monkeypatch):
     (home / ".zshrc").write_text("plugins=(git)\n", encoding="utf-8")
     omega_dir = home / ".omega-zsh"
     omega_dir.mkdir()
-    (omega_dir / "manifest.json").write_text(json.dumps({"files": []}), encoding="utf-8")
+    (omega_dir / "manifest.json").write_text(json.dumps({"files": {}}), encoding="utf-8")
     (omega_dir / "state.json").write_text(
         json.dumps(
             {
@@ -76,6 +76,40 @@ def test_doctor_accepts_present_external_plugin_and_builtin_theme(tmp_path, monk
 
     assert _check(report, "external-plugins")["status"] == "ok"
     assert _check(report, "theme")["status"] == "ok"
+
+
+def test_doctor_reports_corrupt_manifest_without_rewriting(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    manifest = omega_dir / "manifest.json"
+    manifest.write_text("{ invalid json", encoding="utf-8")
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    manifest_check = _check(report, "manifest")
+    assert manifest_check["status"] == "warning"
+    assert manifest_check["message"] == "manifest corrupto"
+    assert manifest.read_text(encoding="utf-8") == "{ invalid json"
+
+
+def test_doctor_reports_invalid_manifest_schema_without_rewriting(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    manifest = omega_dir / "manifest.json"
+    manifest.write_text(json.dumps({"files": []}), encoding="utf-8")
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    manifest_check = _check(report, "manifest")
+    assert manifest_check["status"] == "warning"
+    assert manifest_check["message"] == "manifest schema inválido"
+    assert json.loads(manifest.read_text(encoding="utf-8"))["files"] == []
 
 
 def test_doctor_fix_creates_only_low_risk_missing_files(tmp_path, monkeypatch):

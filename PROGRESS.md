@@ -416,6 +416,38 @@
 - Next:
   - Continue with Item 11: clearer diagnostics for missing Oh My Zsh.
 
+### 2026-06-24 - Item 10b
+
+- TODO item: `10b. Report corrupt or invalid manifest in read-only doctor`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/doctor.py`
+  - `tests/test_doctor.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added explicit read-only manifest status parsing for `omega doctor`.
+  - Missing manifest remains a warning.
+  - Corrupt JSON is now reported as `manifest corrupto` instead of being silently sanitized to ok.
+  - Schema-invalid manifest, such as non-dict `files`, is now reported as `manifest schema inválido`.
+  - `doctor --fix` reuses the same status logic to decide whether manifest repair is needed.
+  - Read-only doctor does not rewrite corrupt or schema-invalid manifest files.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `HOME="/tmp/opencode/omega-manifest-diagnostic-smoke" /tmp/opencode/omega-zsh-test-venv/bin/python -m omega_zsh doctor` with corrupt manifest plus assertion that the file content stayed unchanged.
+- Verification result:
+  - Passed: Python/test compile checks.
+  - Passed: full pytest suite in temporary venv: `76 passed`.
+  - Passed: CLI smoke reported `manifest corrupto` and preserved the corrupt file unchanged.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 529 nodes, 954 edges, 30 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - The manifest diagnostic is intentionally schema-minimal: it validates only that the top-level object is a dict and `files` is a dict. Deep entry validation can be added when repair behavior expands.
+- Next:
+  - Continue with Item 11: clearer diagnostics for missing Oh My Zsh.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

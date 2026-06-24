@@ -49,14 +49,21 @@ def _fix_result(fix_id: str, status: str, message: str, detail: str) -> dict[str
     return {"id": fix_id, "status": status, "message": message, "detail": detail}
 
 
-def _manifest_needs_rewrite(path: Path) -> bool:
+def _manifest_status(path: Path) -> tuple[str, str, str]:
     if not path.exists():
-        return True
+        return "warning", "manifest aún no existe", "manifest aún no existe"
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return True
-    return not isinstance(data, dict) or not isinstance(data.get("files"), dict)
+    except Exception as exc:
+        return "warning", "manifest corrupto", str(exc)
+    if not isinstance(data, dict) or not isinstance(data.get("files"), dict):
+        return "warning", "manifest schema inválido", str(path)
+    return "ok", "manifest disponible", str(path)
+
+
+def _manifest_needs_rewrite(path: Path) -> bool:
+    status, _, _ = _manifest_status(path)
+    return status != "ok"
 
 
 def _create_minimal_zshrc(context: SystemContext) -> dict[str, str]:
@@ -220,14 +227,14 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
     )
 
     manifest_path = context.omega_dir / "manifest.json"
-    manifest = load_manifest(manifest_path)
+    manifest_status, manifest_message, manifest_detail = _manifest_status(manifest_path)
     checks.append(
         _check(
             "manifest",
-            "ok" if manifest_path.exists() and manifest.get("files") is not None else "warning",
-            "ok" if manifest_path.exists() and manifest.get("files") is not None else "warning",
-            "manifest disponible" if manifest_path.exists() else "manifest aún no existe",
-            str(manifest_path) if manifest_path.exists() else "manifest aún no existe",
+            manifest_status,
+            manifest_status,
+            manifest_message,
+            manifest_detail,
         )
     )
 

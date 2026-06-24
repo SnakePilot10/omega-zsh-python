@@ -69,6 +69,10 @@
   - Impact: high
   - Verification: safe fixes run only after backup and validation.
 
+- [x] 10b. Report corrupt or invalid manifest in read-only doctor
+  - Impact: high
+  - Verification: `omega doctor` warns on corrupt or schema-invalid manifest without modifying it.
+
 - [ ] 11. Add clear diagnostics for missing Oh My Zsh
   - Impact: high
   - Verification: user gets actionable repair message instead of broken shell sourcing.
