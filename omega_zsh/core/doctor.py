@@ -4,9 +4,10 @@ from pathlib import Path
 from shutil import which
 from typing import Any
 
-from .backup import create_backup
+from .backup import create_backup, restore_backup
 from .constants import BIN_PLUGINS, EXTERNAL_URLS, THEMES_OMZ_BUILTIN
 from .context import SystemContext
+from .installer import BINARY_COMMANDS
 from .manifest import load_manifest, record_managed_file, save_manifest
 from .shell import validate_zsh_syntax
 from .state import AppState, StateManager
@@ -121,6 +122,47 @@ def _omz_status(context: SystemContext) -> tuple[dict[str, str], dict[str, str]]
     return zsh_check, omz_check
 
 
+def _binary_available(plugin_id: str) -> bool:
+    return any(which(command) for command in BINARY_COMMANDS.get(plugin_id, [plugin_id]))
+
+
+def _binary_detail(context: SystemContext, missing_tools: list[str]) -> str:
+    if not missing_tools:
+        return "herramientas seleccionadas disponibles"
+    install_hint = _package_hint(context)
+    details = []
+    for tool in missing_tools:
+        commands = "/".join(BINARY_COMMANDS.get(tool, [tool]))
+        details.append(f"{tool} (comando: {commands}; instalar: {install_hint})")
+    return "; ".join(details)
+
+
+def _external_plugin_detail(context: SystemContext, missing_plugins: list[str]) -> str:
+    if not missing_plugins:
+        return "plugins externos presentes o no seleccionados"
+    details = []
+    for plugin in missing_plugins:
+        target = context.omz_dir / "custom" / "plugins" / plugin
+        details.append(f"{plugin}: falta {target}; origen {EXTERNAL_URLS[plugin]}")
+    return "; ".join(details)
+
+
+def _latest_valid_zshrc_backup(context: SystemContext) -> Path | None:
+    backup_dir = context.zshrc_path.parent / ".omega-backups"
+    if not backup_dir.exists():
+        return None
+    backups = sorted(
+        backup_dir.glob(f"{context.zshrc_path.name}.*.bak"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    for backup in backups:
+        valid, _ = validate_zsh_syntax(backup)
+        if valid:
+            return backup
+    return None
+
+
 def _fix_result(fix_id: str, status: str, message: str, detail: str) -> dict[str, str]:
     return {"id": fix_id, "status": status, "message": message, "detail": detail}
 
@@ -145,6 +187,21 @@ def _manifest_needs_rewrite(path: Path) -> bool:
 def _create_minimal_zshrc(context: SystemContext) -> dict[str, str]:
     if context.zshrc_path.exists():
         return _fix_result("zshrc", "skipped", ".zshrc existente preservado", str(context.zshrc_path))
+
+    backup_path = _latest_valid_zshrc_backup(context)
+    if backup_path:
+        try:
+            restore_backup(backup_path, context.zshrc_path)
+            record_managed_file(
+                context.omega_dir / "manifest.json",
+                context.zshrc_path,
+                "config",
+                "doctor-restored",
+                {"source": str(backup_path)},
+            )
+            return _fix_result("zshrc", "fixed", ".zshrc restaurado desde backup válido", str(backup_path))
+        except Exception as exc:
+            return _fix_result("zshrc", "failed", "no se pudo restaurar backup de .zshrc", str(exc))
 
     content = "# Created by Omega-ZSH doctor --fix\n# Run omega to configure your shell.\n"
     temp_path = context.zshrc_path.with_suffix(".tmp")
@@ -307,7 +364,7 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
     )
 
     selected = state.selected_plugins
-    missing_tools = [plugin for plugin in selected if plugin in BIN_PLUGINS and not which(plugin)]
+    missing_tools = [plugin for plugin in selected if plugin in BIN_PLUGINS and not _binary_available(plugin)]
     checks.append(
         _check(
             "binary-tools",
@@ -316,7 +373,7 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
             "herramientas binarias disponibles"
             if not missing_tools
             else "faltan herramientas binarias seleccionadas",
-            ", ".join(missing_tools) if missing_tools else "herramientas seleccionadas disponibles",
+            _binary_detail(context, missing_tools),
         )
     )
 
@@ -332,7 +389,7 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
             "ok" if not missing_plugins else "missing",
             "ok" if not missing_plugins else "warning",
             "plugins externos disponibles" if not missing_plugins else "faltan plugins externos seleccionados",
-            ", ".join(missing_plugins) if missing_plugins else "plugins externos presentes o no seleccionados",
+            _external_plugin_detail(context, missing_plugins),
         )
     )
 

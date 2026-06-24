@@ -45,8 +45,10 @@ def test_doctor_reports_expected_installation_checks(tmp_path, monkeypatch):
     assert _check(report, ".zshrc")["status"] == "ok"
     assert _check(report, "manifest")["status"] == "ok"
     assert _check(report, "binary-tools")["status"] == "missing"
-    assert _check(report, "binary-tools")["detail"] == "zoxide"
-    assert _check(report, "external-plugins")["detail"] == "zsh-autosuggestions"
+    assert "zoxide" in _check(report, "binary-tools")["detail"]
+    assert "instalar:" in _check(report, "binary-tools")["detail"]
+    assert "zsh-autosuggestions" in _check(report, "external-plugins")["detail"]
+    assert "https://github.com/zsh-users/zsh-autosuggestions.git" in _check(report, "external-plugins")["detail"]
     assert _check(report, "theme")["status"] == "missing"
 
 
@@ -123,6 +125,64 @@ def test_doctor_reports_missing_omz_script_inside_existing_dir(tmp_path, monkeyp
     assert omz_check["status"] == "missing"
     assert omz_check["message"] == "oh-my-zsh.sh no encontrado"
     assert str(omz / "oh-my-zsh.sh") in omz_check["detail"]
+
+
+def test_doctor_binary_tools_accept_known_command_aliases(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    (omega_dir / "state.json").write_text(
+        json.dumps({"selected_plugins": ["ripgrep", "fd"], "selected_header": "none"}),
+        encoding="utf-8",
+    )
+    context = SystemContext(home=home, env={})
+
+    def fake_which(command):
+        return f"/usr/bin/{command}" if command in {"rg", "fdfind"} else None
+
+    monkeypatch.setattr("omega_zsh.core.doctor.which", fake_which)
+
+    report = run_doctor(context)
+
+    assert _check(report, "binary-tools")["status"] == "ok"
+
+
+def test_doctor_reports_actionable_missing_binary_details(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    (omega_dir / "state.json").write_text(
+        json.dumps({"selected_plugins": ["fd"], "selected_header": "none"}),
+        encoding="utf-8",
+    )
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    tool_check = _check(report, "binary-tools")
+    assert tool_check["status"] == "missing"
+    assert "fd (comando: fd/fdfind" in tool_check["detail"]
+    assert "instalar:" in tool_check["detail"]
+
+
+def test_doctor_reports_actionable_missing_external_plugin_details(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    (omega_dir / "state.json").write_text(
+        json.dumps({"selected_plugins": ["fzf-tab"], "selected_header": "none"}),
+        encoding="utf-8",
+    )
+    context = SystemContext(home=home, env={"ZSH": str(home / ".oh-my-zsh")})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    plugin_check = _check(report, "external-plugins")
+    assert plugin_check["status"] == "missing"
+    assert str(home / ".oh-my-zsh" / "custom" / "plugins" / "fzf-tab") in plugin_check["detail"]
+    assert "https://github.com/Aloxaf/fzf-tab.git" in plugin_check["detail"]
 
 
 def test_doctor_reports_corrupt_manifest_without_rewriting(tmp_path, monkeypatch):
@@ -223,3 +283,20 @@ def test_doctor_fix_does_not_create_zshrc_without_manifest_ready(tmp_path, monke
     assert _check({"checks": result["fixes"]}, "omega-dir")["status"] == "failed"
     assert _check({"checks": result["fixes"]}, "zshrc")["status"] == "skipped"
     assert not context.zshrc_path.exists()
+
+
+def test_doctor_fix_restores_latest_valid_zshrc_backup_before_minimal_file(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    backup_dir = home / ".omega-backups"
+    backup_dir.mkdir(parents=True)
+    backup = backup_dir / ".zshrc.20260624-120000.bak"
+    backup.write_text("# restored config\n", encoding="utf-8")
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    result = run_doctor_fix(context)
+
+    zshrc_fix = _check({"checks": result["fixes"]}, "zshrc")
+    assert zshrc_fix["status"] == "fixed"
+    assert zshrc_fix["message"] == ".zshrc restaurado desde backup válido"
+    assert context.zshrc_path.read_text(encoding="utf-8") == "# restored config\n"

@@ -16,12 +16,16 @@ class ConfigGenerator:
         # Usamos FileSystemLoader con una ruta física real
         self.env = Environment(loader=FileSystemLoader(str(templates_dir)))
 
+    def render_zshrc(self, context: Dict[str, Any]) -> str:
+        """Render .zshrc content without writing to disk."""
+        template = self.env.get_template(".zshrc.j2")
+        return template.render(context)
+
     def generate_zshrc(self, output_path: Path, context: Dict[str, Any]) -> bool:
         """Genera el archivo .zshrc a partir de la plantilla."""
         try:
             # 2. Renderizar plantilla
-            template = self.env.get_template(".zshrc.j2")
-            content = template.render(context)
+            content = self.render_zshrc(context)
 
             # 3. Escritura atómica
             temp_path = output_path.with_suffix(".tmp")

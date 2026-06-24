@@ -77,25 +77,25 @@
   - Impact: high
   - Verification: user gets actionable repair message instead of broken shell sourcing.
 
-- [ ] 12. Add clear diagnostics for missing selected binary tools
+- [x] 12. Add clear diagnostics for missing selected binary tools
   - Impact: medium
   - Verification: doctor reports selected tools missing from PATH.
 
-- [ ] 13. Add clear diagnostics for missing external zsh plugins
+- [x] 13. Add clear diagnostics for missing external zsh plugins
   - Impact: medium
   - Verification: doctor reports selected external plugins not cloned.
 
-- [ ] 14. Integrate recovery actions with backups instead of only shell script cleanup
+- [x] 14. Integrate recovery actions with backups instead of only shell script cleanup
   - Impact: high
   - Verification: recovery can restore the latest valid backup.
 
 ## Phase 3 - Apply Flow Simplification
 
-- [ ] 15. Create `core/apply.py` as the single apply orchestrator
+- [x] 15. Create `core/apply.py` as the single apply orchestrator
   - Impact: high
   - Verification: UI calls the orchestrator instead of doing filesystem work directly.
 
-- [ ] 16. Create pure `render_config(state, context)` flow
+- [x] 16. Create pure `render_config(state, context)` flow
   - Impact: high
   - Verification: render can be executed without touching filesystem.
 

@@ -479,6 +479,56 @@
 - Next:
   - Continue with Item 12: diagnostics for missing selected binary tools.
 
+### 2026-06-24 - Items 12-16
+
+- TODO items:
+  - `12. Add clear diagnostics for missing selected binary tools`
+  - `13. Add clear diagnostics for missing external zsh plugins`
+  - `14. Integrate recovery actions with backups instead of only shell script cleanup`
+  - `15. Create core/apply.py as the single apply orchestrator`
+  - `16. Create pure render_config(state, context) flow`
+- Status: completed as one fast-forward block.
+- Files changed:
+  - `omega_zsh/core/apply.py`
+  - `omega_zsh/core/doctor.py`
+  - `omega_zsh/core/generator.py`
+  - `omega_zsh/ui/app.py`
+  - `tests/test_apply.py`
+  - `tests/test_doctor.py`
+  - `tests/test_ui_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `omega doctor` binary tool diagnostics now use command aliases from `BINARY_COMMANDS`, so tools like `fd`/`fdfind` and `ripgrep`/`rg` are evaluated correctly.
+  - Missing binary tool details now include the selected tool, accepted command names, and a platform package hint.
+  - Missing external plugin details now include the expected local plugin path and source Git URL.
+  - `doctor --fix` now restores `.zshrc` from the newest valid `.omega-backups/.zshrc.*.bak` before falling back to a minimal generated file.
+  - Added `core/apply.py` as the apply orchestrator for config context, theme linking, render, and write orchestration.
+  - Added pure `render_config(context, state)` that renders `.zshrc` content without writing to disk.
+  - `ConfigGenerator` now exposes `render_zshrc()` and `generate_zshrc()` reuses it.
+  - UI Apply now delegates to `apply_config()` instead of performing filesystem orchestration inline.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - CLI smoke: `omega doctor` with selected external plugin missing.
+  - CLI smoke: `omega doctor --fix` restores `.zshrc` from `.omega-backups`.
+  - Python smoke: `render_config()` returns content and does not create `.zshrc`.
+- Verification result:
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `85 passed`.
+  - Passed: external plugin CLI diagnostic smoke reported missing plugin path and URL.
+  - Passed: backup restore smoke restored `.zshrc` from backup instead of creating minimal config.
+  - Passed: render smoke confirmed pure render does not write `.zshrc`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 552 nodes, 1045 edges, 23 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Binary package hints are still generic per package manager; exact package names may differ for some distributions.
+  - Apply result is intentionally minimal (`ok`, `message`); richer structured apply results remain Item 20.
+  - One graphify update was run for this fast-forward block rather than pausing after each individual item.
+- Next:
+  - Continue with Item 17: separate install flow from apply flow.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`
