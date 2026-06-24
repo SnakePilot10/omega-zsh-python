@@ -311,6 +311,41 @@
 - Next:
   - Continue with Item 09: add `omega doctor` command.
 
+### 2026-06-24 - Item 09
+
+- TODO item: `09. Add omega doctor command`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/doctor.py`
+  - `omega_zsh/cli/oz_tool.py`
+  - `tests/test_doctor.py`
+  - `tests/test_oz.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `run_doctor()` as a read-only core diagnostic service.
+  - `omega doctor`, `omega doc`, `oz doctor`, and `oz doc` now render a Rich diagnostics table through the existing CLI delegation path.
+  - Doctor reports `zsh`, `git`, Oh My Zsh, resolved `$ZSH`, `.zshrc`, Omega/state directory writability, `.zshrc` directory writability, manifest availability, selected binary tools, selected external plugins, and selected theme availability.
+  - Doctor returns structured checks with `id`, `status`, `severity`, `message`, and `detail` so future UI or repair flows can consume the same result.
+  - No repair or filesystem mutation is performed by doctor.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `HOME="/tmp/opencode/omega-doctor-smoke" ZSH="/tmp/opencode/omega-doctor-smoke/.oh-my-zsh" /tmp/opencode/omega-zsh-test-venv/bin/python -m omega_zsh doctor`
+- Verification result:
+  - Passed: Python/test compile checks.
+  - Passed: full pytest suite in temporary venv: `68 passed`.
+  - Passed: CLI smoke rendered `OMEGA DOCTOR (WARNING)` and reported expected checks for the temporary installation.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 509 nodes, 881 edges, 24 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Permission checks use effective `os.access()` and do not attempt writes; this is intentional for read-only doctor but may miss filesystem edge cases that only appear during apply.
+  - Binary tool detection currently uses plugin ID as command name. Catalog aliases such as distro-specific command names remain deferred to Item 23.
+  - Doctor is diagnostic only; safe repair remains Item 10.
+- Next:
+  - Continue with Item 10: add `omega doctor --fix` for safe automatic repairs.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

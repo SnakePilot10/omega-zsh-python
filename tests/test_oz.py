@@ -1,7 +1,9 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from omega_zsh.cli.oz_tool import get_omega_active_items, inspect_plugin
+from rich.console import Console
+
+from omega_zsh.cli.oz_tool import get_omega_active_items, inspect_plugin, show_doctor
 
 
 def test_get_active_plugins_empty(tmp_path):
@@ -57,3 +59,28 @@ def test_inspect_plugin_parsing(tmp_path):
         assert "gp" in info["aliases"]
         assert "myfunc" in info["functions"]
         assert "other_func" in info["functions"]
+
+
+def test_show_doctor_renders_report(monkeypatch, capsys):
+    monkeypatch.setattr(
+        "omega_zsh.cli.oz_tool.run_doctor",
+        lambda: {
+            "overall": "warning",
+            "checks": [
+                {
+                    "id": "zsh",
+                    "status": "ok",
+                    "severity": "ok",
+                    "message": "zsh disponible",
+                    "detail": "/usr/bin/zsh",
+                }
+            ],
+        },
+    )
+    monkeypatch.setattr("omega_zsh.cli.oz_tool.console", Console(force_terminal=False, color_system=None))
+
+    show_doctor()
+
+    output = capsys.readouterr().out
+    assert "OMEGA DOCTOR (WARNING)" in output
+    assert "zsh disponible" in output

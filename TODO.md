@@ -60,7 +60,7 @@
 
 ## Phase 2 - Doctor And Recovery
 
-- [ ] 09. Add `omega doctor` command
+- [x] 09. Add `omega doctor` command
   - Impact: high
   - Verification: command reports zsh, git, OMZ, `.zshrc`, `$ZSH`, permissions, plugins, tools, and themes.
 

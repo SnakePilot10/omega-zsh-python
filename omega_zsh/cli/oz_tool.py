@@ -17,10 +17,14 @@ from rich.table import Table
 
 try:
     from omega_zsh.core.plugins_db import get_description
+    from omega_zsh.core.doctor import run_doctor
 except ImportError:
 
     def get_description(name):
         return "Sin descripción disponible."
+
+    def run_doctor():
+        return {"overall": "missing", "checks": []}
 
 
 try:
@@ -583,6 +587,27 @@ def show_banner() -> None:
     )
 
 
+def show_doctor() -> None:
+    """Muestra diagnóstico read-only de la instalación Omega."""
+    report = run_doctor()
+    table = Table(title=f"OMEGA DOCTOR ({report['overall'].upper()})", box=box.ROUNDED)
+    table.add_column("Check", style="bold cyan")
+    table.add_column("Status", style="bold")
+    table.add_column("Mensaje", style="white")
+    table.add_column("Detalle", style="dim white")
+
+    colors = {"ok": "green", "warning": "yellow", "missing": "red"}
+    for check in report["checks"]:
+        status = check["status"]
+        table.add_row(
+            check["id"],
+            f"[{colors.get(status, 'white')}]{status}[/]",
+            check["message"],
+            check["detail"],
+        )
+    console.print(table)
+
+
 def main() -> None:
     if len(sys.argv) <= 1:
         show_help()
@@ -603,6 +628,8 @@ def main() -> None:
         "s": analyze_history,
         "themes": list_themes,
         "t": list_themes,
+        "doctor": show_doctor,
+        "doc": show_doctor,
         "update": self_update,
         "u": self_update,
         "help": show_help,
