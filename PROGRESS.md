@@ -529,6 +529,39 @@
 - Next:
   - Continue with Item 17: separate install flow from apply flow.
 
+### 2026-06-24 - Post-review fixes for `623fb16`
+
+- Review result: not approved as-is.
+- Status: fixed urgent runtime issue and corrected audit status.
+- Files changed:
+  - `omega_zsh/ui/app.py`
+  - `omega_zsh/core/apply.py`
+  - `tests/test_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Restored `BIN_PLUGINS` import in `omega_zsh/ui/app.py`; `OmegaApp.compose()` can now pass binary plugin IDs to `PluginSelectScreen` without `NameError`.
+  - `apply_config()` no longer creates `context.omz_dir/custom/themes` when Oh My Zsh is missing or `$ZSH` points to a bad path. It writes the guarded `.zshrc` and returns a warning instead.
+  - Reopened Item 14 in `TODO.md`: backup restore exists in `doctor --fix`, but `RecoveryScreen` still delegates to `scripts/uninstall.sh`, so recovery actions are not fully backup-aware yet.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -c 'import omega_zsh.ui.app as app; assert app.BIN_PLUGINS; print("bin_plugins_import_smoke: ok")'`
+  - Python smoke calling `apply_config()` with `$ZSH` pointing to a missing OMZ path and asserting `.zshrc` is written while `bad-omz/custom/themes` is not created.
+- Verification result:
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `86 passed`.
+  - Passed: `BIN_PLUGINS` import smoke.
+  - Passed: missing OMZ apply guard smoke.
+  - Note: a direct `list(app.compose())` smoke was invalid outside a running Textual app and failed with `NoActiveAppError`; replaced with direct import smoke for the reported runtime symbol.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 554 nodes, 1050 edges, 27 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Recovery UI still needs a dedicated backup-aware core path before Item 14 can be closed.
+- Next:
+  - Implement Item 14 properly by wiring `RecoveryScreen` to a backup-aware core recovery flow.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

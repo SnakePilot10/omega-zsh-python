@@ -6,7 +6,7 @@ from textual.binding import Binding
 from textual.widgets import Footer, Header, TabbedContent, TabPane
 
 from ..core.apply import apply_config, build_config_context, build_header_command, link_omega_themes
-from ..core.constants import DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeDef
+from ..core.constants import BIN_PLUGINS, DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeDef
 from ..core.context import SystemContext
 from ..core.state import AppState, StateManager, normalize_app_state
 from .screens import (

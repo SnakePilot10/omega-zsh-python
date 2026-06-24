@@ -107,11 +107,15 @@ def apply_config(context: Any, state: AppState) -> ApplyResult:
     """Apply the current state to shell config; installation remains out of scope."""
     try:
         generator = ConfigGenerator(context.assets_dir / "templates")
-        warnings = link_omega_themes(
-            context.assets_dir,
-            context.omz_dir,
-            context.omega_dir / "manifest.json",
-        )
+        warnings = []
+        if (context.omz_dir / "oh-my-zsh.sh").exists():
+            warnings = link_omega_themes(
+                context.assets_dir,
+                context.omz_dir,
+                context.omega_dir / "manifest.json",
+            )
+        else:
+            warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
         ok = generator.generate_zshrc(context.zshrc_path, build_config_context(context, state))
         if not ok:
             return ApplyResult(False, "Error al generar .zshrc. Revisa el log para detalles.")

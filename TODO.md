@@ -85,7 +85,7 @@
   - Impact: medium
   - Verification: doctor reports selected external plugins not cloned.
 
-- [x] 14. Integrate recovery actions with backups instead of only shell script cleanup
+- [ ] 14. Integrate recovery actions with backups instead of only shell script cleanup
   - Impact: high
   - Verification: recovery can restore the latest valid backup.
 
