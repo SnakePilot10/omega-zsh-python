@@ -562,6 +562,51 @@
 - Next:
   - Implement Item 14 properly by wiring `RecoveryScreen` to a backup-aware core recovery flow.
 
+### 2026-06-24 - Items 14, 18, 20
+
+- TODO items:
+  - `14. Integrate recovery actions with backups instead of only shell script cleanup`
+  - `18. Add dry-run apply mode`
+  - `20. Return structured apply results instead of booleans`
+- Status: completed.
+- Files changed:
+  - `omega_zsh/core/recovery.py`
+  - `omega_zsh/core/apply.py`
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_recovery.py`
+  - `tests/test_ui_recovery.py`
+  - `tests/test_apply.py`
+  - `tests/test_ui_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `core/recovery.py` with backup-aware recovery actions: cleanup shell files, nuclear shell fix, dry-run recovery, and restore latest valid `.zshrc` backup.
+  - `RecoveryScreen` no longer shells out directly to `scripts/uninstall.sh`; it calls core recovery functions and renders structured messages, backups, changed files, warnings, and errors.
+  - Added a Recovery UI action for restoring the latest valid `.zshrc` backup.
+  - `apply_config()` now supports `dry_run=True`, returning the intended changed paths without writing `.zshrc` or linking themes.
+  - `ApplyResult` now carries structured fields: `ok`, `message`, `changed`, `warnings`, `errors`, and `dry_run`.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - Runtime smoke: `restore_latest_zshrc_backup()` restores `.zshrc` from `.omega-backups`.
+  - Runtime smoke: `recovery_dry_run()` reports planned cleanup without modifying `.zshrc` or creating `.omega-zsh-recovery`.
+  - Runtime smoke: `apply_config(..., dry_run=True)` reports planned `.zshrc` write without creating `.zshrc` or theme directories.
+- Verification result:
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `95 passed`.
+  - Passed: recovery restore smoke.
+  - Passed: recovery dry-run smoke.
+  - Passed: apply dry-run smoke.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 586 nodes, 1172 edges, 33 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `scripts/uninstall.sh` still exists as a standalone legacy script, but the TUI Recovery path no longer depends on it directly.
+  - Item 17 remains open because install/apply separation still needs an explicit audit of installer behavior.
+  - Item 19 remains open because there is not yet a user-facing config preview before Apply.
+- Next:
+  - Continue with Item 17 or Item 19.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

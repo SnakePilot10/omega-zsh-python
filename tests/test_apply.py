@@ -76,3 +76,20 @@ def test_apply_config_does_not_create_fake_omz_tree_when_omz_is_missing(tmp_path
     assert "se omitió el link de temas" in result.message
     assert context.zshrc_path.exists()
     assert not (missing_omz / "custom" / "themes").exists()
+
+
+def test_apply_config_dry_run_reports_plan_without_writing(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omz = home / ".oh-my-zsh"
+    (omz / "custom" / "themes").mkdir(parents=True)
+    (omz / "oh-my-zsh.sh").write_text("# omz\n", encoding="utf-8")
+    context = SystemContext(home=home, env={"ZSH": str(omz)})
+    state = AppState(selected_plugins=["git"], selected_header="none")
+    monkeypatch.setattr("omega_zsh.core.shell.which", lambda command: None)
+
+    result = apply_config(context, state, dry_run=True)
+
+    assert result.ok
+    assert result.dry_run
+    assert str(context.zshrc_path) in result.changed
+    assert not context.zshrc_path.exists()

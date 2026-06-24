@@ -85,7 +85,7 @@
   - Impact: medium
   - Verification: doctor reports selected external plugins not cloned.
 
-- [ ] 14. Integrate recovery actions with backups instead of only shell script cleanup
+- [x] 14. Integrate recovery actions with backups instead of only shell script cleanup
   - Impact: high
   - Verification: recovery can restore the latest valid backup.
 
@@ -103,7 +103,7 @@
   - Impact: high
   - Verification: apply never installs packages; install never rewrites config unless requested.
 
-- [ ] 18. Add dry-run apply mode
+- [x] 18. Add dry-run apply mode
   - Impact: medium
   - Verification: dry run shows intended file changes without writing them.
 
@@ -111,7 +111,7 @@
   - Impact: medium
   - Verification: generated content can be inspected before replace.
 
-- [ ] 20. Return structured apply results instead of booleans
+- [x] 20. Return structured apply results instead of booleans
   - Impact: high
   - Verification: callers receive status, changed files, warnings, and errors.
 

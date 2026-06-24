@@ -24,6 +24,7 @@ from textual.widgets.selection_list import Selection
 
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
+from ..core.recovery import cleanup_shell_files, nuclear_fix_shell, recovery_dry_run, restore_latest_zshrc_backup
 
 
 NAV_HINT = "[dim]Tabs: [bold]1-5[/] / [bold]D P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
@@ -111,25 +112,24 @@ class DashboardScreen(Static):
 
 
 class RecoveryScreen(Vertical):
-    """Pantalla para ejecutar limpieza segura y fix nuclear."""
+    """Pantalla para ejecutar recuperación shell con backups."""
 
     def compose(self) -> ComposeResult:
         yield Label("[bold #ff006e]RECOVERY / NUCLEAR FIX[/]")
         yield Label(NAV_HINT, id="recovery-nav-hint")
         yield Static(
             "[bold #00f5ff]Modo seguro:[/] prueba primero con Dry Run.\n"
-            "[bold yellow]Nuclear Fix:[/] reconstruye .zshrc, .bashrc y .profile con valores mínimos.\n"
-            "[dim]Los respaldos usan una sola carpeta rotativa: ~/.omega-zsh-recovery[/]",
+            "[bold yellow]Nuclear Fix:[/] respalda y reconstruye .zshrc, .bashrc y .profile.\n"
+            "[bold green]Restore Backup:[/] restaura el último .zshrc válido encontrado.\n"
+            "[dim]Los respaldos de recovery viven en ~/.omega-zsh-recovery[/]",
             id="recovery-help",
         )
         with Horizontal(id="recovery-actions"):
             yield Button("Dry Run", variant="primary", id="btn-recovery-dry-run")
             yield Button("Cleanup", variant="warning", id="btn-recovery-uninstall")
             yield Button("Nuclear Fix", variant="error", id="btn-recovery-nuclear")
+            yield Button("Restore Backup", variant="success", id="btn-recovery-restore")
         yield Log(id="recovery-log")
-
-    def _script_path(self) -> Path:
-        return Path(__file__).resolve().parents[2] / "scripts" / "uninstall.sh"
 
     def _write_log(self, message: str) -> None:
         def write() -> None:
@@ -152,31 +152,36 @@ class RecoveryScreen(Vertical):
         except RuntimeError:
             notify()
 
-    def _run_recovery(self, *args: str) -> None:
-        script = self._script_path()
-        if not script.exists():
-            self._write_log(f"[ERROR] Script not found: {script}\n")
-            self._notify("scripts/uninstall.sh no existe.", severity="error")
-            return
-
-        cmd = ["bash", str(script), "--yes", *args]
-        self._write_log(f"$ {' '.join(cmd)}\n")
+    def _run_recovery(self, action: str) -> None:
+        context = SystemContext()
+        self._write_log(f"$ omega recovery {action}\n")
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-            if result.stdout:
-                self._write_log(result.stdout)
-            if result.stderr:
-                self._write_log(result.stderr)
-            if result.returncode == 0:
-                self._notify("Recovery command finished.")
+            if action == "dry-run":
+                result = recovery_dry_run(context)
+            elif action == "cleanup":
+                result = cleanup_shell_files(context)
+            elif action == "nuclear-fix":
+                result = nuclear_fix_shell(context)
+            elif action == "restore-zshrc":
+                result = restore_latest_zshrc_backup(context)
             else:
-                self._notify(
-                    f"Recovery command failed: exit {result.returncode}",
-                    severity="error",
-                )
-        except subprocess.TimeoutExpired:
-            self._write_log("[ERROR] Recovery command timed out.\n")
-            self._notify("Recovery command timed out.", severity="error")
+                raise ValueError(f"Unknown recovery action: {action}")
+
+            for message in result.messages:
+                self._write_log(f"[i] {message}\n")
+            for backup in result.backups:
+                self._write_log(f"[backup] {backup}\n")
+            for changed in result.changed:
+                self._write_log(f"[changed] {changed}\n")
+            for warning in result.warnings:
+                self._write_log(f"[warning] {warning}\n")
+            for error in result.errors:
+                self._write_log(f"[error] {error}\n")
+
+            if result.ok:
+                self._notify(result.summary)
+            else:
+                self._notify(result.summary, severity="error")
         except Exception as e:
             self._write_log(f"[ERROR] {e}\n")
             self._notify(f"Recovery error: {e}", severity="error")
@@ -184,17 +189,22 @@ class RecoveryScreen(Vertical):
     @on(Button.Pressed, "#btn-recovery-dry-run")
     @work(exclusive=True, thread=True)
     def run_dry_run(self) -> None:
-        self._run_recovery("--dry-run", "--purge", "--nuclear-fix")
+        self._run_recovery("dry-run")
 
     @on(Button.Pressed, "#btn-recovery-uninstall")
     @work(exclusive=True, thread=True)
     def run_cleanup(self) -> None:
-        self._run_recovery("--purge")
+        self._run_recovery("cleanup")
 
     @on(Button.Pressed, "#btn-recovery-nuclear")
     @work(exclusive=True, thread=True)
     def run_nuclear_fix(self) -> None:
-        self._run_recovery("--purge", "--nuclear-fix")
+        self._run_recovery("nuclear-fix")
+
+    @on(Button.Pressed, "#btn-recovery-restore")
+    @work(exclusive=True, thread=True)
+    def run_restore_backup(self) -> None:
+        self._run_recovery("restore-zshrc")
 
 
 class PluginSelectScreen(Vertical):

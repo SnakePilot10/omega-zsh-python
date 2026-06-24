@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
@@ -14,6 +14,10 @@ from .state import AppState
 class ApplyResult:
     ok: bool
     message: str
+    changed: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    dry_run: bool = False
 
 
 def get_app_version() -> str:
@@ -103,24 +107,47 @@ def render_config(context: Any, state: AppState) -> str:
     return generator.render_zshrc(build_config_context(context, state))
 
 
-def apply_config(context: Any, state: AppState) -> ApplyResult:
+def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyResult:
     """Apply the current state to shell config; installation remains out of scope."""
     try:
         generator = ConfigGenerator(context.assets_dir / "templates")
         warnings = []
-        if (context.omz_dir / "oh-my-zsh.sh").exists():
+        if not (context.omz_dir / "oh-my-zsh.sh").exists():
+            warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
+        if dry_run:
+            content = generator.render_zshrc(build_config_context(context, state))
+            planned = [str(context.zshrc_path)]
+            if not warnings:
+                planned.append(str(context.omz_dir / "custom" / "themes"))
+            return ApplyResult(
+                True,
+                f"Dry-run apply: se renderizarían {len(content)} bytes hacia {context.zshrc_path}.",
+                changed=planned,
+                warnings=warnings,
+                dry_run=True,
+            )
+
+        if not warnings:
             warnings = link_omega_themes(
                 context.assets_dir,
                 context.omz_dir,
                 context.omega_dir / "manifest.json",
             )
-        else:
-            warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
         ok = generator.generate_zshrc(context.zshrc_path, build_config_context(context, state))
         if not ok:
-            return ApplyResult(False, "Error al generar .zshrc. Revisa el log para detalles.")
+            return ApplyResult(
+                False,
+                "Error al generar .zshrc. Revisa el log para detalles.",
+                warnings=warnings,
+                errors=["generate_zshrc failed"],
+            )
         if warnings:
-            return ApplyResult(True, "Configuración actualizada con advertencias: " + "; ".join(warnings))
-        return ApplyResult(True, "Configuración actualizada con éxito.")
+            return ApplyResult(
+                True,
+                "Configuración actualizada con advertencias: " + "; ".join(warnings),
+                changed=[str(context.zshrc_path)],
+                warnings=warnings,
+            )
+        return ApplyResult(True, "Configuración actualizada con éxito.", changed=[str(context.zshrc_path)])
     except Exception as exc:
-        return ApplyResult(False, f"Error al aplicar: {exc}")
+        return ApplyResult(False, f"Error al aplicar: {exc}", errors=[str(exc)])

@@ -46,6 +46,18 @@ def test_apply_action_delegates_to_core_orchestrator(mock_app):
         mock_app.notify.assert_called_with("Configuración actualizada con éxito.")
 
 
+def test_apply_action_reports_structured_core_failure(mock_app):
+    with patch("omega_zsh.ui.app.apply_config") as mock_apply:
+        mock_apply.return_value.ok = False
+        mock_apply.return_value.message = "Error al generar .zshrc. Revisa el log para detalles."
+        mock_apply.return_value.errors = ["generate_zshrc failed"]
+
+        mock_app.action_apply_changes()
+
+        mock_app.notify.assert_called_once()
+        assert mock_app.notify.call_args[1].get("severity") == "error"
+
+
 def test_header_cmd_figlet(mock_app):
     """Verifica que selected_header=figlet genera el comando correcto."""
     from omega_zsh.core.apply import build_config_context
