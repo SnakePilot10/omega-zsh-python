@@ -21,7 +21,7 @@ def mock_app():
         app.context.is_termux = False
         app.state_manager = MagicMock()
         app.state = AppState(
-            selected_plugins=["zsh-autosuggestions", "zoxide", "eza"],
+            selected_plugins=["zsh-autosuggestions", "zoxide", "eza", "EZA"],
             selected_theme="bira_elegante",
             selected_root_theme="root_p10k_red",
             selected_header="none",
@@ -90,6 +90,7 @@ def test_plugins_separados_omz_vs_binarios(mock_app):
         # Los binarios deben ir en active_tools
         assert "zoxide" in active_tools
         assert "eza" in active_tools
+        assert active_tools.count("eza") == 1
 
 
 def test_header_cmd_figlet(mock_app):

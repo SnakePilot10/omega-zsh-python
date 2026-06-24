@@ -68,6 +68,16 @@ def test_load_corrupt_state(manager, tmp_path):
     assert loaded.selected_plugins == []
 
 
+def test_import_from_zshrc_normaliza_plugins(manager, tmp_path):
+    zshrc = tmp_path / ".zshrc"
+    zshrc.write_text('plugins=(git git zoxide  EZA "" 123)\n', encoding="utf-8")
+    manager.zshrc_path = zshrc
+
+    loaded = manager.load()
+
+    assert loaded.selected_plugins == ["git", "zoxide", "eza", "123"]
+
+
 def test_load_state_normaliza_tipos_invalidos(manager, tmp_path):
     state_file = tmp_path / "state.json"
     state_file.write_text(

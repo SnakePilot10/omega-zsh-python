@@ -12,7 +12,7 @@ from ..core.context import SystemContext
 from ..core.figlet import FigletManager
 from ..core.generator import ConfigGenerator
 from ..core.manifest import record_managed_file, require_managed_or_absent
-from ..core.state import AppState, StateManager
+from ..core.state import AppState, StateManager, normalize_app_state
 from .screens import (
     DashboardScreen,
     HeaderSelectScreen,
@@ -311,8 +311,8 @@ class OmegaApp(App):
                 header_text=h_text,
                 header_font=h_font,
             )
-            self.state = current_state
-            self.state_manager.save(current_state)
+            self.state = normalize_app_state(current_state.__dict__)
+            self.state_manager.save(self.state)
         except Exception as e:
             logging.warning("Fallo al guardar auto-save: %s", e)
 

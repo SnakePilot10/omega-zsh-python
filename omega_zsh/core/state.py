@@ -34,6 +34,8 @@ def _clean_plugins(value) -> List[str]:
         if not isinstance(plugin, str):
             continue
         plugin_id = plugin.strip().lower()
+        if len(plugin_id) >= 2 and plugin_id[0] == plugin_id[-1] and plugin_id[0] in {"'", '"'}:
+            plugin_id = plugin_id[1:-1].strip()
         if not plugin_id or plugin_id in seen:
             continue
         plugins.append(plugin_id)
@@ -138,4 +140,4 @@ class StateManager:
         except Exception as e:
             logging.warning(f"No se pudo importar configuración de .zshrc: {e}")
 
-        return state
+        return normalize_app_state(asdict(state))

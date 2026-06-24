@@ -281,6 +281,36 @@
 - Next:
   - Continue with Item 09: add `omega doctor` command.
 
+### 2026-06-21 - Item 08b
+
+- TODO item: `08b. Normalize plugins imported from existing .zshrc`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `omega_zsh/ui/app.py`
+  - `tests/test_state.py`
+  - `tests/test_ui_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `_import_from_zshrc()` now returns a normalized `AppState`, so duplicated or mixed-case plugins imported from an existing `.zshrc` are cleaned before use.
+  - `OmegaApp.save_state()` now stores the normalized state in memory before writing it, so Apply uses the same cleaned state that is persisted.
+  - Plugin normalization now treats quoted empty tokens such as `""` or `''` as empty and drops them.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - Runtime smoke script covering duplicated/mixed-case plugins imported from `.zshrc`.
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+- Verification result:
+  - Passed: `zshrc_import_dedupe_smoke: ok`.
+  - Passed: full pytest suite in temporary venv: `65 passed`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 489 nodes, 820 edges, 24 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Unknown plugin IDs are still allowed intentionally; rejecting or warning on unknown IDs remains Item 24.
+- Next:
+  - Continue with Item 09: add `omega doctor` command.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

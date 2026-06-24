@@ -54,6 +54,10 @@
   - Impact: medium
   - Verification: duplicated plugin selections render once in `.zshrc`.
 
+- [x] 08b. Normalize plugins imported from existing `.zshrc`
+  - Impact: medium
+  - Verification: duplicated plugins in imported `.zshrc` render once after Apply.
+
 ## Phase 2 - Doctor And Recovery
 
 - [ ] 09. Add `omega doctor` command
