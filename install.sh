@@ -55,8 +55,8 @@ run_with_spinner() {
 
     echo -ne "   $msg  [    ]"
 
-    # Ejecutar el comando en background
-    eval "$cmd" &>/dev/null &
+    # Ejecutar el comando en background sin eval para evitar re-expansiones inesperadas.
+    bash -c "$cmd" &>/dev/null &
     pid=$!
 
     # Animación Neon Scanner
@@ -256,13 +256,16 @@ fi
 
 # --- 6. LIMPIEZA DE CONFLICTOS ---
 print_step 4 9 "Limpiando conflictos de entorno..."
-CLEAN_CMD="true"
 if command -v pip3 &> /dev/null; then
     if pip3 show lolcat &> /dev/null; then
-        CLEAN_CMD="sudo pip3 uninstall -y lolcat &>/dev/null || pip3 uninstall -y lolcat &>/dev/null || true"
+        echo -e "   ${WARN} lolcat instalado vía pip global detectado. No se modifica automáticamente."
+        echo -e "   ${INFO} Usa omega doctor --fix cuando esté disponible para reparaciones guiadas."
+    else
+        echo -e "   ${CHECK} Sin conflictos de lolcat global detectados."
     fi
+else
+    echo -e "   ${CHECK} pip3 no disponible; se omite revisión de lolcat global."
 fi
-run_with_spinner "Eliminando lolcat (Python) global" "$CLEAN_CMD"
 
 # --- 7. ENTORNO VIRTUAL ---
 print_step 5 9 "Configurando entorno virtual aislado (.venv)..."
@@ -311,14 +314,15 @@ from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.platforms.debian import DebianPlatform
 from omega_zsh.platforms.termux import TermuxPlatform
 from omega_zsh.core.context import SystemContext
+from omega_zsh.core.manifest import default_manifest_path
 from omega_zsh.core.state import StateManager, AppState
 from omega_zsh.core.constants import BIN_PLUGINS
+from omega_zsh.ui.app import link_omega_themes
 from pathlib import Path
-import os
 
 ctx = SystemContext()
 plat = TermuxPlatform() if ctx.is_termux else DebianPlatform()
-inst = PluginInstaller(plat, Path.home())
+inst = PluginInstaller(plat, ctx.home)
 sm = StateManager(ctx.omega_dir)
 
 # Cargar estado real del usuario
@@ -335,17 +339,8 @@ for p in selected:
     if p not in bin_set:
         inst.download_zsh_plugin(p)
 
-# 2. Temas Omega (Symlinks)
-custom_themes_dir = ctx.omz_dir / 'custom' / 'themes'
-custom_themes_dir.mkdir(parents=True, exist_ok=True)
-omega_themes_src = ctx.assets_dir / 'themes'
-
-if omega_themes_src.exists():
-    for tf in omega_themes_src.glob('*.zsh-theme'):
-        link_path = custom_themes_dir / tf.name
-        if os.path.lexists(link_path):
-            os.unlink(link_path)
-        os.symlink(tf, link_path)
+# 2. Temas Omega (Symlinks) respetando ownership del manifest
+link_omega_themes(ctx.assets_dir, ctx.omz_dir, default_manifest_path(ctx.home))
 \""
 
 # --- 10. ACCESO GLOBAL ---

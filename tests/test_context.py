@@ -6,18 +6,21 @@ from omega_zsh.core.context import SystemContext
 
 
 @pytest.fixture(autouse=True)
-def reset_singleton():
-    """Resetea la instancia Singleton de SystemContext antes de cada test."""
-    SystemContext._instance = None
+def patch_package_path():
+    """Parchea omega_zsh.__file__ para que sea un string de ruta válido."""
     # Parcheamos omega_zsh.__file__ para que sea un string de ruta válido
     with patch("omega_zsh.__file__", "/mock/path/omega_zsh/__init__.py"):
         yield
 
 
-def test_singleton_instance():
-    ctx1 = SystemContext()
-    ctx2 = SystemContext()
-    assert ctx1 is ctx2
+def test_context_instances_are_independent(tmp_path):
+    ctx1 = SystemContext(home=tmp_path / "home1", env={})
+    ctx2 = SystemContext(home=tmp_path / "home2", env={"ZSH": str(tmp_path / "custom-zsh")})
+
+    assert ctx1 is not ctx2
+    assert ctx1.home == tmp_path / "home1"
+    assert ctx2.home == tmp_path / "home2"
+    assert ctx2.omz_dir == tmp_path / "custom-zsh"
 
 
 @patch("platform.system")

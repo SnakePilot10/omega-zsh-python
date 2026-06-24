@@ -34,6 +34,10 @@
   - Impact: high
   - Verification: existing non-symlink theme/config files remain unchanged.
 
+- [x] 05b. Make `install.sh` respect manifest ownership for theme symlinks
+  - Impact: critical
+  - Verification: install path delegates theme symlinks to `link_omega_themes()` instead of unlinking paths directly.
+
 - [x] 06. Add atomic writes for `state.json`
   - Impact: high
   - Verification: interrupted write cannot leave partially written JSON.

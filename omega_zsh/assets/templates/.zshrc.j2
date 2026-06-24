@@ -14,7 +14,7 @@ function omega_zcompile() {
     local zfile=$1
     if [[ -f "$zfile" ]]; then
         if [[ ! -f "${zfile}.zwc" || "$zfile" -nt "${zfile}.zwc" ]]; then
-            zsh -c "zcompile $zfile" 2>/dev/null
+            zsh -c 'zcompile "$1"' -- "$zfile" 2>/dev/null
         fi
     fi
 }

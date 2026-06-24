@@ -210,3 +210,46 @@
   - `pyproject.toml` currently does not include pytest in dev dependencies by project choice, so this is recorded rather than silently fixed.
 - Next:
   - Continue with Item 07: normalize and validate `state.json` schema.
+
+### 2026-06-21 - Item 05b / Audit Drift Fixes
+
+- TODO item: `05b. Make install.sh respect manifest ownership for theme symlinks`
+- Status: completed
+- Files changed:
+  - `install.sh`
+  - `omega_zsh/assets/templates/.zshrc.j2`
+  - `pyproject.toml`
+  - `tests/test_context.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `install.sh` no longer manually unlinks/recreates Omega theme symlinks.
+  - Installer theme sync now delegates to `link_omega_themes(ctx.assets_dir, ctx.omz_dir, default_manifest_path(ctx.home))`, preserving Item 05 ownership rules.
+  - `run_with_spinner()` no longer uses `eval "$cmd"`; it runs commands through `bash -c "$cmd"` to avoid an extra eval expansion layer.
+  - Installer no longer uninstalls global pip `lolcat`; it warns and leaves global packages untouched.
+  - `.zshrc.j2` now quotes `zcompile` paths safely via `zsh -c 'zcompile "$1"' -- "$zfile"`.
+  - `pytest>=8.0.0` was added to the dev extra so documented test commands are installable.
+  - Obsolete singleton expectation in `tests/test_context.py` was replaced with independent-context behavior.
+- Verification commands:
+  - Grep audit for removed stale patterns: `os.unlink`, `eval "$cmd"`, `pip3 uninstall`, old fastfetch/notify expectations, and singleton assertion.
+  - `bash -n install.sh`
+  - `bash -n scripts/uninstall.sh`
+  - `python3 -m compileall omega_zsh tests`
+  - Runtime smoke script covering installer-equivalent theme sync with foreign file preservation and owned symlink replacement.
+  - Rendered `.zshrc` validation with `zsh -n`.
+  - `python3 -m pytest -q` attempted conditionally.
+- Verification result:
+  - Passed: stale pattern grep returned no matches.
+  - Passed: shell syntax checks.
+  - Passed: Python/test compile checks.
+  - Passed: `install_manifest_smoke: ok`.
+  - Passed: rendered `.zshrc` syntax validation.
+  - Pytest still unavailable in the current interpreter, but `pytest` is now declared in `.[dev]`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 470 nodes, 784 edges, 24 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `run_with_spinner()` still accepts command strings for complex bootstrap commands. Full conversion to array-based or Python-owned install flow remains under Item 43.
+  - Importing `link_omega_themes()` from `omega_zsh.ui.app` works because Textual is a runtime dependency, but a future refactor should move theme sync to a core module.
+- Next:
+  - Continue with Item 07: normalize and validate `state.json` schema.
