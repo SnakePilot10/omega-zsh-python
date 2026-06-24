@@ -95,10 +95,33 @@ def test_load_state_normaliza_tipos_invalidos(manager, tmp_path):
     assert loaded.header_font == "slant"
 
 
+def test_load_state_json_no_dict_usa_defaults(manager, tmp_path):
+    state_file = tmp_path / "state.json"
+    state_file.write_text(json.dumps(["git", "zoxide"]), encoding="utf-8")
+
+    loaded = manager.load()
+
+    assert isinstance(loaded, AppState)
+    assert loaded.selected_plugins == []
+    assert loaded.selected_theme == "robbyrussell"
+
+
 def test_normalize_app_state_acepta_plugin_string():
     state = normalize_app_state({"selected_plugins": "git", "selected_header": "none"})
 
     assert state.selected_plugins == ["git"]
+    assert state.selected_header == "none"
+
+
+def test_normalize_app_state_header_tipo_invalido_no_revienta():
+    state = normalize_app_state({"selected_header": ["fastfetch"]})
+
+    assert state.selected_header == "fastfetch"
+
+
+def test_normalize_app_state_header_limpia_espacios():
+    state = normalize_app_state({"selected_header": " none "})
+
     assert state.selected_header == "none"
 
 

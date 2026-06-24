@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import List
 
@@ -37,7 +37,7 @@ def normalize_app_state(data) -> AppState:
     if not isinstance(data, dict):
         return defaults
 
-    selected_header = data.get("selected_header", defaults.selected_header)
+    selected_header = _clean_string(data.get("selected_header"), defaults.selected_header)
     if selected_header not in VALID_HEADERS:
         selected_header = defaults.selected_header
 
@@ -66,9 +66,7 @@ class StateManager:
             try:
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                valid_fields = {field.name for field in fields(AppState)}
-                clean_data = {k: v for k, v in data.items() if k in valid_fields}
-                return normalize_app_state(clean_data)
+                return normalize_app_state(data)
             except Exception as e:
                 logging.warning(
                     "No se pudo cargar state.json, usando .zshrc como fallback: %s", e

@@ -244,6 +244,34 @@
 - Next:
   - Continue with Item 08: deduplicate and normalize selected plugin IDs.
 
+### 2026-06-21 - Item 07 Edge Hardening
+
+- TODO item: `07. Normalize and validate state.json schema`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `tests/test_state.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `StateManager.load()` now passes raw JSON data directly to `normalize_app_state()` instead of calling `.items()` first.
+  - Valid JSON that is not an object, such as a list, now resolves to safe defaults instead of falling through to `.zshrc` import.
+  - `selected_header` now passes through `_clean_string()` before membership validation, avoiding unhashable-type crashes and accepting trimmed values such as `" none "`.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - Runtime smoke script covering non-dict JSON, non-hashable header value, and trimmed header value.
+  - `python3 -m pytest -q tests/test_state.py` attempted conditionally.
+- Verification result:
+  - Passed: `state_schema_edge_smoke: ok`.
+  - Passed: Python/test compile checks.
+  - Pytest unavailable in the current interpreter, but `pytest` is declared in the `.[dev]` extra.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 484 nodes, 809 edges, 28 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Plugin deduplication remains deferred to Item 08.
+- Next:
+  - Continue with Item 08: deduplicate and normalize selected plugin IDs.
+
 ### 2026-06-21 - Item 06b
 
 - TODO item: `06b. Make installer binary symlinks ownership-safe`
