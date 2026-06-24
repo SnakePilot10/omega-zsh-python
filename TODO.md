@@ -50,7 +50,7 @@
   - Impact: high
   - Verification: unknown fields are ignored and invalid field types fall back safely.
 
-- [ ] 08. Deduplicate and normalize selected plugin IDs
+- [x] 08. Deduplicate and normalize selected plugin IDs
   - Impact: medium
   - Verification: duplicated plugin selections render once in `.zshrc`.
 

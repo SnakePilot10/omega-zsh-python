@@ -28,7 +28,17 @@ def _clean_plugins(value) -> List[str]:
         value = [value]
     if not isinstance(value, list):
         return []
-    return [plugin.strip() for plugin in value if isinstance(plugin, str) and plugin.strip()]
+    plugins = []
+    seen = set()
+    for plugin in value:
+        if not isinstance(plugin, str):
+            continue
+        plugin_id = plugin.strip().lower()
+        if not plugin_id or plugin_id in seen:
+            continue
+        plugins.append(plugin_id)
+        seen.add(plugin_id)
+    return plugins
 
 
 def normalize_app_state(data) -> AppState:

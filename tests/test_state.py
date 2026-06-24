@@ -107,10 +107,28 @@ def test_load_state_json_no_dict_usa_defaults(manager, tmp_path):
 
 
 def test_normalize_app_state_acepta_plugin_string():
-    state = normalize_app_state({"selected_plugins": "git", "selected_header": "none"})
+    state = normalize_app_state({"selected_plugins": " Git ", "selected_header": "none"})
 
     assert state.selected_plugins == ["git"]
     assert state.selected_header == "none"
+
+
+def test_normalize_app_state_deduplica_plugins_preservando_orden():
+    state = normalize_app_state(
+        {
+            "selected_plugins": [
+                " Git ",
+                "zoxide",
+                "git",
+                "",
+                "  EZA  ",
+                123,
+                "zoxide",
+            ]
+        }
+    )
+
+    assert state.selected_plugins == ["git", "zoxide", "eza"]
 
 
 def test_normalize_app_state_header_tipo_invalido_no_revienta():

@@ -244,6 +244,43 @@
 - Next:
   - Continue with Item 08: deduplicate and normalize selected plugin IDs.
 
+### 2026-06-21 - Item 08
+
+- TODO item: `08. Deduplicate and normalize selected plugin IDs`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `tests/test_state.py`
+  - `tests/test_figlet.py`
+  - `tests/test_oz.py`
+  - `tests/test_ui_header_preview.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `selected_plugins` normalization now strips whitespace, lowercases IDs, filters non-string/empty values, deduplicates while preserving first-seen order, and keeps catalog validation deferred to Item 24.
+  - Full pytest drift was resolved after installing `.[dev]` in a temporary venv.
+  - Figlet command tests now reflect runtime shell guards for `figlet`/`lolcat`.
+  - `oz_tool` tests now patch `StateManager` instead of removed `state_manager` global.
+  - Header preview tests now call the `@work`-wrapped method body directly via `__wrapped__`, avoiding old Textual `run_test(initial_screen=...)` API drift.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - Runtime smoke script covering plugin normalization, dedupe, order preservation, save, and reload.
+  - `python3 -m pip install -e ".[dev]"` attempted globally and rejected by PEP 668, as expected on this system.
+  - Temporary venv: `/tmp/opencode/omega-zsh-test-venv/bin/python -m pip install -e ".[dev]"`.
+  - Temporary venv: `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`.
+- Verification result:
+  - Passed: `plugin_dedupe_smoke: ok`.
+  - Passed: Python/test compile checks.
+  - Passed: full pytest suite in temporary venv: `64 passed`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 487 nodes, 815 edges, 26 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Unknown plugin IDs are still allowed intentionally; rejecting or warning on unknown IDs remains Item 24.
+  - Temporary venv under `/tmp/opencode` is not part of the repo and can be discarded.
+- Next:
+  - Continue with Item 09: add `omega doctor` command.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

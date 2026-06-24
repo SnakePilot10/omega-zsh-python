@@ -6,8 +6,8 @@ from omega_zsh.cli.oz_tool import get_omega_active_items, inspect_plugin
 
 def test_get_active_plugins_empty(tmp_path):
     """Verifica que devuelve lista vacía si no hay .zshrc"""
-    # Patch state_manager to None to force fallback to ZSHRC parsing
-    with patch("omega_zsh.cli.oz_tool.state_manager", None):
+    # Patch StateManager to None to force fallback to ZSHRC parsing
+    with patch("omega_zsh.cli.oz_tool.StateManager", None):
         with patch("omega_zsh.cli.oz_tool.ZSHRC", tmp_path / "nonexistent"):
             plugins = get_omega_active_items()
             assert plugins == []
@@ -18,8 +18,8 @@ def test_get_active_plugins_parse(tmp_path):
     zshrc = tmp_path / ".zshrc"
     zshrc.write_text("plugins=(git python docker\n  zsh-autosuggestions)")
 
-    # Patch state_manager to None to force fallback to ZSHRC parsing
-    with patch("omega_zsh.cli.oz_tool.state_manager", None):
+    # Patch StateManager to None to force fallback to ZSHRC parsing
+    with patch("omega_zsh.cli.oz_tool.StateManager", None):
         with patch("omega_zsh.cli.oz_tool.ZSHRC", zshrc):
             plugins = get_omega_active_items()
             assert "git" in plugins

@@ -23,13 +23,12 @@ def test_render(figlet_manager):
     assert len(output) > 0
 
 def test_generate_safe_command_with_lolcat(figlet_manager):
-    with patch("shutil.which") as mock_which:
-        mock_which.side_effect = lambda x: "/usr/bin/lolcat" if x == "lolcat" else "/usr/bin/figlet"
-        cmd = figlet_manager.generate_safe_command("Hello World", "standard")
-        assert "| lolcat" in cmd
+    cmd = figlet_manager.generate_safe_command("Hello World", "standard")
+    assert "$+commands[figlet]" in cmd
+    assert "$+commands[lolcat]" in cmd
+    assert "| lolcat" in cmd
 
 def test_generate_safe_command_without_lolcat(figlet_manager):
-    with patch("shutil.which") as mock_which:
-        mock_which.side_effect = lambda x: None if x == "lolcat" else "/usr/bin/figlet"
-        cmd = figlet_manager.generate_safe_command("Hello World", "standard")
-        assert "| lolcat" not in cmd
+    cmd = figlet_manager.generate_safe_command("Hello World", "standard")
+    assert "|| figlet" in cmd
+    assert "Hello World" in cmd
