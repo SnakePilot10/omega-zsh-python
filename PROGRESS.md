@@ -211,6 +211,39 @@
 - Next:
   - Continue with Item 07: normalize and validate `state.json` schema.
 
+### 2026-06-21 - Item 07
+
+- TODO item: `07. Normalize and validate state.json schema`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `tests/test_state.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `normalize_app_state()` to convert untrusted JSON-like data into a safe `AppState`.
+  - Unknown fields are ignored.
+  - Invalid string fields fall back to defaults.
+  - `selected_header` is restricted to `fastfetch`, `figlet`, `cowsay`, or `none`.
+  - `selected_plugins` is always normalized to a list of non-empty strings.
+  - `StateManager.load()` now normalizes loaded JSON instead of trusting type hints.
+  - `StateManager.save()` normalizes before writing, preserving the atomic write path from Item 06.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - Runtime smoke script covering invalid types, invalid header, plugin cleanup, save normalization, and reload.
+  - `python3 -m pytest -q tests/test_state.py` attempted conditionally.
+- Verification result:
+  - Passed: `state_schema_smoke: ok`.
+  - Passed: Python/test compile checks.
+  - Pytest unavailable in the current interpreter, but `pytest` is declared in the `.[dev]` extra.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 480 nodes, 803 edges, 26 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Plugin deduplication and catalog validation remain intentionally deferred to Item 08 and later catalog work.
+- Next:
+  - Continue with Item 08: deduplicate and normalize selected plugin IDs.
+
 ### 2026-06-21 - Item 06b
 
 - TODO item: `06b. Make installer binary symlinks ownership-safe`

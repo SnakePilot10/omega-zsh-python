@@ -16,6 +16,44 @@ class AppState:
     header_font: str = "slant"
 
 
+VALID_HEADERS = {"fastfetch", "figlet", "cowsay", "none"}
+
+
+def _clean_string(value, default: str) -> str:
+    return value.strip() if isinstance(value, str) and value.strip() else default
+
+
+def _clean_plugins(value) -> List[str]:
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        return []
+    return [plugin.strip() for plugin in value if isinstance(plugin, str) and plugin.strip()]
+
+
+def normalize_app_state(data) -> AppState:
+    """Normalize untrusted JSON-like state data into a safe AppState."""
+    defaults = AppState()
+    if not isinstance(data, dict):
+        return defaults
+
+    selected_header = data.get("selected_header", defaults.selected_header)
+    if selected_header not in VALID_HEADERS:
+        selected_header = defaults.selected_header
+
+    return AppState(
+        selected_plugins=_clean_plugins(data.get("selected_plugins", defaults.selected_plugins)),
+        selected_theme=_clean_string(data.get("selected_theme"), defaults.selected_theme),
+        selected_root_theme=_clean_string(
+            data.get("selected_root_theme"),
+            defaults.selected_root_theme,
+        ),
+        selected_header=selected_header,
+        header_text=_clean_string(data.get("header_text"), defaults.header_text),
+        header_font=_clean_string(data.get("header_font"), defaults.header_font),
+    )
+
+
 class StateManager:
     def __init__(self, config_dir: Path):
         self.config_path = config_dir / "state.json"
@@ -30,7 +68,7 @@ class StateManager:
                     data = json.load(f)
                 valid_fields = {field.name for field in fields(AppState)}
                 clean_data = {k: v for k, v in data.items() if k in valid_fields}
-                return AppState(**clean_data)
+                return normalize_app_state(clean_data)
             except Exception as e:
                 logging.warning(
                     "No se pudo cargar state.json, usando .zshrc como fallback: %s", e
@@ -43,8 +81,9 @@ class StateManager:
         """Guarda el estado actual en JSON."""
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
         temp_path = self.config_path.with_suffix(".tmp")
+        clean_state = normalize_app_state(asdict(state))
         temp_path.write_text(
-            json.dumps(asdict(state), indent=4, ensure_ascii=False),
+            json.dumps(asdict(clean_state), indent=4, ensure_ascii=False),
             encoding="utf-8",
         )
         temp_path.replace(self.config_path)

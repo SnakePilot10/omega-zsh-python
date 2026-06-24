@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from omega_zsh.core.state import AppState, StateManager
+from omega_zsh.core.state import AppState, StateManager, normalize_app_state
 
 
 @pytest.fixture
@@ -66,3 +66,47 @@ def test_load_corrupt_state(manager, tmp_path):
     assert isinstance(loaded, AppState)
     # Asumiendo que el default de plugins es []
     assert loaded.selected_plugins == []
+
+
+def test_load_state_normaliza_tipos_invalidos(manager, tmp_path):
+    state_file = tmp_path / "state.json"
+    state_file.write_text(
+        json.dumps(
+            {
+                "selected_plugins": ["git", 123, "", " zoxide "],
+                "selected_theme": None,
+                "selected_root_theme": "",
+                "selected_header": "invalid",
+                "header_text": 42,
+                "header_font": " slant ",
+                "unknown_field": "ignored",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    loaded = manager.load()
+
+    assert loaded.selected_plugins == ["git", "zoxide"]
+    assert loaded.selected_theme == "robbyrussell"
+    assert loaded.selected_root_theme == "root_p10k_red"
+    assert loaded.selected_header == "fastfetch"
+    assert loaded.header_text == "Omega"
+    assert loaded.header_font == "slant"
+
+
+def test_normalize_app_state_acepta_plugin_string():
+    state = normalize_app_state({"selected_plugins": "git", "selected_header": "none"})
+
+    assert state.selected_plugins == ["git"]
+    assert state.selected_header == "none"
+
+
+def test_save_state_normaliza_antes_de_escribir(manager, tmp_path):
+    state = AppState(selected_plugins="git", selected_header="invalid")
+
+    manager.save(state)
+
+    data = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
+    assert data["selected_plugins"] == ["git"]
+    assert data["selected_header"] == "fastfetch"

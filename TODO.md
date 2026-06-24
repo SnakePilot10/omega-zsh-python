@@ -46,7 +46,7 @@
   - Impact: high
   - Verification: installer does not overwrite existing foreign `omega` or `oz` commands.
 
-- [ ] 07. Normalize and validate `state.json` schema
+- [x] 07. Normalize and validate `state.json` schema
   - Impact: high
   - Verification: unknown fields are ignored and invalid field types fall back safely.
 
