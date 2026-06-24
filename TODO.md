@@ -42,6 +42,10 @@
   - Impact: high
   - Verification: interrupted write cannot leave partially written JSON.
 
+- [x] 06b. Make installer binary symlinks ownership-safe
+  - Impact: high
+  - Verification: installer does not overwrite existing foreign `omega` or `oz` commands.
+
 - [ ] 07. Normalize and validate `state.json` schema
   - Impact: high
   - Verification: unknown fields are ignored and invalid field types fall back safely.

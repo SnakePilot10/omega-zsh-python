@@ -211,6 +211,35 @@
 - Next:
   - Continue with Item 07: normalize and validate `state.json` schema.
 
+### 2026-06-21 - Item 06b
+
+- TODO item: `06b. Make installer binary symlinks ownership-safe`
+- Status: completed
+- Files changed:
+  - `install.sh`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `safe_link_bin()` to avoid overwriting existing foreign `omega` or `oz` commands.
+  - Installer now creates `omega`/`oz` symlinks only when absent or already pointing to the expected Omega virtualenv executable.
+  - Installer records verified binary symlinks in `~/.omega-zsh/manifest.json` as `bin_symlink` entries.
+- Verification commands:
+  - `bash -n install.sh`
+  - `python3 -m compileall omega_zsh tests`
+  - Runtime smoke script extracting `safe_link_bin()` and verifying foreign symlink preservation plus missing symlink creation.
+- Verification result:
+  - Passed: install script syntax check.
+  - Passed: Python/test compile checks.
+  - Passed: binary symlink smoke preserved a foreign `omega` symlink and created an Omega-owned `oz` symlink.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 472 nodes, 787 edges, 27 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `install.sh` still carries complex shell bootstrap logic and string commands. Full simplification remains under Item 43.
+  - Manifest recording of bin symlinks happens after link creation; future core installer flow should own this end-to-end in Python.
+- Next:
+  - Continue with Item 07: normalize and validate `state.json` schema.
+
 ### 2026-06-21 - Item 05b / Audit Drift Fixes
 
 - TODO item: `05b. Make install.sh respect manifest ownership for theme symlinks`

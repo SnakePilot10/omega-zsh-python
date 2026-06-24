@@ -113,6 +113,22 @@ pkg_installed() {
     esac
 }
 
+safe_link_bin() {
+    local src="$1"
+    local dst="$2"
+    local current=""
+
+    if [ -e "$dst" ] || [ -L "$dst" ]; then
+        current="$(readlink "$dst" 2>/dev/null || true)"
+        if [ "$current" != "$src" ]; then
+            echo -e "   ${WARN} $dst ya existe y no apunta a Omega; se omite."
+            return 0
+        fi
+    fi
+
+    ln -sfn "$src" "$dst"
+}
+
 # --- 3. DETECCIÓN DE ENTORNO ---
 print_step 1 9 "Detectando entorno del sistema..."
 UPDATED=false
@@ -357,8 +373,21 @@ else
     SUDO_CMD=""
 fi
 
-ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_DIR/bin/omega" "$BIN_DEST/omega"
-ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || $SUDO_CMD ln -sf "$VENV_DIR/bin/oz" "$BIN_DEST/oz"
+safe_link_bin "$VENV_DIR/bin/omega" "$BIN_DEST/omega" 2>/dev/null || $SUDO_CMD bash -c "$(declare -f safe_link_bin); safe_link_bin '$VENV_DIR/bin/omega' '$BIN_DEST/omega'"
+safe_link_bin "$VENV_DIR/bin/oz" "$BIN_DEST/oz" 2>/dev/null || $SUDO_CMD bash -c "$(declare -f safe_link_bin); safe_link_bin '$VENV_DIR/bin/oz' '$BIN_DEST/oz'"
+"$VENV_DIR/bin/python" -c "
+from pathlib import Path
+from omega_zsh.core.context import SystemContext
+from omega_zsh.core.manifest import default_manifest_path, record_managed_file
+
+ctx = SystemContext()
+manifest = default_manifest_path(ctx.home)
+for name in ('omega', 'oz'):
+    link = Path('$BIN_DEST') / name
+    source = Path('$VENV_DIR') / 'bin' / name
+    if link.is_symlink() and link.resolve(strict=False) == source.resolve(strict=False):
+        record_managed_file(manifest, link, 'bin_symlink', 'verified', {'source': str(source)})
+"
 echo -e "   ${CHECK} Binarios en: ${BOLD}$BIN_DEST${NC}"
 
 # --- 11. CONFIGURACIÓN DE SHELL ---
