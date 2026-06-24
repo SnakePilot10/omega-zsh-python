@@ -47,23 +47,25 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
     context = context or SystemContext()
     state = _load_state(context)
     checks = []
+    zsh_path = which("zsh")
+    git_path = which("git")
 
     checks.append(
         _check(
             "zsh",
-            "ok" if which("zsh") else "missing",
-            "ok" if which("zsh") else "error",
-            "zsh disponible" if which("zsh") else "zsh no está en PATH",
-            which("zsh") or "Instala zsh antes de aplicar configuraciones de shell",
+            "ok" if zsh_path else "missing",
+            "ok" if zsh_path else "error",
+            "zsh disponible" if zsh_path else "zsh no está en PATH",
+            zsh_path or "Instala zsh antes de aplicar configuraciones de shell",
         )
     )
     checks.append(
         _check(
             "git",
-            "ok" if which("git") else "missing",
-            "ok" if which("git") else "error",
-            "git disponible" if which("git") else "git no está en PATH",
-            which("git") or "Instala git para clonar Oh My Zsh y plugins externos",
+            "ok" if git_path else "missing",
+            "ok" if git_path else "error",
+            "git disponible" if git_path else "git no está en PATH",
+            git_path or "Instala git para clonar Oh My Zsh y plugins externos",
         )
     )
 
@@ -87,24 +89,26 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
             str(context.zshrc_path),
         )
     )
+    omega_dir_writable = _path_writable(context.omega_dir)
     checks.append(
         _check(
             "omega-dir-writable",
-            "ok" if _path_writable(context.omega_dir) else "warning",
-            "ok" if _path_writable(context.omega_dir) else "warning",
+            "ok" if omega_dir_writable else "warning",
+            "ok" if omega_dir_writable else "warning",
             "directorio Omega escribible"
-            if _path_writable(context.omega_dir)
+            if omega_dir_writable
             else "directorio Omega no parece escribible",
             str(context.omega_dir),
         )
     )
+    zshrc_dir_writable = _path_writable(context.zshrc_path)
     checks.append(
         _check(
             "zshrc-dir-writable",
-            "ok" if _path_writable(context.zshrc_path) else "warning",
-            "ok" if _path_writable(context.zshrc_path) else "warning",
+            "ok" if zshrc_dir_writable else "warning",
+            "ok" if zshrc_dir_writable else "warning",
             "directorio de .zshrc escribible"
-            if _path_writable(context.zshrc_path)
+            if zshrc_dir_writable
             else "directorio de .zshrc no parece escribible",
             str(context.zshrc_path.parent),
         )
@@ -152,12 +156,13 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
         )
     )
 
+    theme_exists = _theme_exists(context, state.selected_theme)
     checks.append(
         _check(
             "theme",
-            "ok" if _theme_exists(context, state.selected_theme) else "missing",
-            "ok" if _theme_exists(context, state.selected_theme) else "warning",
-            "tema disponible" if _theme_exists(context, state.selected_theme) else "tema seleccionado no encontrado",
+            "ok" if theme_exists else "missing",
+            "ok" if theme_exists else "warning",
+            "tema disponible" if theme_exists else "tema seleccionado no encontrado",
             state.selected_theme,
         )
     )

@@ -4,6 +4,7 @@
 
 - Prioritize real runtime functionality over artificial tests.
 - Do not modify user-owned shell files without backup and validation.
+- Any `doctor --fix` action must either create a backup before changing user files or prove manifest ownership before changing managed files.
 - Do not mark an item completed without runtime verification.
 - Do not silence errors just to make a verification pass.
 - Do not modify tests to justify a functional change.

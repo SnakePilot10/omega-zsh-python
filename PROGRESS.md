@@ -346,6 +346,34 @@
 - Next:
   - Continue with Item 10: add `omega doctor --fix` for safe automatic repairs.
 
+### 2026-06-24 - Item 09 Review Follow-up
+
+- TODO item: `09. Add omega doctor command`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/doctor.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Cached `zsh` and `git` command lookups inside `run_doctor()` instead of calling `which()` repeatedly.
+  - Cached repeated permission and theme existence checks inside one doctor run.
+  - Added an execution rule for Item 10: every `doctor --fix` action must either back up user files before changing them or prove manifest ownership before changing managed files.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `HOME="/tmp/opencode/omega-doctor-smoke" ZSH="/tmp/opencode/omega-doctor-smoke/.oh-my-zsh" /tmp/opencode/omega-zsh-test-venv/bin/python -m omega_zsh doctor`
+- Verification result:
+  - Passed: Python/test compile checks.
+  - Passed: full pytest suite in temporary venv: `68 passed`.
+  - Passed: CLI smoke rendered the doctor report successfully.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 510 nodes, 882 edges, 25 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - No intended runtime behavior change beyond removing repeated lookups.
+- Next:
+  - Run verification, update graph, then continue with Item 10.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`
