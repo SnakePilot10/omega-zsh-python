@@ -65,7 +65,7 @@
   - Impact: high
   - Verification: command reports zsh, git, OMZ, `.zshrc`, `$ZSH`, permissions, plugins, tools, and themes.
 
-- [ ] 10. Add `omega doctor --fix` for safe automatic repairs
+- [x] 10. Add `omega doctor --fix` for safe automatic repairs
   - Impact: high
   - Verification: safe fixes run only after backup and validation.
 

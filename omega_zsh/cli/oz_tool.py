@@ -17,7 +17,7 @@ from rich.table import Table
 
 try:
     from omega_zsh.core.plugins_db import get_description
-    from omega_zsh.core.doctor import run_doctor
+    from omega_zsh.core.doctor import run_doctor, run_doctor_fix
 except ImportError:
 
     def get_description(name):
@@ -25,6 +25,9 @@ except ImportError:
 
     def run_doctor():
         return {"overall": "missing", "checks": []}
+
+    def run_doctor_fix():
+        return {"fixes": [], "report": run_doctor()}
 
 
 try:
@@ -587,9 +590,7 @@ def show_banner() -> None:
     )
 
 
-def show_doctor() -> None:
-    """Muestra diagnóstico read-only de la instalación Omega."""
-    report = run_doctor()
+def _print_doctor_report(report: dict) -> None:
     table = Table(title=f"OMEGA DOCTOR ({report['overall'].upper()})", box=box.ROUNDED)
     table.add_column("Check", style="bold cyan")
     table.add_column("Status", style="bold")
@@ -608,12 +609,42 @@ def show_doctor() -> None:
     console.print(table)
 
 
+def show_doctor(*, fix: bool = False) -> None:
+    """Muestra diagnóstico read-only de la instalación Omega."""
+    if fix:
+        result = run_doctor_fix()
+        table = Table(title="OMEGA DOCTOR FIX", box=box.ROUNDED)
+        table.add_column("Fix", style="bold cyan")
+        table.add_column("Status", style="bold")
+        table.add_column("Mensaje", style="white")
+        table.add_column("Detalle", style="dim white")
+        colors = {"fixed": "green", "skipped": "yellow", "failed": "red"}
+        for fix_result in result["fixes"]:
+            status = fix_result["status"]
+            table.add_row(
+                fix_result["id"],
+                f"[{colors.get(status, 'white')}]{status}[/]",
+                fix_result["message"],
+                fix_result["detail"],
+            )
+        console.print(table)
+        _print_doctor_report(result["report"])
+        return
+
+    report = run_doctor()
+    _print_doctor_report(report)
+
+
 def main() -> None:
     if len(sys.argv) <= 1:
         show_help()
         return
 
     cmd = sys.argv[1].lstrip("-")
+    if cmd in {"doctor", "doc"}:
+        show_doctor(fix="--fix" in sys.argv[2:])
+        return
+
     actions = {
         "banner": show_banner,
         "b": show_banner,
@@ -628,8 +659,6 @@ def main() -> None:
         "s": analyze_history,
         "themes": list_themes,
         "t": list_themes,
-        "doctor": show_doctor,
-        "doc": show_doctor,
         "update": self_update,
         "u": self_update,
         "help": show_help,

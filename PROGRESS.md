@@ -374,6 +374,48 @@
 - Next:
   - Run verification, update graph, then continue with Item 10.
 
+### 2026-06-24 - Item 10
+
+- TODO item: `10. Add omega doctor --fix for safe automatic repairs`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/doctor.py`
+  - `omega_zsh/cli/oz_tool.py`
+  - `omega_zsh/__main__.py`
+  - `tests/test_doctor.py`
+  - `tests/test_oz.py`
+  - `tests/test_main.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `run_doctor_fix()` with conservative local repairs only.
+  - `omega doctor --fix`, `omega doc --fix`, `oz doctor --fix`, and `oz doc --fix` now run safe fixes and then show an updated doctor report.
+  - Fixes are limited to creating `~/.omega-zsh`, creating or normalizing `manifest.json`, and creating a minimal `.zshrc` only when `.zshrc` is absent.
+  - Existing `.zshrc` is preserved and never overwritten by doctor fix.
+  - Corrupt or schema-invalid manifest is backed up before being replaced.
+  - `.zshrc` creation is skipped unless manifest is ready, so doctor fix does not create untracked user shell files.
+  - `omega_zsh.__main__` now delegates CLI subcommands before configuring logging, preserving read-only behavior for `omega doctor` and preventing logging setup from pre-creating `~/.omega-zsh`.
+  - No packages, Oh My Zsh repo, external plugins, binary tools, or existing shell configs are installed or overwritten by this first fix version.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `HOME="/tmp/opencode/omega-doctor-readonly-smoke" /tmp/opencode/omega-zsh-test-venv/bin/python -m omega_zsh doctor` plus assertions that `.omega-zsh` and `.zshrc` were not created.
+  - `HOME="/tmp/opencode/omega-doctor-fix-smoke" /tmp/opencode/omega-zsh-test-venv/bin/python -m omega_zsh doctor --fix` plus assertions that `.omega-zsh`, `manifest.json`, and `.zshrc` were created.
+- Verification result:
+  - Passed: Python/test compile checks.
+  - Passed: full pytest suite in temporary venv: `74 passed`.
+  - Passed: read-only doctor smoke did not create `.omega-zsh` or `.zshrc`.
+  - Passed: doctor fix smoke created only the expected low-risk local files.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 525 nodes, 941 edges, 23 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `doctor --fix` intentionally does not install missing packages, Oh My Zsh, binary tools, or external plugins yet.
+  - Minimal `.zshrc` is intentionally only a placeholder; full generated config remains owned by apply flow with validation/backup.
+  - Manifest repair backs up corrupt content but does not attempt semantic recovery of unknown invalid data.
+- Next:
+  - Continue with Item 11: clearer diagnostics for missing Oh My Zsh.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

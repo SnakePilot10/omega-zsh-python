@@ -20,6 +20,16 @@ def test_main_cli_delegation():
             mock_cli.assert_called_once()
 
 
+def test_main_cli_delegation_does_not_configure_logging():
+    """Los comandos CLI deben poder ser read-only, como omega doctor."""
+    with patch("sys.argv", ["omega", "doctor"]):
+        with patch("omega_zsh.cli.oz_tool.main") as mock_cli:
+            with patch("omega_zsh.__main__.configure_logging") as mock_logging:
+                main()
+                mock_cli.assert_called_once()
+                mock_logging.assert_not_called()
+
+
 def test_main_import_error():
     """Prueba el manejo de ImportError en main()."""
     with patch("sys.argv", ["omega"]):

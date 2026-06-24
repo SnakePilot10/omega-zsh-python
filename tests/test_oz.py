@@ -84,3 +84,22 @@ def test_show_doctor_renders_report(monkeypatch, capsys):
     output = capsys.readouterr().out
     assert "OMEGA DOCTOR (WARNING)" in output
     assert "zsh disponible" in output
+
+
+def test_show_doctor_fix_renders_fix_results(monkeypatch, capsys):
+    monkeypatch.setattr(
+        "omega_zsh.cli.oz_tool.run_doctor_fix",
+        lambda: {
+            "fixes": [
+                {"id": "manifest", "status": "fixed", "message": "manifest inicializado", "detail": "x"}
+            ],
+            "report": {"overall": "ok", "checks": []},
+        },
+    )
+    monkeypatch.setattr("omega_zsh.cli.oz_tool.console", Console(force_terminal=False, color_system=None))
+
+    show_doctor(fix=True)
+
+    output = capsys.readouterr().out
+    assert "OMEGA DOCTOR FIX" in output
+    assert "manifest inicializado" in output

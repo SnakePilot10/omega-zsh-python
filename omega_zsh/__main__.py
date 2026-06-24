@@ -32,21 +32,19 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
 
 def main():
-    configure_logging()
-    sys.excepthook = handle_exception
-
     # Si hay argumentos (ej: oz stats), delegar a la herramienta CLI oz_tool.py
     if len(sys.argv) > 1:
-        logging.info(f"Delegando comando CLI: {sys.argv[1:]}")
         try:
             from omega_zsh.cli.oz_tool import main as cli_main
 
             cli_main()
             return
         except Exception as e:
-            logging.error(f"Error en delegación CLI: {e}", exc_info=True)
             print(f"Error ejecutando comando CLI: {e}")
             sys.exit(1)
+
+    configure_logging()
+    sys.excepthook = handle_exception
 
     # Si no hay argumentos, lanzar la interfaz visual (TUI)
     logging.info("Iniciando Interfaz Visual (TUI)...")

@@ -1,11 +1,14 @@
+import json
 import os
 from pathlib import Path
 from shutil import which
 from typing import Any
 
+from .backup import create_backup
 from .constants import BIN_PLUGINS, EXTERNAL_URLS, THEMES_OMZ_BUILTIN
 from .context import SystemContext
-from .manifest import load_manifest
+from .manifest import load_manifest, record_managed_file, save_manifest
+from .shell import validate_zsh_syntax
 from .state import AppState, StateManager
 
 
@@ -40,6 +43,108 @@ def _theme_exists(context: SystemContext, theme_id: str) -> bool:
         context.omz_dir / "custom" / "themes" / f"{theme_id}.zsh-theme",
     ]
     return any(path.exists() for path in candidates)
+
+
+def _fix_result(fix_id: str, status: str, message: str, detail: str) -> dict[str, str]:
+    return {"id": fix_id, "status": status, "message": message, "detail": detail}
+
+
+def _manifest_needs_rewrite(path: Path) -> bool:
+    if not path.exists():
+        return True
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return True
+    return not isinstance(data, dict) or not isinstance(data.get("files"), dict)
+
+
+def _create_minimal_zshrc(context: SystemContext) -> dict[str, str]:
+    if context.zshrc_path.exists():
+        return _fix_result("zshrc", "skipped", ".zshrc existente preservado", str(context.zshrc_path))
+
+    content = "# Created by Omega-ZSH doctor --fix\n# Run omega to configure your shell.\n"
+    temp_path = context.zshrc_path.with_suffix(".tmp")
+    created_zshrc = False
+    try:
+        temp_path.write_text(content, encoding="utf-8")
+        valid, message = validate_zsh_syntax(temp_path)
+        if not valid:
+            temp_path.unlink(missing_ok=True)
+            return _fix_result("zshrc", "failed", "validación zsh falló", message)
+        temp_path.replace(context.zshrc_path)
+        created_zshrc = True
+        record_managed_file(context.omega_dir / "manifest.json", context.zshrc_path, "config", "doctor-created")
+        return _fix_result("zshrc", "fixed", ".zshrc mínimo creado", str(context.zshrc_path))
+    except Exception as exc:
+        temp_path.unlink(missing_ok=True)
+        if created_zshrc:
+            context.zshrc_path.unlink(missing_ok=True)
+        return _fix_result("zshrc", "failed", "no se pudo crear .zshrc", str(exc))
+
+
+def run_doctor_fix(context: SystemContext | None = None) -> dict[str, Any]:
+    """Apply conservative, local doctor repairs and return the updated report."""
+    context = context or SystemContext()
+    fixes = []
+    omega_dir_ready = False
+
+    if context.omega_dir.exists() and context.omega_dir.is_dir():
+        omega_dir_ready = True
+        fixes.append(_fix_result("omega-dir", "skipped", "directorio Omega ya existe", str(context.omega_dir)))
+    elif context.omega_dir.exists():
+        fixes.append(_fix_result("omega-dir", "failed", "ruta Omega existe y no es directorio", str(context.omega_dir)))
+    else:
+        try:
+            context.omega_dir.mkdir(parents=True, exist_ok=True)
+            omega_dir_ready = True
+            fixes.append(_fix_result("omega-dir", "fixed", "directorio Omega creado", str(context.omega_dir)))
+        except Exception as exc:
+            fixes.append(_fix_result("omega-dir", "failed", "no se pudo crear directorio Omega", str(exc)))
+
+    manifest_path = context.omega_dir / "manifest.json"
+    manifest_ready = False
+    if not omega_dir_ready:
+        fixes.append(_fix_result("manifest", "failed", "manifest omitido porque Omega dir no está listo", str(manifest_path)))
+    elif _manifest_needs_rewrite(manifest_path):
+        try:
+            backup_path = create_backup(manifest_path, context.omega_dir / "backups")
+            save_manifest(manifest_path, load_manifest(manifest_path))
+            manifest_ready = True
+            if backup_path:
+                record_managed_file(
+                    manifest_path,
+                    backup_path,
+                    "backup",
+                    "doctor-created",
+                    {"source": str(manifest_path)},
+                )
+            fixes.append(
+                _fix_result(
+                    "manifest",
+                    "fixed",
+                    "manifest inicializado" if backup_path is None else "manifest reparado con backup",
+                    str(manifest_path),
+                )
+            )
+        except Exception as exc:
+            fixes.append(_fix_result("manifest", "failed", "no se pudo reparar manifest", str(exc)))
+    else:
+        manifest_ready = True
+        fixes.append(_fix_result("manifest", "skipped", "manifest válido preservado", str(manifest_path)))
+
+    if manifest_ready:
+        fixes.append(_create_minimal_zshrc(context))
+    else:
+        fixes.append(
+            _fix_result(
+                "zshrc",
+                "skipped",
+                ".zshrc no creado porque manifest no está listo",
+                str(context.zshrc_path),
+            )
+        )
+    return {"fixes": fixes, "report": run_doctor(context)}
 
 
 def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
