@@ -448,6 +448,37 @@
 - Next:
   - Continue with Item 11: clearer diagnostics for missing Oh My Zsh.
 
+### 2026-06-24 - Item 11
+
+- TODO item: `11. Add clear diagnostics for missing Oh My Zsh`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/doctor.py`
+  - `tests/test_doctor.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added explicit Oh My Zsh diagnostics for missing OMZ directory, missing `oh-my-zsh.sh` inside an existing OMZ directory, and `$ZSH` pointing to a nonexistent path.
+  - `$ZSH` diagnostics now distinguish explicit `$ZSH`, default `~/.oh-my-zsh`, and missing default path.
+  - Missing OMZ details include the expected install path and prerequisite package command based on detected package manager, with Termux prioritized when `PREFIX` indicates Termux.
+  - `omega doctor` remains read-only; these diagnostics do not create directories, rewrite `.zshrc`, clone repositories, or install packages.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `HOME="/tmp/opencode/omega-omz-diagnostic-smoke" ZSH="/tmp/opencode/omega-omz-diagnostic-smoke/bad-omz" /tmp/opencode/omega-zsh-test-venv/bin/python -m omega_zsh doctor` plus assertions that `.omega-zsh` and `.zshrc` were not created.
+- Verification result:
+  - Passed: Python/test compile checks.
+  - Passed: full pytest suite in temporary venv: `79 passed`.
+  - Passed: CLI smoke reported missing OMZ and bad `$ZSH` path while remaining read-only.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 535 nodes, 974 edges, 28 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Install hints are guidance only and do not execute commands.
+  - Package-manager detection still comes from `SystemContext`; more detailed platform-aware install flow remains deferred to catalog/platform items.
+- Next:
+  - Continue with Item 12: diagnostics for missing selected binary tools.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

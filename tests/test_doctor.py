@@ -41,7 +41,7 @@ def test_doctor_reports_expected_installation_checks(tmp_path, monkeypatch):
     assert _check(report, "zsh")["status"] == "ok"
     assert _check(report, "git")["status"] == "ok"
     assert _check(report, "oh-my-zsh")["status"] == "ok"
-    assert _check(report, "ZSH")["detail"] == str(omz)
+    assert _check(report, "ZSH")["detail"] == f"$ZSH={omz}"
     assert _check(report, ".zshrc")["status"] == "ok"
     assert _check(report, "manifest")["status"] == "ok"
     assert _check(report, "binary-tools")["status"] == "missing"
@@ -76,6 +76,53 @@ def test_doctor_accepts_present_external_plugin_and_builtin_theme(tmp_path, monk
 
     assert _check(report, "external-plugins")["status"] == "ok"
     assert _check(report, "theme")["status"] == "ok"
+
+
+def test_doctor_reports_bad_zsh_env_path(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    home.mkdir()
+    missing_omz = home / "custom-omz"
+    context = SystemContext(home=home, env={"ZSH": str(missing_omz)})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    zsh_check = _check(report, "ZSH")
+    omz_check = _check(report, "oh-my-zsh")
+    assert zsh_check["status"] == "warning"
+    assert zsh_check["message"] == "$ZSH apunta a ruta inexistente"
+    assert str(missing_omz) in zsh_check["detail"]
+    assert omz_check["message"] == "directorio Oh My Zsh no existe"
+
+
+def test_doctor_reports_missing_omz_with_termux_hint(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    home.mkdir()
+    context = SystemContext(home=home, env={"PREFIX": "/data/data/com.termux/files/usr"})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    omz_check = _check(report, "oh-my-zsh")
+    assert omz_check["status"] == "missing"
+    assert omz_check["message"] == "directorio Oh My Zsh no existe"
+    assert "pkg install zsh git curl" in omz_check["detail"]
+    assert str(home / ".oh-my-zsh") in omz_check["detail"]
+
+
+def test_doctor_reports_missing_omz_script_inside_existing_dir(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omz = home / ".oh-my-zsh"
+    omz.mkdir(parents=True)
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    omz_check = _check(report, "oh-my-zsh")
+    assert omz_check["status"] == "missing"
+    assert omz_check["message"] == "oh-my-zsh.sh no encontrado"
+    assert str(omz / "oh-my-zsh.sh") in omz_check["detail"]
 
 
 def test_doctor_reports_corrupt_manifest_without_rewriting(tmp_path, monkeypatch):

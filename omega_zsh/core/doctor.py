@@ -45,6 +45,82 @@ def _theme_exists(context: SystemContext, theme_id: str) -> bool:
     return any(path.exists() for path in candidates)
 
 
+def _package_hint(context: SystemContext) -> str:
+    if context.is_termux:
+        return "pkg install zsh git curl"
+    commands = {
+        "pkg": "pkg install zsh git curl",
+        "apt": "sudo apt install zsh git curl",
+        "nala": "sudo nala install zsh git curl",
+        "pacman": "sudo pacman -S zsh git curl",
+        "dnf": "sudo dnf install zsh git curl",
+        "apk": "sudo apk add zsh git curl",
+        "zypper": "sudo zypper install zsh git curl",
+        "xbps": "sudo xbps-install -S zsh git curl",
+    }
+    return commands.get(context.package_manager_type, "instala zsh, git y curl con tu gestor de paquetes")
+
+
+def _omz_status(context: SystemContext) -> tuple[dict[str, str], dict[str, str]]:
+    env = getattr(context, "_env", {})
+    zsh_env = env.get("ZSH")
+    default_omz = context.home / ".oh-my-zsh"
+    omz_main = context.omz_dir / "oh-my-zsh.sh"
+    install_hint = (
+        f"Prerrequisitos: {_package_hint(context)}. "
+        f"Instala Oh My Zsh en {context.omz_dir} y vuelve a ejecutar omega doctor."
+    )
+
+    if zsh_env:
+        if context.omz_dir.exists():
+            zsh_check = _check("ZSH", "ok", "ok", "$ZSH resuelto", f"$ZSH={context.omz_dir}")
+        else:
+            zsh_check = _check(
+                "ZSH",
+                "warning",
+                "warning",
+                "$ZSH apunta a ruta inexistente",
+                f"$ZSH={context.omz_dir}. Corrige $ZSH o instala Oh My Zsh ahí.",
+            )
+    elif default_omz.exists():
+        zsh_check = _check(
+            "ZSH",
+            "ok",
+            "ok",
+            "$ZSH no definido; usando ruta default",
+            str(default_omz),
+        )
+    else:
+        zsh_check = _check(
+            "ZSH",
+            "warning",
+            "warning",
+            "$ZSH no definido y ruta default ausente",
+            f"Ruta default esperada: {default_omz}",
+        )
+
+    if not context.omz_dir.exists():
+        omz_check = _check(
+            "oh-my-zsh",
+            "missing",
+            "error",
+            "directorio Oh My Zsh no existe",
+            f"Ruta esperada: {context.omz_dir}. {install_hint}",
+        )
+    elif not omz_main.exists():
+        omz_check = _check(
+            "oh-my-zsh",
+            "missing",
+            "error",
+            "oh-my-zsh.sh no encontrado",
+            f"Ruta esperada: {omz_main}. Reinstala o repara Oh My Zsh en {context.omz_dir}.",
+        )
+    else:
+        omz_check = _check("oh-my-zsh", "ok", "ok", "Oh My Zsh instalado", str(omz_main))
+
+    return zsh_check, omz_check
+
+
 def _fix_result(fix_id: str, status: str, message: str, detail: str) -> dict[str, str]:
     return {"id": fix_id, "status": status, "message": message, "detail": detail}
 
@@ -181,17 +257,9 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
         )
     )
 
-    omz_main = context.omz_dir / "oh-my-zsh.sh"
-    checks.append(
-        _check(
-            "oh-my-zsh",
-            "ok" if omz_main.exists() else "missing",
-            "ok" if omz_main.exists() else "error",
-            "Oh My Zsh instalado" if omz_main.exists() else "Oh My Zsh no encontrado",
-            str(omz_main) if omz_main.exists() else f"No existe {omz_main}",
-        )
-    )
-    checks.append(_check("ZSH", "ok", "ok", "$ZSH resuelto", str(context.omz_dir)))
+    zsh_check, omz_check = _omz_status(context)
+    checks.append(omz_check)
+    checks.append(zsh_check)
     checks.append(
         _check(
             ".zshrc",

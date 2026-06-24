@@ -73,7 +73,7 @@
   - Impact: high
   - Verification: `omega doctor` warns on corrupt or schema-invalid manifest without modifying it.
 
-- [ ] 11. Add clear diagnostics for missing Oh My Zsh
+- [x] 11. Add clear diagnostics for missing Oh My Zsh
   - Impact: high
   - Verification: user gets actionable repair message instead of broken shell sourcing.
 
