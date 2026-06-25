@@ -86,3 +86,16 @@ def test_install_binary_uses_catalog_package_name_for_platform(tmp_path):
     args, kwargs = platform.install_package.call_args
     assert args[0] == "fd-find"
     assert callable(kwargs["on_progress"])
+
+
+def test_install_binary_uses_catalog_fortune_package_on_debian(tmp_path):
+    platform = MockPlatform()
+    platform.pkg_mgr = "apt-get"
+    platform.install_package = MagicMock(return_value=True)
+    installer = PluginInstaller(platform, home_dir=tmp_path)
+
+    assert installer.install_binary("fortune")
+
+    args, kwargs = platform.install_package.call_args
+    assert args[0] == "fortune-mod"
+    assert callable(kwargs["on_progress"])

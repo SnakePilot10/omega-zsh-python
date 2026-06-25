@@ -660,6 +660,35 @@
 - Next:
   - Continue with Item 17 or Item 24.
 
+### 2026-06-24 - Item 22b
+
+- TODO item: `22b. Add Debian package override for fortune`
+- Status: completed.
+- Files changed:
+  - `omega_zsh/core/constants.py`
+  - `tests/test_catalog.py`
+  - `tests/test_installer.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `binary_package_name("fortune", "apt")` and `binary_package_name("fortune", "nala")` now resolve to `fortune-mod`.
+  - `PluginInstaller.install_binary("fortune")` passes `fortune-mod` to Debian/nala-style platforms instead of relying on fallback `fortune`.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -c 'from omega_zsh.core.constants import binary_package_name; assert binary_package_name("fortune", "apt") == "fortune-mod"; assert binary_package_name("fortune", "nala") == "fortune-mod"; print("fortune_override_smoke: ok")'`
+- Verification result:
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `103 passed`.
+  - Passed: fortune package override smoke.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 605 nodes, 1234 edges, 28 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Other distro package overrides still default to tool ID unless explicitly modeled.
+- Next:
+  - Continue with Item 17 or Item 24.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

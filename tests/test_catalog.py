@@ -30,4 +30,6 @@ def test_catalog_exposes_binary_detection_commands():
 def test_catalog_exposes_platform_package_names():
     assert binary_package_name("fd", "apt") == "fd-find"
     assert binary_package_name("fd", "pacman") == "fd"
+    assert binary_package_name("fortune", "apt") == "fortune-mod"
+    assert binary_package_name("fortune", "nala") == "fortune-mod"
     assert binary_package_name("zoxide", "apt") == "zoxide"

@@ -83,6 +83,7 @@ BINARY_TOOLS.update(
     {
         "bat": BinaryToolDef("bat", ["bat", "batcat"], {"apt": "bat", "nala": "bat"}),
         "fd": BinaryToolDef("fd", ["fd", "fdfind"], {"apt": "fd-find", "nala": "fd-find"}),
+        "fortune": BinaryToolDef("fortune", ["fortune"], {"apt": "fortune-mod", "nala": "fortune-mod"}),
         "ripgrep": BinaryToolDef("ripgrep", ["rg", "ripgrep"], {"apt": "ripgrep", "nala": "ripgrep"}),
         "httpie": BinaryToolDef("httpie", ["http", "httpie"], {"apt": "httpie", "nala": "httpie"}),
     }

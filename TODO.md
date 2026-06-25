@@ -125,6 +125,10 @@
   - Impact: high
   - Verification: Debian/Termux package names resolve from catalog, not hardcoded branches.
 
+- [x] 22b. Add Debian package override for `fortune`
+  - Impact: medium
+  - Verification: Debian/nala resolve `fortune` to `fortune-mod` before install.
+
 - [x] 23. Add command detection names to catalog
   - Impact: medium
   - Verification: `bat/batcat`, `fd/fdfind`, and `ripgrep/rg` are handled by data.
