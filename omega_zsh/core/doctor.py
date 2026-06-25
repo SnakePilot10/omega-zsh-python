@@ -5,9 +5,8 @@ from shutil import which
 from typing import Any
 
 from .backup import create_backup, restore_backup
-from .constants import BIN_PLUGINS, EXTERNAL_URLS, THEMES_OMZ_BUILTIN
+from .constants import EXTERNAL_URLS, THEMES_OMZ_BUILTIN, binary_commands, binary_package_name, is_binary_tool
 from .context import SystemContext
-from .installer import BINARY_COMMANDS
 from .manifest import load_manifest, record_managed_file, save_manifest
 from .shell import validate_zsh_syntax
 from .state import AppState, StateManager
@@ -123,7 +122,7 @@ def _omz_status(context: SystemContext) -> tuple[dict[str, str], dict[str, str]]
 
 
 def _binary_available(plugin_id: str) -> bool:
-    return any(which(command) for command in BINARY_COMMANDS.get(plugin_id, [plugin_id]))
+    return any(which(command) for command in binary_commands(plugin_id))
 
 
 def _binary_detail(context: SystemContext, missing_tools: list[str]) -> str:
@@ -132,8 +131,9 @@ def _binary_detail(context: SystemContext, missing_tools: list[str]) -> str:
     install_hint = _package_hint(context)
     details = []
     for tool in missing_tools:
-        commands = "/".join(BINARY_COMMANDS.get(tool, [tool]))
-        details.append(f"{tool} (comando: {commands}; instalar: {install_hint})")
+        commands = "/".join(binary_commands(tool))
+        package = binary_package_name(tool, context.package_manager_type)
+        details.append(f"{tool} (comando: {commands}; paquete: {package}; instalar: {install_hint})")
     return "; ".join(details)
 
 
@@ -364,7 +364,7 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
     )
 
     selected = state.selected_plugins
-    missing_tools = [plugin for plugin in selected if plugin in BIN_PLUGINS and not _binary_available(plugin)]
+    missing_tools = [plugin for plugin in selected if is_binary_tool(plugin) and not _binary_available(plugin)]
     checks.append(
         _check(
             "binary-tools",

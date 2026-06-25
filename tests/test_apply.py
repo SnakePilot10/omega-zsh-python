@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from omega_zsh.core.apply import apply_config, build_config_context, render_config
+from omega_zsh.core.apply import apply_config, build_config_context, preview_config, render_config
 from omega_zsh.core.context import SystemContext
 from omega_zsh.core.state import AppState
 
@@ -91,5 +91,43 @@ def test_apply_config_dry_run_reports_plan_without_writing(tmp_path, monkeypatch
 
     assert result.ok
     assert result.dry_run
+    assert result.preview
     assert str(context.zshrc_path) in result.changed
     assert not context.zshrc_path.exists()
+
+
+def test_preview_config_returns_rendered_content_before_write(tmp_path):
+    home = tmp_path / "home"
+    omz = home / ".oh-my-zsh"
+    omz.mkdir(parents=True)
+    (omz / "oh-my-zsh.sh").write_text("# omz\n", encoding="utf-8")
+    context = SystemContext(home=home, env={"ZSH": str(omz)})
+    state = AppState(selected_plugins=["git", "fd"], selected_header="none")
+
+    result = preview_config(context, state)
+
+    assert result.ok
+    assert result.dry_run
+    assert "plugins=(git )" in result.preview
+    assert "fd" not in result.preview.split("plugins=", 1)[1].split(")", 1)[0]
+    assert not context.zshrc_path.exists()
+
+
+def test_apply_config_never_invokes_installer_for_selected_binary_tools(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omz = home / ".oh-my-zsh"
+    (omz / "custom" / "themes").mkdir(parents=True)
+    (omz / "oh-my-zsh.sh").write_text("# omz\n", encoding="utf-8")
+    context = SystemContext(home=home, env={"ZSH": str(omz)})
+    state = AppState(selected_plugins=["fd", "zsh-autosuggestions"], selected_header="none")
+    monkeypatch.setattr("omega_zsh.core.shell.which", lambda command: None)
+
+    def fail_install(*args, **kwargs):
+        raise AssertionError("apply_config must not install packages or plugins")
+
+    monkeypatch.setattr("omega_zsh.core.installer.PluginInstaller.install_all", fail_install)
+
+    result = apply_config(context, state)
+
+    assert result.ok
+    assert context.zshrc_path.exists()

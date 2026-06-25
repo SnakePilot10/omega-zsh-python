@@ -607,6 +607,59 @@
 - Next:
   - Continue with Item 17 or Item 19.
 
+### 2026-06-24 - Items 19, 21, 22, 23
+
+- TODO items:
+  - `19. Add config preview before writing .zshrc`
+  - `21. Split zsh plugins from binary tools in the catalog`
+  - `22. Add platform-aware package names to catalog`
+  - `23. Add command detection names to catalog`
+- Status: completed.
+- Files changed:
+  - `omega_zsh/core/constants.py`
+  - `omega_zsh/core/apply.py`
+  - `omega_zsh/core/doctor.py`
+  - `omega_zsh/core/installer.py`
+  - `tests/test_catalog.py`
+  - `tests/test_apply.py`
+  - `tests/test_doctor.py`
+  - `tests/test_installer.py`
+  - `tests/test_ui_app.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `BinaryToolDef` and `BINARY_TOOLS` catalog metadata with command detection names and package names.
+  - Added catalog helpers: `is_binary_tool()`, `binary_commands()`, and `binary_package_name()`.
+  - Added `DB_ZSH_PLUGINS` and `DB_BINARY_TOOLS` split views over the UI plugin catalog.
+  - `build_config_context()` now uses catalog metadata instead of a local `BIN_PLUGINS` set to keep binary tools out of `plugins=(...)`.
+  - `doctor` and `installer` now use catalog command metadata for binary detection.
+  - `doctor` missing binary diagnostics now include command names and resolved package name.
+  - Added `preview_config()` and `ApplyResult.preview` so generated `.zshrc` content can be inspected before replacing the real file.
+  - `apply_config(..., dry_run=True)` now returns the rendered preview content without writing files.
+  - `link_omega_themes()` now guards direct calls too: it does not create `custom/themes` unless `oh-my-zsh.sh` exists under the target OMZ dir.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - Runtime smoke: `preview_config()` returns rendered content and does not create `.zshrc`.
+  - Runtime smoke: catalog resolves `fd` commands and Debian package name.
+  - Runtime smoke: `PluginInstaller.install_binary("fd")` resolves Debian package `fd-find` before calling the platform.
+  - Runtime smoke: direct `link_omega_themes()` with missing OMZ returns warning and creates no theme tree.
+- Verification result:
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `102 passed`.
+  - Passed: preview smoke.
+  - Passed: catalog metadata smoke.
+  - Passed: installer catalog package resolution smoke.
+  - Passed: direct theme guard smoke.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 603 nodes, 1230 edges, 29 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Item 17 remains open because install/apply separation still needs a dedicated audit of installer and bootstrap behavior, not just Apply tests.
+  - Package names default to the tool ID unless explicitly overridden in catalog metadata.
+- Next:
+  - Continue with Item 17 or Item 24.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

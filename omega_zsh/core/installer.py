@@ -3,18 +3,18 @@ from pathlib import Path
 from shutil import which
 from typing import Callable, List
 
-from .constants import BIN_PLUGINS, EXTERNAL_URLS
-
-
-BINARY_COMMANDS = {
-    "bat": ["bat", "batcat"],
-    "fd": ["fd", "fdfind"],
-    "ripgrep": ["rg", "ripgrep"],
-}
+from .constants import EXTERNAL_URLS, binary_commands, binary_package_name, is_binary_tool
 
 
 def _binary_available(plugin_id: str) -> bool:
-    return any(which(cmd) for cmd in BINARY_COMMANDS.get(plugin_id, [plugin_id]))
+    return any(which(cmd) for cmd in binary_commands(plugin_id))
+
+
+def _platform_package_manager(platform) -> str:
+    pkg_mgr = getattr(platform, "pkg_mgr", "")
+    if pkg_mgr == "apt-get":
+        return "apt"
+    return pkg_mgr or "unknown"
 
 
 class PluginInstaller:
@@ -48,7 +48,7 @@ class PluginInstaller:
         Returns:
             List[str]: Subconjunto de binarios no encontrados en el PATH.
         """
-        return [p for p in plugins if p in BIN_PLUGINS and not _binary_available(p)]
+        return [p for p in plugins if is_binary_tool(p) and not _binary_available(p)]
 
     def install_binary(self, plugin: str) -> bool:
         """
@@ -60,11 +60,12 @@ class PluginInstaller:
         Returns:
             bool: True si la instalación fue exitosa.
         """
-        if plugin not in BIN_PLUGINS:
+        if not is_binary_tool(plugin):
             return False
         # Las plataformas deben implementar install_package(id, on_progress)
         # Aquí usamos un lambda vacío para on_progress si no se provee
-        return self.platform.install_package(plugin, on_progress=lambda msg: None)
+        package_name = binary_package_name(plugin, _platform_package_manager(self.platform))
+        return self.platform.install_package(package_name, on_progress=lambda msg: None)
 
     def get_missing_zsh_plugins(self, plugins: List[str]) -> List[str]:
         """
@@ -116,9 +117,10 @@ class PluginInstaller:
         failed = []
         for plugin_id in selected_ids:
             # 1. ¿Es un paquete binario del sistema?
-            if plugin_id in BIN_PLUGINS:
+            if is_binary_tool(plugin_id):
+                package_name = binary_package_name(plugin_id, _platform_package_manager(self.platform))
                 on_progress(f"Instalando paquete binario: {plugin_id}")
-                if not self.platform.install_package(plugin_id, on_progress=on_progress):
+                if not self.platform.install_package(package_name, on_progress=on_progress):
                     on_progress(f"Error instalando paquete binario: {plugin_id}")
                     failed.append(plugin_id)
 

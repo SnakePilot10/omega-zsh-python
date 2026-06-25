@@ -3,7 +3,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
-from .constants import BIN_PLUGINS
+from .constants import is_binary_tool
 from .figlet import FigletManager
 from .generator import ConfigGenerator
 from .manifest import record_managed_file, require_managed_or_absent
@@ -18,6 +18,7 @@ class ApplyResult:
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     dry_run: bool = False
+    preview: str = ""
 
 
 def get_app_version() -> str:
@@ -38,16 +39,15 @@ def build_header_command(state: AppState) -> str:
 
 
 def build_config_context(context: Any, state: AppState) -> dict[str, Any]:
-    bin_set = set(BIN_PLUGINS)
     return {
         "version": get_app_version(),
         "omz_dir": str(context.omz_dir),
         "user_theme": state.selected_theme,
         "root_theme": state.selected_root_theme,
-        "plugins": [p for p in state.selected_plugins if p not in bin_set],
+        "plugins": [p for p in state.selected_plugins if not is_binary_tool(p)],
         "header_cmd": build_header_command(state),
         "is_termux": context.is_termux,
-        "active_tools": [p for p in state.selected_plugins if p in bin_set],
+        "active_tools": [p for p in state.selected_plugins if is_binary_tool(p)],
         "default_user": "",
         "personal_zsh": str(context.home / ".omega-zsh" / "personal.zsh"),
         "custom_zsh": str(context.home / ".omega-zsh" / "custom.zsh"),
@@ -57,6 +57,8 @@ def build_config_context(context: Any, state: AppState) -> dict[str, Any]:
 def link_omega_themes(assets_dir: Path, omz_dir: Path, manifest_path: Path | None = None) -> list[str]:
     omega_themes_dir = assets_dir / "themes"
     warnings: list[str] = []
+    if not (omz_dir / "oh-my-zsh.sh").exists():
+        return [f"Oh My Zsh no encontrado en {omz_dir}; se omitió el link de temas"]
     if not omega_themes_dir.exists():
         return warnings
 
@@ -107,6 +109,25 @@ def render_config(context: Any, state: AppState) -> str:
     return generator.render_zshrc(build_config_context(context, state))
 
 
+def preview_config(context: Any, state: AppState) -> ApplyResult:
+    """Return the rendered config and planned paths without writing files."""
+    warnings = []
+    if not (context.omz_dir / "oh-my-zsh.sh").exists():
+        warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
+    content = render_config(context, state)
+    planned = [str(context.zshrc_path)]
+    if not warnings:
+        planned.append(str(context.omz_dir / "custom" / "themes"))
+    return ApplyResult(
+        True,
+        f"Preview apply: se renderizarían {len(content)} bytes hacia {context.zshrc_path}.",
+        changed=planned,
+        warnings=warnings,
+        dry_run=True,
+        preview=content,
+    )
+
+
 def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyResult:
     """Apply the current state to shell config; installation remains out of scope."""
     try:
@@ -115,17 +136,7 @@ def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyR
         if not (context.omz_dir / "oh-my-zsh.sh").exists():
             warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
         if dry_run:
-            content = generator.render_zshrc(build_config_context(context, state))
-            planned = [str(context.zshrc_path)]
-            if not warnings:
-                planned.append(str(context.omz_dir / "custom" / "themes"))
-            return ApplyResult(
-                True,
-                f"Dry-run apply: se renderizarían {len(content)} bytes hacia {context.zshrc_path}.",
-                changed=planned,
-                warnings=warnings,
-                dry_run=True,
-            )
+            return preview_config(context, state)
 
         if not warnings:
             warnings = link_omega_themes(

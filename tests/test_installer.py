@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from omega_zsh.core.constants import BIN_PLUGINS, EXTERNAL_URLS
+from omega_zsh.core.constants import EXTERNAL_URLS
 from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.platforms.base import BasePlatform
 
@@ -64,9 +64,6 @@ def test_install_plugin_external(installer):
 def test_install_plugin_binary(installer):
     """Prueba la instalación de un plugin binario (e.g., fzf)"""
     plugin_id = "fzf"
-    # Aseguramos que sea binario
-    if plugin_id not in BIN_PLUGINS:
-        BIN_PLUGINS.append(plugin_id)
 
     installer.platform.install_package = MagicMock()
 
@@ -76,3 +73,16 @@ def test_install_plugin_binary(installer):
     installer.install_all([plugin_id], cb)
 
     installer.platform.install_package.assert_called_with(plugin_id, on_progress=cb)
+
+
+def test_install_binary_uses_catalog_package_name_for_platform(tmp_path):
+    platform = MockPlatform()
+    platform.pkg_mgr = "apt-get"
+    platform.install_package = MagicMock(return_value=True)
+    installer = PluginInstaller(platform, home_dir=tmp_path)
+
+    assert installer.install_binary("fd")
+
+    args, kwargs = platform.install_package.call_args
+    assert args[0] == "fd-find"
+    assert callable(kwargs["on_progress"])

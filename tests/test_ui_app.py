@@ -72,6 +72,8 @@ def test_link_omega_themes_preserva_archivo_ajeno(tmp_path):
     (themes / "same.zsh-theme").write_text("# omega", encoding="utf-8")
 
     omz = tmp_path / ".oh-my-zsh"
+    omz.mkdir()
+    (omz / "oh-my-zsh.sh").write_text("# omz", encoding="utf-8")
     foreign = omz / "custom/themes/same.zsh-theme"
     foreign.parent.mkdir(parents=True)
     foreign.write_text("# user", encoding="utf-8")
@@ -89,6 +91,8 @@ def test_link_omega_themes_preserva_symlink_ajeno_con_manifest_corrupto(tmp_path
     (themes / "same.zsh-theme").write_text("# omega", encoding="utf-8")
 
     omz = tmp_path / ".oh-my-zsh"
+    omz.mkdir()
+    (omz / "oh-my-zsh.sh").write_text("# omz", encoding="utf-8")
     foreign_target = tmp_path / "foreign.zsh-theme"
     foreign_target.write_text("# foreign", encoding="utf-8")
     foreign_link = omz / "custom/themes/same.zsh-theme"
@@ -113,6 +117,8 @@ def test_link_omega_themes_reemplaza_symlink_propio(tmp_path):
     new_source.write_text("# omega", encoding="utf-8")
 
     omz = tmp_path / ".oh-my-zsh"
+    omz.mkdir()
+    (omz / "oh-my-zsh.sh").write_text("# omz", encoding="utf-8")
     old_source = tmp_path / "old.zsh-theme"
     old_source.write_text("# old", encoding="utf-8")
     owned_link = omz / "custom/themes/same.zsh-theme"
@@ -132,3 +138,16 @@ def test_link_omega_themes_reemplaza_symlink_propio(tmp_path):
 
     assert owned_link.is_symlink()
     assert owned_link.resolve(strict=False) == new_source
+
+
+def test_link_omega_themes_omite_omz_inexistente(tmp_path):
+    assets = tmp_path / "assets"
+    themes = assets / "themes"
+    themes.mkdir(parents=True)
+    (themes / "same.zsh-theme").write_text("# omega", encoding="utf-8")
+    omz = tmp_path / ".oh-my-zsh"
+
+    warnings = link_omega_themes(assets, omz, tmp_path / ".omega-zsh/manifest.json")
+
+    assert "Oh My Zsh no encontrado" in warnings[0]
+    assert not (omz / "custom" / "themes").exists()

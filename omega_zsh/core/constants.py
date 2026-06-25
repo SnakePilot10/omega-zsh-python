@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 
@@ -8,6 +8,16 @@ class PluginDef:
     desc: str
     category: str
     url: Optional[str] = None
+
+
+@dataclass
+class BinaryToolDef:
+    id: str
+    commands: List[str]
+    packages: Dict[str, str] = field(default_factory=dict)
+
+    def package_for(self, package_manager: str) -> str:
+        return self.packages.get(package_manager, self.id)
 
 
 @dataclass
@@ -65,6 +75,32 @@ BIN_PLUGINS: List[str] = [
     "fortune",
     "cowsay",
 ]
+
+BINARY_TOOLS: Dict[str, BinaryToolDef] = {
+    tool_id: BinaryToolDef(tool_id, [tool_id]) for tool_id in BIN_PLUGINS
+}
+BINARY_TOOLS.update(
+    {
+        "bat": BinaryToolDef("bat", ["bat", "batcat"], {"apt": "bat", "nala": "bat"}),
+        "fd": BinaryToolDef("fd", ["fd", "fdfind"], {"apt": "fd-find", "nala": "fd-find"}),
+        "ripgrep": BinaryToolDef("ripgrep", ["rg", "ripgrep"], {"apt": "ripgrep", "nala": "ripgrep"}),
+        "httpie": BinaryToolDef("httpie", ["http", "httpie"], {"apt": "httpie", "nala": "httpie"}),
+    }
+)
+
+
+def is_binary_tool(plugin_id: str) -> bool:
+    return plugin_id in BINARY_TOOLS
+
+
+def binary_commands(plugin_id: str) -> List[str]:
+    tool = BINARY_TOOLS.get(plugin_id)
+    return tool.commands if tool else [plugin_id]
+
+
+def binary_package_name(plugin_id: str, package_manager: str) -> str:
+    tool = BINARY_TOOLS.get(plugin_id)
+    return tool.package_for(package_manager) if tool else plugin_id
 
 # --- ALL PLUGINS LIST (UI DATA) ---
 DB_PLUGINS: List[PluginDef] = [
@@ -144,6 +180,9 @@ DB_PLUGINS: List[PluginDef] = [
     PluginDef("safe-paste", "Evita ejecución al pegar", "SEC"),
     PluginDef("sudo", "Doble ESC pone sudo/tsu", "UTIL"),
 ]
+
+DB_ZSH_PLUGINS: List[PluginDef] = [plugin for plugin in DB_PLUGINS if not is_binary_tool(plugin.id)]
+DB_BINARY_TOOLS: List[PluginDef] = [plugin for plugin in DB_PLUGINS if is_binary_tool(plugin.id)]
 
 THEMES_OMZ_BUILTIN: List[ThemeDef] = [
     ThemeDef("robbyrussell", "Clásico (Default)"),

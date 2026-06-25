@@ -107,7 +107,7 @@
   - Impact: medium
   - Verification: dry run shows intended file changes without writing them.
 
-- [ ] 19. Add config preview before writing `.zshrc`
+- [x] 19. Add config preview before writing `.zshrc`
   - Impact: medium
   - Verification: generated content can be inspected before replace.
 
@@ -117,15 +117,15 @@
 
 ## Phase 4 - Catalog And Installation
 
-- [ ] 21. Split zsh plugins from binary tools in the catalog
+- [x] 21. Split zsh plugins from binary tools in the catalog
   - Impact: high
   - Verification: binary tools never render inside `plugins=(...)`.
 
-- [ ] 22. Add platform-aware package names to catalog
+- [x] 22. Add platform-aware package names to catalog
   - Impact: high
   - Verification: Debian/Termux package names resolve from catalog, not hardcoded branches.
 
-- [ ] 23. Add command detection names to catalog
+- [x] 23. Add command detection names to catalog
   - Impact: medium
   - Verification: `bat/batcat`, `fd/fdfind`, and `ripgrep/rg` are handled by data.
 

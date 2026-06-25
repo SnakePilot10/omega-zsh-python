@@ -163,6 +163,7 @@ def test_doctor_reports_actionable_missing_binary_details(tmp_path, monkeypatch)
     tool_check = _check(report, "binary-tools")
     assert tool_check["status"] == "missing"
     assert "fd (comando: fd/fdfind" in tool_check["detail"]
+    assert "paquete: fd" in tool_check["detail"]
     assert "instalar:" in tool_check["detail"]
 
 
