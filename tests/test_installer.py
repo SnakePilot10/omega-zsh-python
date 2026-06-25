@@ -99,3 +99,28 @@ def test_install_binary_uses_catalog_fortune_package_on_debian(tmp_path):
     args, kwargs = platform.install_package.call_args
     assert args[0] == "fortune-mod"
     assert callable(kwargs["on_progress"])
+
+
+def test_install_all_result_reports_installed_skipped_and_failed(tmp_path):
+    platform = MockPlatform()
+    platform.pkg_mgr = "apt-get"
+    platform.install_package = MagicMock(side_effect=lambda package, on_progress=None: package != "fd-find")
+    installer = PluginInstaller(platform, home_dir=tmp_path)
+    messages = []
+
+    result = installer.install_all_result(["zoxide", "fd", "git", "typo-plugin"], messages.append)
+
+    assert not result.ok
+    assert result.installed == ["zoxide"]
+    assert result.failed == ["fd"]
+    assert result.skipped == ["git", "typo-plugin"]
+    assert "ID desconocido omitido: typo-plugin" in messages
+
+
+def test_install_all_keeps_bool_compatibility(tmp_path):
+    platform = MockPlatform()
+    platform.pkg_mgr = "apt-get"
+    platform.install_package = MagicMock(return_value=True)
+    installer = PluginInstaller(platform, home_dir=tmp_path)
+
+    assert installer.install_all(["zoxide"], lambda message: None)

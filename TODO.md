@@ -133,11 +133,11 @@
   - Impact: medium
   - Verification: `bat/batcat`, `fd/fdfind`, and `ripgrep/rg` are handled by data.
 
-- [ ] 24. Reject or warn on unknown plugin/tool IDs before rendering config
+- [x] 24. Reject or warn on unknown plugin/tool IDs before rendering config
   - Impact: high
   - Verification: invalid state cannot produce invalid `.zshrc` silently.
 
-- [ ] 25. Make `PluginInstaller.install_all()` return a structured result
+- [x] 25. Make `PluginInstaller.install_all()` return a structured result
   - Impact: medium
   - Verification: result includes installed, skipped, failed, and messages.
 

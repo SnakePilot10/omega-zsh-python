@@ -689,6 +689,48 @@
 - Next:
   - Continue with Item 17 or Item 24.
 
+### 2026-06-24 - Items 24, 25
+
+- TODO items:
+  - `24. Reject or warn on unknown plugin/tool IDs before rendering config`
+  - `25. Make PluginInstaller.install_all() return a structured result`
+- Status: completed.
+- Files changed:
+  - `omega_zsh/core/constants.py`
+  - `omega_zsh/core/apply.py`
+  - `omega_zsh/core/doctor.py`
+  - `omega_zsh/core/installer.py`
+  - `tests/test_catalog.py`
+  - `tests/test_apply.py`
+  - `tests/test_doctor.py`
+  - `tests/test_installer.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added catalog validation helpers: `known_plugin_ids()`, `unknown_plugin_ids()`, and `valid_selected_plugins()`.
+  - `build_config_context()` now filters unknown selected IDs before rendering `.zshrc`, while preserving known native `git` and catalog/external/binary IDs.
+  - `preview_config()` and `apply_config()` warn about unknown selected IDs that were omitted.
+  - `omega doctor` reports unknown selected IDs through a dedicated `unknown-selected-ids` check.
+  - Added `InstallResult` and `PluginInstaller.install_all_result()` with `installed`, `skipped`, `failed`, and `messages` fields.
+  - `PluginInstaller.install_all()` remains a bool-compatible wrapper around the structured result.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - Runtime smoke: `preview_config()` warns on `typo-plugin` and omits it from rendered config.
+  - Runtime smoke: `install_all_result()` reports installed and skipped IDs structurally.
+- Verification result:
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `108 passed`.
+  - Passed: unknown preview smoke.
+  - Passed: installer structured result smoke.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 616 nodes, 1278 edges, 28 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Unknown IDs are omitted with warnings; this is safer than rendering them, but users with custom OMZ plugins not present in catalog will need Item 24 follow-up policy if custom IDs should be allowed explicitly.
+- Next:
+  - Continue with Item 17 or Item 26.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

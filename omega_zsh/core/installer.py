@@ -1,9 +1,10 @@
 import subprocess
+from dataclasses import dataclass, field
 from pathlib import Path
 from shutil import which
 from typing import Callable, List
 
-from .constants import EXTERNAL_URLS, binary_commands, binary_package_name, is_binary_tool
+from .constants import EXTERNAL_URLS, binary_commands, binary_package_name, is_binary_tool, unknown_plugin_ids
 
 
 def _binary_available(plugin_id: str) -> bool:
@@ -15,6 +16,15 @@ def _platform_package_manager(platform) -> str:
     if pkg_mgr == "apt-get":
         return "apt"
     return pkg_mgr or "unknown"
+
+
+@dataclass
+class InstallResult:
+    ok: bool = True
+    installed: list[str] = field(default_factory=list)
+    skipped: list[str] = field(default_factory=list)
+    failed: list[str] = field(default_factory=list)
+    messages: list[str] = field(default_factory=list)
 
 
 class PluginInstaller:
@@ -102,6 +112,9 @@ class PluginInstaller:
         return self._git_clone(url, target, lambda msg: None)
 
     def install_all(self, selected_ids: List[str], on_progress: Callable[[str], None]) -> bool:
+        return self.install_all_result(selected_ids, on_progress).ok
+
+    def install_all_result(self, selected_ids: List[str], on_progress: Callable[[str], None]) -> InstallResult:
 
         """
         Orquestador principal de instalación de plugins.
@@ -114,15 +127,24 @@ class PluginInstaller:
             on_progress (Callable[[str], None]): Función de callback para reportar progreso.
                                                 Debe aceptar un string (mensaje).
         """
-        failed = []
+        result = InstallResult()
+        unknown = set(unknown_plugin_ids(selected_ids))
         for plugin_id in selected_ids:
+            if plugin_id in unknown:
+                message = f"ID desconocido omitido: {plugin_id}"
+                on_progress(message)
+                result.messages.append(message)
+                result.skipped.append(plugin_id)
+                continue
             # 1. ¿Es un paquete binario del sistema?
             if is_binary_tool(plugin_id):
                 package_name = binary_package_name(plugin_id, _platform_package_manager(self.platform))
                 on_progress(f"Instalando paquete binario: {plugin_id}")
                 if not self.platform.install_package(package_name, on_progress=on_progress):
                     on_progress(f"Error instalando paquete binario: {plugin_id}")
-                    failed.append(plugin_id)
+                    result.failed.append(plugin_id)
+                else:
+                    result.installed.append(plugin_id)
 
             # 2. ¿Es un plugin externo de Git?
             elif plugin_id in EXTERNAL_URLS:
@@ -133,19 +155,25 @@ class PluginInstaller:
                     on_progress(f"Clonando plugin Git: {plugin_id}")
                     if not self._git_clone(url, target_path, on_progress):
                         on_progress(f"Error clonando plugin Git: {plugin_id}")
-                        failed.append(plugin_id)
+                        result.failed.append(plugin_id)
+                    else:
+                        result.installed.append(plugin_id)
                 else:
                     on_progress(f"Plugin Git ya existe: {plugin_id}")
+                    result.skipped.append(plugin_id)
 
             # 3. ¿Es un plugin nativo de OMZ?
             # No requiere instalación física, solo estar en la lista del .zshrc
             else:
                 on_progress(f"Activando plugin nativo: {plugin_id}")
+                result.skipped.append(plugin_id)
 
-        if failed:
-            on_progress("Fallaron: " + ", ".join(failed))
-            return False
-        return True
+        if result.failed:
+            result.ok = False
+            message = "Fallaron: " + ", ".join(result.failed)
+            on_progress(message)
+            result.messages.append(message)
+        return result
 
     def _git_clone(self, url: str, target: Path, on_progress: Callable[[str], None]) -> bool:
         """

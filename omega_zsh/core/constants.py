@@ -184,6 +184,21 @@ DB_PLUGINS: List[PluginDef] = [
 
 DB_ZSH_PLUGINS: List[PluginDef] = [plugin for plugin in DB_PLUGINS if not is_binary_tool(plugin.id)]
 DB_BINARY_TOOLS: List[PluginDef] = [plugin for plugin in DB_PLUGINS if is_binary_tool(plugin.id)]
+NATIVE_ZSH_PLUGIN_IDS = {"git"}
+
+
+def known_plugin_ids() -> set[str]:
+    return {plugin.id for plugin in DB_PLUGINS} | set(EXTERNAL_URLS) | set(BINARY_TOOLS) | NATIVE_ZSH_PLUGIN_IDS
+
+
+def unknown_plugin_ids(plugin_ids: List[str]) -> List[str]:
+    known = known_plugin_ids()
+    return [plugin_id for plugin_id in plugin_ids if plugin_id not in known]
+
+
+def valid_selected_plugins(plugin_ids: List[str]) -> List[str]:
+    known = known_plugin_ids()
+    return [plugin_id for plugin_id in plugin_ids if plugin_id in known]
 
 THEMES_OMZ_BUILTIN: List[ThemeDef] = [
     ThemeDef("robbyrussell", "Clásico (Default)"),

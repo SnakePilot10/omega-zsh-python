@@ -186,6 +186,24 @@ def test_doctor_reports_actionable_missing_external_plugin_details(tmp_path, mon
     assert "https://github.com/Aloxaf/fzf-tab.git" in plugin_check["detail"]
 
 
+def test_doctor_reports_unknown_selected_ids(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    (omega_dir / "state.json").write_text(
+        json.dumps({"selected_plugins": ["git", "typo-plugin"], "selected_header": "none"}),
+        encoding="utf-8",
+    )
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    unknown_check = _check(report, "unknown-selected-ids")
+    assert unknown_check["status"] == "warning"
+    assert unknown_check["detail"] == "typo-plugin"
+
+
 def test_doctor_reports_corrupt_manifest_without_rewriting(tmp_path, monkeypatch):
     home = tmp_path / "home"
     omega_dir = home / ".omega-zsh"

@@ -5,7 +5,15 @@ from shutil import which
 from typing import Any
 
 from .backup import create_backup, restore_backup
-from .constants import EXTERNAL_URLS, THEMES_OMZ_BUILTIN, binary_commands, binary_package_name, is_binary_tool
+from .constants import (
+    EXTERNAL_URLS,
+    THEMES_OMZ_BUILTIN,
+    binary_commands,
+    binary_package_name,
+    is_binary_tool,
+    unknown_plugin_ids,
+    valid_selected_plugins,
+)
 from .context import SystemContext
 from .manifest import load_manifest, record_managed_file, save_manifest
 from .shell import validate_zsh_syntax
@@ -363,7 +371,18 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
         )
     )
 
-    selected = state.selected_plugins
+    unknown_selected = unknown_plugin_ids(state.selected_plugins)
+    checks.append(
+        _check(
+            "unknown-selected-ids",
+            "ok" if not unknown_selected else "warning",
+            "ok" if not unknown_selected else "warning",
+            "IDs seleccionados conocidos" if not unknown_selected else "IDs seleccionados desconocidos",
+            ", ".join(unknown_selected) if unknown_selected else "todos los IDs seleccionados están en catálogo",
+        )
+    )
+
+    selected = valid_selected_plugins(state.selected_plugins)
     missing_tools = [plugin for plugin in selected if is_binary_tool(plugin) and not _binary_available(plugin)]
     checks.append(
         _check(

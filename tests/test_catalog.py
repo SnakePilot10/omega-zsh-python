@@ -6,6 +6,8 @@ from omega_zsh.core.constants import (
     binary_commands,
     binary_package_name,
     is_binary_tool,
+    unknown_plugin_ids,
+    valid_selected_plugins,
 )
 
 
@@ -33,3 +35,10 @@ def test_catalog_exposes_platform_package_names():
     assert binary_package_name("fortune", "apt") == "fortune-mod"
     assert binary_package_name("fortune", "nala") == "fortune-mod"
     assert binary_package_name("zoxide", "apt") == "zoxide"
+
+
+def test_catalog_validates_selected_plugin_ids():
+    selected = ["git", "zsh-autosuggestions", "fd", "typo-plugin"]
+
+    assert unknown_plugin_ids(selected) == ["typo-plugin"]
+    assert valid_selected_plugins(selected) == ["git", "zsh-autosuggestions", "fd"]

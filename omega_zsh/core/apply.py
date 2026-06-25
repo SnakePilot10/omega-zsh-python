@@ -3,7 +3,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
-from .constants import is_binary_tool
+from .constants import is_binary_tool, unknown_plugin_ids, valid_selected_plugins
 from .figlet import FigletManager
 from .generator import ConfigGenerator
 from .manifest import record_managed_file, require_managed_or_absent
@@ -39,15 +39,16 @@ def build_header_command(state: AppState) -> str:
 
 
 def build_config_context(context: Any, state: AppState) -> dict[str, Any]:
+    selected_plugins = valid_selected_plugins(state.selected_plugins)
     return {
         "version": get_app_version(),
         "omz_dir": str(context.omz_dir),
         "user_theme": state.selected_theme,
         "root_theme": state.selected_root_theme,
-        "plugins": [p for p in state.selected_plugins if not is_binary_tool(p)],
+        "plugins": [p for p in selected_plugins if not is_binary_tool(p)],
         "header_cmd": build_header_command(state),
         "is_termux": context.is_termux,
-        "active_tools": [p for p in state.selected_plugins if is_binary_tool(p)],
+        "active_tools": [p for p in selected_plugins if is_binary_tool(p)],
         "default_user": "",
         "personal_zsh": str(context.home / ".omega-zsh" / "personal.zsh"),
         "custom_zsh": str(context.home / ".omega-zsh" / "custom.zsh"),
@@ -112,6 +113,9 @@ def render_config(context: Any, state: AppState) -> str:
 def preview_config(context: Any, state: AppState) -> ApplyResult:
     """Return the rendered config and planned paths without writing files."""
     warnings = []
+    unknown = unknown_plugin_ids(state.selected_plugins)
+    if unknown:
+        warnings.append("IDs seleccionados desconocidos omitidos: " + ", ".join(unknown))
     if not (context.omz_dir / "oh-my-zsh.sh").exists():
         warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
     content = render_config(context, state)
@@ -133,6 +137,9 @@ def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyR
     try:
         generator = ConfigGenerator(context.assets_dir / "templates")
         warnings = []
+        unknown = unknown_plugin_ids(state.selected_plugins)
+        if unknown:
+            warnings.append("IDs seleccionados desconocidos omitidos: " + ", ".join(unknown))
         if not (context.omz_dir / "oh-my-zsh.sh").exists():
             warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
         if dry_run:
