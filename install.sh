@@ -20,10 +20,33 @@ STAR="***"
 
 # --- Parsear argumentos ---
 UNATTENDED=false
-if [[ "$1" == "-y" || "$1" == "--unattended" ]]; then
-    UNATTENDED=true
-    echo -e "${INFO} Modo desatendido activado."
-fi
+APPLY_CONFIG=false
+SYNC_THEMES=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -y|--unattended)
+            UNATTENDED=true
+            echo -e "${INFO} Modo desatendido activado."
+            ;;
+        --apply-config)
+            APPLY_CONFIG=true
+            echo -e "${INFO} Aplicación explícita de .zshrc activada."
+            ;;
+        --sync-themes)
+            SYNC_THEMES=true
+            echo -e "${INFO} Sincronización explícita de temas activada."
+            ;;
+        --help|-h)
+            echo "Uso: bash install.sh [--unattended|-y] [--sync-themes] [--apply-config]"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}${ERROR} Argumento desconocido: $1${NC}"
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 # --- Configuración Omega ---
 OMEGA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/omega-zsh"
@@ -323,18 +346,15 @@ else
     echo -e "   ${CHECK} Código y dependencias ya sincronizados."
 fi
 
-# --- 9. DESCARGA DE PLUGINS Y TEMAS ZSH ---
-print_step 7 9 "Sincronizando recursos de Zsh (Plugins/Temas)..."
-run_with_spinner "Sincronizando repositorios y enlaces" "\"$VENV_DIR/bin/python\" -c \"
+# --- 9. DESCARGA DE PLUGINS ZSH ---
+print_step 7 9 "Sincronizando plugins Zsh instalables..."
+run_with_spinner "Sincronizando repositorios" "\"$VENV_DIR/bin/python\" -c \"
 from omega_zsh.core.installer import PluginInstaller
 from omega_zsh.platforms.debian import DebianPlatform
 from omega_zsh.platforms.termux import TermuxPlatform
 from omega_zsh.core.context import SystemContext
-from omega_zsh.core.manifest import default_manifest_path
-from omega_zsh.core.state import StateManager, AppState
-from omega_zsh.core.constants import BIN_PLUGINS
-from omega_zsh.ui.app import link_omega_themes
-from pathlib import Path
+from omega_zsh.core.state import StateManager
+from omega_zsh.core.constants import is_binary_tool
 
 ctx = SystemContext()
 plat = TermuxPlatform() if ctx.is_termux else DebianPlatform()
@@ -349,15 +369,40 @@ except Exception:
     # Fallback si no hay estado previo
     selected = ['zsh-autosuggestions', 'zsh-syntax-highlighting', 'fzf-tab', 'zsh-completions', 'k', 'alias-tips', 'zsh-history-substring-search']
 
-# 1. Filtrar y descargar plugins (solo los que no son binarios)
-bin_set = set(BIN_PLUGINS)
 for p in selected:
-    if p not in bin_set:
+    if not is_binary_tool(p):
         inst.download_zsh_plugin(p)
-
-# 2. Temas Omega (Symlinks) respetando ownership del manifest
-link_omega_themes(ctx.assets_dir, ctx.omz_dir, default_manifest_path(ctx.home))
 \""
+
+if [ "$SYNC_THEMES" = true ]; then
+    run_with_spinner "Sincronizando temas Omega" "\"$VENV_DIR/bin/python\" -c \"
+from omega_zsh.core.apply import link_omega_themes
+from omega_zsh.core.context import SystemContext
+from omega_zsh.core.manifest import default_manifest_path
+
+ctx = SystemContext()
+for warning in link_omega_themes(ctx.assets_dir, ctx.omz_dir, default_manifest_path(ctx.home)):
+    print(warning)
+\""
+else
+    echo -e "   ${INFO} Temas Omega no sincronizados. Usa --sync-themes para hacerlo explícitamente."
+fi
+
+if [ "$APPLY_CONFIG" = true ]; then
+    run_with_spinner "Aplicando configuración .zshrc" "\"$VENV_DIR/bin/python\" -c \"
+from omega_zsh.core.apply import apply_config
+from omega_zsh.core.context import SystemContext
+from omega_zsh.core.state import StateManager
+
+ctx = SystemContext()
+state = StateManager(ctx.omega_dir).load()
+result = apply_config(ctx, state)
+if not result.ok:
+    raise SystemExit(result.message)
+\""
+else
+    echo -e "   ${INFO} .zshrc no modificado. Usa --apply-config para aplicar configuración explícitamente."
+fi
 
 # --- 10. ACCESO GLOBAL ---
 print_step 8 9 "Configurando acceso global (omega/oz)..."

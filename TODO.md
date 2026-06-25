@@ -99,7 +99,7 @@
   - Impact: high
   - Verification: render can be executed without touching filesystem.
 
-- [ ] 17. Separate install flow from apply flow
+- [x] 17. Separate install flow from apply flow
   - Impact: high
   - Verification: apply never installs packages; install never rewrites config unless requested.
 

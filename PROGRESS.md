@@ -773,6 +773,41 @@
 - Next:
   - Continue with Item 17 or Item 26.
 
+### 2026-06-24 - Item 17
+
+- TODO item: `17. Separate install flow from apply flow`
+- Status: completed.
+- Files changed:
+  - `install.sh`
+  - `tests/test_install_script.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `install.sh` now parses explicit flags instead of only checking the first argument.
+  - Installer defaults are now `APPLY_CONFIG=false` and `SYNC_THEMES=false`.
+  - `.zshrc` is not written during install unless `--apply-config` is passed.
+  - Omega theme symlinks are not synced during install unless `--sync-themes` is passed.
+  - Theme sync uses `omega_zsh.core.apply.link_omega_themes` instead of importing from the UI module.
+  - Plugin repository download remains part of install flow; config rendering/writing remains part of apply flow.
+- Verification commands:
+  - `bash -n install.sh`
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `bash install.sh --help`
+- Verification result:
+  - Passed: install script syntax check.
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `117 passed`.
+  - Passed: install help smoke prints explicit flags.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 629 nodes, 1305 edges, 29 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `install.sh` still contains legacy shell bootstrap complexity; full simplification remains a later backlog item.
+  - `--apply-config` intentionally writes `.zshrc`; users must opt into it explicitly.
+- Next:
+  - Continue with Item 26.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`
