@@ -11,6 +11,7 @@ from .constants import (
     binary_commands,
     binary_package_name,
     is_binary_tool,
+    selected_custom_plugin_ids,
     unknown_plugin_ids,
     valid_selected_plugins,
 )
@@ -371,7 +372,7 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
         )
     )
 
-    unknown_selected = unknown_plugin_ids(state.selected_plugins)
+    unknown_selected = unknown_plugin_ids(state.selected_plugins, state.allowed_custom_plugins)
     checks.append(
         _check(
             "unknown-selected-ids",
@@ -382,7 +383,29 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
         )
     )
 
-    selected = valid_selected_plugins(state.selected_plugins)
+    custom_selected = selected_custom_plugin_ids(state.selected_plugins, state.allowed_custom_plugins)
+    missing_custom = [
+        plugin for plugin in custom_selected if not (context.omz_dir / "custom" / "plugins" / plugin).exists()
+    ]
+    checks.append(
+        _check(
+            "custom-plugins",
+            "ok" if not missing_custom else "warning",
+            "ok" if not missing_custom else "warning",
+            "plugins custom permitidos disponibles"
+            if custom_selected and not missing_custom
+            else "plugins custom permitidos faltantes"
+            if missing_custom
+            else "sin plugins custom permitidos seleccionados",
+            ", ".join(missing_custom)
+            if missing_custom
+            else ", ".join(custom_selected)
+            if custom_selected
+            else "ninguno",
+        )
+    )
+
+    selected = valid_selected_plugins(state.selected_plugins, state.allowed_custom_plugins)
     missing_tools = [plugin for plugin in selected if is_binary_tool(plugin) and not _binary_available(plugin)]
     checks.append(
         _check(

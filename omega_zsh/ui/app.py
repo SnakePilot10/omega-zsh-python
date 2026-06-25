@@ -222,6 +222,7 @@ class OmegaApp(App):
 
             current_state = AppState(
                 selected_plugins=selected_plugins,
+                allowed_custom_plugins=self.state.allowed_custom_plugins,
                 selected_theme=selected_theme,
                 selected_root_theme=self.state.selected_root_theme,
                 selected_header=h_type,

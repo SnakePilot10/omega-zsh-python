@@ -39,7 +39,7 @@ def build_header_command(state: AppState) -> str:
 
 
 def build_config_context(context: Any, state: AppState) -> dict[str, Any]:
-    selected_plugins = valid_selected_plugins(state.selected_plugins)
+    selected_plugins = valid_selected_plugins(state.selected_plugins, state.allowed_custom_plugins)
     return {
         "version": get_app_version(),
         "omz_dir": str(context.omz_dir),
@@ -113,7 +113,7 @@ def render_config(context: Any, state: AppState) -> str:
 def preview_config(context: Any, state: AppState) -> ApplyResult:
     """Return the rendered config and planned paths without writing files."""
     warnings = []
-    unknown = unknown_plugin_ids(state.selected_plugins)
+    unknown = unknown_plugin_ids(state.selected_plugins, state.allowed_custom_plugins)
     if unknown:
         warnings.append("IDs seleccionados desconocidos omitidos: " + ", ".join(unknown))
     if not (context.omz_dir / "oh-my-zsh.sh").exists():
@@ -137,7 +137,7 @@ def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyR
     try:
         generator = ConfigGenerator(context.assets_dir / "templates")
         warnings = []
-        unknown = unknown_plugin_ids(state.selected_plugins)
+        unknown = unknown_plugin_ids(state.selected_plugins, state.allowed_custom_plugins)
         if unknown:
             warnings.append("IDs seleccionados desconocidos omitidos: " + ", ".join(unknown))
         if not (context.omz_dir / "oh-my-zsh.sh").exists():

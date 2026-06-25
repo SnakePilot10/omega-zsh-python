@@ -22,6 +22,7 @@ def mock_app():
         app.state_manager = MagicMock()
         app.state = AppState(
             selected_plugins=["zsh-autosuggestions", "zoxide", "eza", "EZA"],
+            allowed_custom_plugins=["mi-plugin"],
             selected_theme="bira_elegante",
             selected_root_theme="root_p10k_red",
             selected_header="none",
@@ -44,6 +45,13 @@ def test_apply_action_delegates_to_core_orchestrator(mock_app):
 
         mock_apply.assert_called_once_with(mock_app.context, mock_app.state)
         mock_app.notify.assert_called_with("Configuración actualizada con éxito.")
+
+
+def test_save_state_preserves_allowed_custom_plugins(mock_app):
+    mock_app.save_state()
+
+    saved_state = mock_app.state_manager.save.call_args.args[0]
+    assert saved_state.allowed_custom_plugins == ["mi-plugin"]
 
 
 def test_apply_action_reports_structured_core_failure(mock_app):

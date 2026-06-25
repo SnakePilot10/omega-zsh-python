@@ -204,6 +204,59 @@ def test_doctor_reports_unknown_selected_ids(tmp_path, monkeypatch):
     assert unknown_check["detail"] == "typo-plugin"
 
 
+def test_doctor_reports_allowed_custom_plugin_status(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    omz = home / ".oh-my-zsh"
+    custom_plugin = omz / "custom" / "plugins" / "mi-plugin"
+    custom_plugin.mkdir(parents=True)
+    (omz / "oh-my-zsh.sh").write_text("# omz\n", encoding="utf-8")
+    (omega_dir / "state.json").write_text(
+        json.dumps(
+            {
+                "selected_plugins": ["git", "mi-plugin"],
+                "allowed_custom_plugins": ["mi-plugin"],
+                "selected_header": "none",
+            }
+        ),
+        encoding="utf-8",
+    )
+    context = SystemContext(home=home, env={"ZSH": str(omz)})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    assert _check(report, "unknown-selected-ids")["status"] == "ok"
+    custom_check = _check(report, "custom-plugins")
+    assert custom_check["status"] == "ok"
+    assert custom_check["detail"] == "mi-plugin"
+
+
+def test_doctor_warns_when_allowed_custom_plugin_is_missing(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    (omega_dir / "state.json").write_text(
+        json.dumps(
+            {
+                "selected_plugins": ["mi-plugin"],
+                "allowed_custom_plugins": ["mi-plugin"],
+                "selected_header": "none",
+            }
+        ),
+        encoding="utf-8",
+    )
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    custom_check = _check(report, "custom-plugins")
+    assert custom_check["status"] == "warning"
+    assert custom_check["detail"] == "mi-plugin"
+
+
 def test_doctor_reports_corrupt_manifest_without_rewriting(tmp_path, monkeypatch):
     home = tmp_path / "home"
     omega_dir = home / ".omega-zsh"

@@ -137,6 +137,10 @@
   - Impact: high
   - Verification: invalid state cannot produce invalid `.zshrc` silently.
 
+- [x] 24b. Add explicit custom plugin allowlist policy
+  - Impact: medium
+  - Verification: user-declared custom plugin IDs can render, while typos still warn.
+
 - [x] 25. Make `PluginInstaller.install_all()` return a structured result
   - Impact: medium
   - Verification: result includes installed, skipped, failed, and messages.

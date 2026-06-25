@@ -731,6 +731,48 @@
 - Next:
   - Continue with Item 17 or Item 26.
 
+### 2026-06-24 - Item 24b
+
+- TODO item: `24b. Add explicit custom plugin allowlist policy`
+- Status: completed.
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `omega_zsh/core/constants.py`
+  - `omega_zsh/core/apply.py`
+  - `omega_zsh/core/doctor.py`
+  - `omega_zsh/ui/app.py`
+  - `tests/test_state.py`
+  - `tests/test_catalog.py`
+  - `tests/test_apply.py`
+  - `tests/test_doctor.py`
+  - `tests/test_ui_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `allowed_custom_plugins` to `AppState` and persisted `state.json`.
+  - Catalog validation helpers now accept explicit custom plugin IDs as known IDs.
+  - `build_config_context()` renders allowlisted custom plugin IDs while still omitting unallowlisted unknown IDs.
+  - `preview_config()` and `apply_config()` still warn about unallowlisted unknown IDs.
+  - `omega doctor` reports allowlisted custom plugins through `custom-plugins`, warning when their local OMZ custom plugin directory is missing.
+  - UI state saving preserves `allowed_custom_plugins` loaded from state.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - Runtime smoke: preview renders `mi-plugin` when allowlisted and omits `typo-plugin` with warning.
+  - Runtime smoke: `omega doctor` reports allowlisted custom plugin as available when the local directory exists.
+- Verification result:
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `114 passed`.
+  - Passed: custom preview smoke.
+  - Passed: custom doctor smoke.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 624 nodes, 1301 edges, 28 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - There is no UI editor for `allowed_custom_plugins` yet; users must provide it in `state.json` until a future UI/CLI setting is added.
+- Next:
+  - Continue with Item 17 or Item 26.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

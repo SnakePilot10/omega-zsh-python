@@ -6,6 +6,7 @@ from omega_zsh.core.constants import (
     binary_commands,
     binary_package_name,
     is_binary_tool,
+    selected_custom_plugin_ids,
     unknown_plugin_ids,
     valid_selected_plugins,
 )
@@ -42,3 +43,12 @@ def test_catalog_validates_selected_plugin_ids():
 
     assert unknown_plugin_ids(selected) == ["typo-plugin"]
     assert valid_selected_plugins(selected) == ["git", "zsh-autosuggestions", "fd"]
+
+
+def test_catalog_allows_explicit_custom_plugin_ids():
+    selected = ["git", "mi-plugin", "typo-plugin"]
+    allowed = ["mi-plugin"]
+
+    assert unknown_plugin_ids(selected, allowed) == ["typo-plugin"]
+    assert valid_selected_plugins(selected, allowed) == ["git", "mi-plugin"]
+    assert selected_custom_plugin_ids(selected, allowed) == ["mi-plugin"]

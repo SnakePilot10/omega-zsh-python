@@ -33,6 +33,7 @@ def test_save_state(manager, tmp_path):
 
     data = json.loads(expected_file.read_text())
     assert data["selected_plugins"] == ["git", "python"]
+    assert data["allowed_custom_plugins"] == []
     assert data["header_text"] == "TEST"
     assert not expected_file.with_suffix(".tmp").exists()
 
@@ -103,6 +104,25 @@ def test_load_state_normaliza_tipos_invalidos(manager, tmp_path):
     assert loaded.selected_header == "fastfetch"
     assert loaded.header_text == "Omega"
     assert loaded.header_font == "slant"
+
+
+def test_load_state_normaliza_allowed_custom_plugins(manager, tmp_path):
+    state_file = tmp_path / "state.json"
+    state_file.write_text(
+        json.dumps(
+            {
+                "selected_plugins": ["git", "Mi-Custom", "mi-custom"],
+                "allowed_custom_plugins": [" Mi-Custom ", "mi-custom", 123],
+                "selected_header": "none",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    loaded = manager.load()
+
+    assert loaded.selected_plugins == ["git", "mi-custom"]
+    assert loaded.allowed_custom_plugins == ["mi-custom"]
 
 
 def test_load_state_json_no_dict_usa_defaults(manager, tmp_path):

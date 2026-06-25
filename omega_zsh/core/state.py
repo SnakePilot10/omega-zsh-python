@@ -9,6 +9,7 @@ from typing import List
 @dataclass
 class AppState:
     selected_plugins: List[str] = field(default_factory=list)
+    allowed_custom_plugins: List[str] = field(default_factory=list)
     selected_theme: str = "robbyrussell"
     selected_root_theme: str = "root_p10k_red"
     selected_header: str = "fastfetch"
@@ -55,6 +56,9 @@ def normalize_app_state(data) -> AppState:
 
     return AppState(
         selected_plugins=_clean_plugins(data.get("selected_plugins", defaults.selected_plugins)),
+        allowed_custom_plugins=_clean_plugins(
+            data.get("allowed_custom_plugins", defaults.allowed_custom_plugins)
+        ),
         selected_theme=_clean_string(data.get("selected_theme"), defaults.selected_theme),
         selected_root_theme=_clean_string(
             data.get("selected_root_theme"),

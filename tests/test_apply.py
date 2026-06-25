@@ -129,6 +129,26 @@ def test_preview_config_warns_and_omits_unknown_plugin_ids(tmp_path):
     assert "typo-plugin" not in plugin_block
 
 
+def test_preview_config_renders_explicitly_allowed_custom_plugin(tmp_path):
+    home = tmp_path / "home"
+    omz = home / ".oh-my-zsh"
+    omz.mkdir(parents=True)
+    (omz / "oh-my-zsh.sh").write_text("# omz\n", encoding="utf-8")
+    context = SystemContext(home=home, env={"ZSH": str(omz)})
+    state = AppState(
+        selected_plugins=["git", "mi-plugin", "typo-plugin"],
+        allowed_custom_plugins=["mi-plugin"],
+        selected_header="none",
+    )
+
+    result = preview_config(context, state)
+
+    plugin_block = result.preview.split("plugins=", 1)[1].split(")", 1)[0]
+    assert "mi-plugin" in plugin_block
+    assert "typo-plugin" not in plugin_block
+    assert "typo-plugin" in result.warnings[0]
+
+
 def test_apply_config_never_invokes_installer_for_selected_binary_tools(tmp_path, monkeypatch):
     home = tmp_path / "home"
     omz = home / ".oh-my-zsh"
