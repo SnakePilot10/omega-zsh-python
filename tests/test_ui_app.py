@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from omega_zsh.core.manifest import record_managed_file
 from omega_zsh.core.state import AppState
 from omega_zsh.ui.app import OmegaApp, link_omega_themes
+from omega_zsh.ui.screens import PluginSelectScreen
 
 
 def test_get_all_themes_discovery():
@@ -199,3 +200,17 @@ def test_first_run_minimal_saves_state_without_apply():
         assert saved_state.selected_theme == "robbyrussell"
         assert saved_state.selected_header == "none"
         mock_apply.assert_not_called()
+
+
+def test_plugin_select_status_labels(tmp_path, monkeypatch):
+    context = MagicMock()
+    context.package_manager_type = "apt"
+    context.omz_dir = tmp_path / ".oh-my-zsh"
+    (context.omz_dir / "custom" / "plugins" / "zsh-autosuggestions").mkdir(parents=True)
+    screen = PluginSelectScreen([], [], [])
+    monkeypatch.setattr("omega_zsh.ui.screens.shutil.which", lambda cmd: "/bin/fd" if cmd == "fdfind" else None)
+
+    assert "installed" in screen._label_for("zsh-autosuggestions", context)
+    assert "installed" in screen._label_for("fd", context)
+    assert "missing" in screen._label_for("zoxide", context)
+    assert "unmanaged" in screen._label_for("git", context)

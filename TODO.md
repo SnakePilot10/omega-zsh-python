@@ -189,7 +189,7 @@
   - Impact: high
   - Verification: user can choose and restore a previous `.zshrc` backup.
 
-- [ ] 35. Mark UI items as installed, missing, unsupported, or unmanaged
+- [x] 35. Mark UI items as installed, missing, unsupported, or unmanaged
   - Impact: medium
   - Verification: plugin/tool selectors show real status.
 

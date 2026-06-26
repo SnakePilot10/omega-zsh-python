@@ -479,6 +479,38 @@
 - Next:
   - Commit and push Item 34.
 
+### 2026-06-26 - Item 35
+
+- TODO item: `35. Mark UI items as installed, missing, unsupported, or unmanaged`
+- Status: completed
+- Files changed:
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_ui_app.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Plugin/tool selector labels now include item type and runtime status.
+  - Binary tools show `installed`, `missing`, or `unsupported` based on catalog platform support and command detection.
+  - External zsh plugins show `installed` or `missing` based on the OMZ custom plugin directory.
+  - Native/unmanaged catalog items are labeled `unmanaged`.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_ui_app.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused UI app tests, `9 passed`.
+  - Passed: full pytest suite, `139 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 720 nodes, 1582 edges, 35 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Status is evaluated at compose time. Live status refresh can be added later if installs happen while the screen is open.
+- Next:
+  - Commit and push Item 35.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

@@ -22,6 +22,7 @@ from textual.widgets import (
 )
 from textual.widgets.selection_list import Selection
 
+from ..core.constants import EXTERNAL_URLS, binary_commands, binary_supported, is_binary_tool
 from ..core.context import SystemContext
 from ..core.doctor import run_doctor, run_doctor_fix
 from ..core.figlet import FigletManager
@@ -389,25 +390,41 @@ class PluginSelectScreen(Vertical):
         yield Label("[bold #ff006e]SELECCIÓN DE PLUGINS Y BINARIOS[/]")
         yield Label(NAV_HINT, id="plugin-nav-hint")
         yield Label("[dim]Usa [bold]Espacio[/] para marcar/desmarcar[/]", id="plugin-hint")
+        context = SystemContext()
 
         options = []
         seen_ids = set()
 
         for p in self.all_plugins:
             if p.id not in seen_ids:
-                options.append(Selection(p.id, p.id, p.id in self.selected_plugins))
+                options.append(Selection(self._label_for(p.id, context), p.id, p.id in self.selected_plugins))
                 seen_ids.add(p.id)
 
         for p in self.bin_plugins:
             pid = p if isinstance(p, str) else p.id
             if pid not in seen_ids:
-                options.append(Selection(f"📦 {pid}", pid, pid in self.selected_plugins))
+                options.append(Selection(self._label_for(pid, context), pid, pid in self.selected_plugins))
                 seen_ids.add(pid)
 
         yield SelectionList(*options, id="plugin-list")
 
     def get_selected(self) -> list[str]:
         return self.query_one(SelectionList).selected
+
+    def _status_for(self, plugin_id: str, context: SystemContext) -> str:
+        if is_binary_tool(plugin_id):
+            if not binary_supported(plugin_id, context.package_manager_type):
+                return "unsupported"
+            return "installed" if any(shutil.which(cmd) for cmd in binary_commands(plugin_id)) else "missing"
+        if plugin_id in EXTERNAL_URLS:
+            path = context.omz_dir / "custom" / "plugins" / plugin_id
+            return "installed" if path.exists() else "missing"
+        return "unmanaged"
+
+    def _label_for(self, plugin_id: str, context: SystemContext) -> str:
+        status = self._status_for(plugin_id, context)
+        prefix = "tool" if is_binary_tool(plugin_id) else "plugin"
+        return f"{plugin_id} [dim]({prefix}; {status})[/]"
 
 
 class ThemeSelectScreen(Horizontal):
