@@ -26,6 +26,7 @@ from ..core.context import SystemContext
 from ..core.doctor import run_doctor, run_doctor_fix
 from ..core.figlet import FigletManager
 from ..core.recovery import cleanup_shell_files, nuclear_fix_shell, recovery_dry_run, restore_latest_zshrc_backup
+from ..core.recovery import list_zshrc_backups, restore_zshrc_backup
 from ..core.system_info import get_system_stats
 
 
@@ -258,7 +259,26 @@ class RecoveryScreen(Vertical):
             yield Button("Cleanup", variant="warning", id="btn-recovery-uninstall")
             yield Button("Nuclear Fix", variant="error", id="btn-recovery-nuclear")
             yield Button("Restore Backup", variant="success", id="btn-recovery-restore")
+            yield Button("Refresh Backups", id="btn-recovery-refresh-backups")
+        yield Label("[bold #00f5ff]VALID .zshrc BACKUPS[/]", id="recovery-backups-label")
+        yield ListView(id="recovery-backups")
         yield Log(id="recovery-log")
+
+    def on_mount(self) -> None:
+        self.refresh_backup_list()
+
+    def refresh_backup_list(self) -> None:
+        try:
+            context = SystemContext()
+            backups = list_zshrc_backups(context)
+            items = [ListItem(Label(str(path)), id=f"backup-{i}") for i, path in enumerate(backups)]
+            backup_list = self.query_one("#recovery-backups", ListView)
+            backup_list.clear()
+            backup_list.extend(items)
+            self._backup_paths = backups
+        except Exception as e:
+            self._backup_paths = []
+            self._write_log(f"[warning] Could not list backups: {e}\n")
 
     def _write_log(self, message: str) -> None:
         def write() -> None:
@@ -292,7 +312,12 @@ class RecoveryScreen(Vertical):
             elif action == "nuclear-fix":
                 result = nuclear_fix_shell(context)
             elif action == "restore-zshrc":
-                result = restore_latest_zshrc_backup(context)
+                selected_backup = self._selected_backup()
+                result = (
+                    restore_zshrc_backup(selected_backup, context)
+                    if selected_backup
+                    else restore_latest_zshrc_backup(context)
+                )
             else:
                 raise ValueError(f"Unknown recovery action: {action}")
 
@@ -334,6 +359,21 @@ class RecoveryScreen(Vertical):
     @work(exclusive=True, thread=True)
     def run_restore_backup(self) -> None:
         self._run_recovery("restore-zshrc")
+
+    @on(Button.Pressed, "#btn-recovery-refresh-backups")
+    def run_refresh_backups(self) -> None:
+        self.refresh_backup_list()
+
+    def _selected_backup(self) -> Path | None:
+        try:
+            backup_list = self.query_one("#recovery-backups", ListView)
+            index = backup_list.index
+            if index is None:
+                return None
+            paths = getattr(self, "_backup_paths", [])
+            return paths[index] if index < len(paths) else None
+        except Exception:
+            return None
 
 
 class PluginSelectScreen(Vertical):

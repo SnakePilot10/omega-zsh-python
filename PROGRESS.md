@@ -443,6 +443,42 @@
 - Next:
   - Commit and push the Problems UX fixes.
 
+### 2026-06-26 - Item 34
+
+- TODO item: `34. Add Restore Backup screen/action`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/recovery.py`
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_recovery.py`
+  - `tests/test_ui_recovery.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `list_zshrc_backups()` to enumerate valid `.zshrc` backups from Omega and recovery backup locations, newest first.
+  - Added `restore_zshrc_backup()` for restoring a specific selected backup after backing up the current `.zshrc`.
+  - Recovery TUI now shows a selectable list of valid `.zshrc` backups and restores the selection when present.
+  - Existing Restore Backup behavior still falls back to the latest valid backup when no backup is selected.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_recovery.py tests/test_ui_recovery.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -c "from textual.widgets import ListView; print(hasattr(ListView, 'clear'), hasattr(ListView, 'extend'))"`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused recovery tests, `10 passed`.
+  - Passed: Textual `ListView.clear` and `ListView.extend` are available.
+  - Passed: full pytest suite, `138 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 715 nodes, 1557 edges, 36 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - The selector currently lists paths directly. A future polish pass could display timestamps and source labels separately.
+- Next:
+  - Commit and push Item 34.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

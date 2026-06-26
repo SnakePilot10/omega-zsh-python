@@ -148,6 +148,12 @@ def _write_minimal(path: Path, content: str, result: RecoveryResult, dry_run: bo
 
 
 def _latest_valid_zshrc_backup(context: SystemContext) -> Path | None:
+    backups = list_zshrc_backups(context)
+    return backups[0] if backups else None
+
+
+def list_zshrc_backups(context: SystemContext | None = None) -> list[Path]:
+    context = context or SystemContext()
     candidates: list[Path] = []
     omega_backups = context.zshrc_path.parent / ".omega-backups"
     if omega_backups.exists():
@@ -159,16 +165,46 @@ def _latest_valid_zshrc_backup(context: SystemContext) -> Path | None:
             candidates.append(legacy)
         candidates.extend(legacy_recovery.glob(f"{context.zshrc_path.name}.*.bak"))
 
-    candidates = sorted(
+    backups = sorted(
         [path for path in candidates if path.is_file()],
         key=lambda path: path.stat().st_mtime,
         reverse=True,
     )
-    for backup in candidates:
+    valid_backups = []
+    seen = set()
+    for backup in backups:
+        resolved = backup.resolve(strict=False)
+        if resolved in seen:
+            continue
         valid, _ = validate_zsh_syntax(backup)
         if valid:
-            return backup
-    return None
+            valid_backups.append(backup)
+            seen.add(resolved)
+    return valid_backups
+
+
+def restore_zshrc_backup(
+    backup: Path | str,
+    context: SystemContext | None = None,
+    dry_run: bool = False,
+) -> RecoveryResult:
+    context = context or SystemContext()
+    backup_path = Path(backup)
+    result = RecoveryResult(ok=True, action="restore-zshrc")
+    valid_backups = {path.resolve(strict=False): path for path in list_zshrc_backups(context)}
+    selected = valid_backups.get(backup_path.resolve(strict=False))
+    if not selected:
+        result.ok = False
+        result.errors.append("Selected .zshrc backup is not valid or not known.")
+        return result
+    if dry_run:
+        result.messages.append(f"Would restore {selected} -> {context.zshrc_path}")
+        return result
+    _backup_file(context, context.zshrc_path, result, dry_run=False)
+    restore_backup(selected, context.zshrc_path)
+    result.changed.append(str(context.zshrc_path))
+    result.messages.append(f"Restored .zshrc from {selected}")
+    return result
 
 
 def restore_latest_zshrc_backup(context: SystemContext | None = None, dry_run: bool = False) -> RecoveryResult:
@@ -179,14 +215,7 @@ def restore_latest_zshrc_backup(context: SystemContext | None = None, dry_run: b
         result.ok = False
         result.errors.append("No valid .zshrc backup found.")
         return result
-    if dry_run:
-        result.messages.append(f"Would restore {backup} -> {context.zshrc_path}")
-        return result
-    _backup_file(context, context.zshrc_path, result, dry_run=False)
-    restore_backup(backup, context.zshrc_path)
-    result.changed.append(str(context.zshrc_path))
-    result.messages.append(f"Restored .zshrc from {backup}")
-    return result
+    return restore_zshrc_backup(backup, context, dry_run=dry_run)
 
 
 def cleanup_shell_files(context: SystemContext | None = None, dry_run: bool = False) -> RecoveryResult:

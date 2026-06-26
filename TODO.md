@@ -185,7 +185,7 @@
   - Impact: medium
   - Verification: TUI lists current doctor findings and actions.
 
-- [ ] 34. Add Restore Backup screen/action
+- [x] 34. Add Restore Backup screen/action
   - Impact: high
   - Verification: user can choose and restore a previous `.zshrc` backup.
 
