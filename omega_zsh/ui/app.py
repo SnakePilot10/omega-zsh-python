@@ -225,10 +225,19 @@ class OmegaApp(App):
 
     def action_switch_tab(self, tab_id: str) -> None:
         """Cambia programáticamente a un Tab por su ID."""
+        if tab_id == "tab-setup" and not self.first_run:
+            self._notify_unavailable_panel()
+            return
         try:
             self.query_one(TabbedContent).active = tab_id
         except Exception:
             logging.warning("No se pudo cambiar de tab: %s", tab_id)
+
+    def _notify_unavailable_panel(self) -> None:
+        try:
+            self.notify("Ese panel no está disponible en este contexto.", severity="warning")
+        except Exception:
+            logging.warning("Panel no disponible en este contexto")
 
     def save_state(self) -> None:
         """Sincroniza el estado actual de la UI con AppState y el archivo JSON."""

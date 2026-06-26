@@ -31,3 +31,20 @@ def test_action_switch_tab_fallo_silencioso():
             app.action_switch_tab("tab-dashboard")
         except Exception:
             assert False, "action_switch_tab no debe propagar excepciones"
+
+
+def test_action_switch_tab_setup_unavailable_noop():
+    """Setup shortcut should not target a missing tab outside first-run."""
+    with patch("omega_zsh.ui.app.SystemContext"), \
+         patch("omega_zsh.ui.app.StateManager"):
+        app = OmegaApp()
+        app.first_run = False
+        app.query_one = MagicMock()
+        app.notify = MagicMock()
+
+        app.action_switch_tab("tab-setup")
+
+        app.query_one.assert_not_called()
+        app.notify.assert_called_once_with(
+            "Ese panel no está disponible en este contexto.", severity="warning"
+        )

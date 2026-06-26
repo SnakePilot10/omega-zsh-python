@@ -313,6 +313,35 @@
 - Next:
   - Commit and push Item 31.
 
+### 2026-06-26 - Setup Navigation Fix
+
+- TODO item: review caveat after `41d3310`.
+- Status: completed
+- Files changed:
+  - `omega_zsh/ui/app.py`
+  - `tests/test_ui_nav.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - The global `S`/`6` setup shortcut now no-ops outside first-run instead of targeting a missing `tab-setup` pane.
+  - A warning notification is shown when the setup panel is unavailable.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_ui_nav.py tests/test_ui_app.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused UI tests, `11 passed`.
+  - Passed: full pytest suite, `128 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 674 nodes, 1436 edges, 34 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - None identified; this is a navigation guard only.
+- Next:
+  - Commit and push the navigation guard.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`
