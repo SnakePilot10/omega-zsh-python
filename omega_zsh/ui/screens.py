@@ -23,12 +23,13 @@ from textual.widgets import (
 from textual.widgets.selection_list import Selection
 
 from ..core.context import SystemContext
+from ..core.doctor import run_doctor, run_doctor_fix
 from ..core.figlet import FigletManager
 from ..core.recovery import cleanup_shell_files, nuclear_fix_shell, recovery_dry_run, restore_latest_zshrc_backup
 from ..core.system_info import get_system_stats
 
 
-NAV_HINT = "[dim]Tabs: [bold]1-5[/] / [bold]D P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
+NAV_HINT = "[dim]Tabs: [bold]1-6[/] / [bold]D X P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
 
 
 class FirstRunScreen(Vertical):
@@ -46,8 +47,8 @@ class FirstRunScreen(Vertical):
         )
         yield Label("[bold #ff006e]FIRST RUN SETUP[/]")
         yield Label(
-            "[dim]Setup: [bold]S/6[/] · Plugins: [bold]P/2[/] · "
-            "Themes: [bold]T/3[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
+            "[dim]Setup: [bold]S/7[/] · Problems: [bold]X/6[/] · Plugins: [bold]P[/] · "
+            "Themes: [bold]T[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
         )
         yield Static(
             "[bold #00f5ff]Recommended path:[/]\n"
@@ -127,6 +128,106 @@ class DashboardScreen(Static):
             f"[bold #ff006e]◄ SHORTCUTS ►[/]\n{help_text}",
             id="dashboard-shortcuts"
         )
+
+
+class ProblemsScreen(Vertical):
+    """Read-only doctor findings and explicit repair entry points."""
+
+    def compose(self) -> ComposeResult:
+        yield Label("[bold #ff006e]PROBLEMS / DOCTOR FINDINGS[/]")
+        yield Label(NAV_HINT, id="problems-nav-hint")
+        yield Static(
+            "[bold #00f5ff]Doctor is read-only here.[/] Use Doctor Fix only for explicit, "
+            "conservative repairs.",
+            id="problems-help",
+        )
+        with Horizontal(id="problems-actions"):
+            yield Button("Refresh", variant="primary", id="btn-problems-refresh")
+            yield Button("Open Recovery", id="btn-problems-recovery")
+            yield Button("Doctor Fix", variant="warning", id="btn-problems-fix")
+        yield Log(id="problems-log")
+
+    def on_mount(self) -> None:
+        self.refresh_problems()
+
+    def _write_log(self, message: str) -> None:
+        def write() -> None:
+            self.query_one("#problems-log", Log).write(message)
+
+        try:
+            self.app.call_from_thread(write)
+        except RuntimeError:
+            write()
+
+    def _notify(self, message: str, severity: str | None = None) -> None:
+        def notify() -> None:
+            if severity:
+                self.app.notify(message, severity=severity)
+            else:
+                self.app.notify(message)
+
+        try:
+            self.app.call_from_thread(notify)
+        except RuntimeError:
+            notify()
+
+    def _render_report(self, report: dict) -> list[str]:
+        lines = [f"overall: {report.get('overall', 'unknown')}"]
+        checks = report.get("checks", [])
+        problems = [check for check in checks if check.get("severity") != "ok"]
+        if not problems:
+            return [*lines, "ok: no doctor problems found"]
+        for check in problems:
+            lines.append(
+                f"[{check.get('severity', 'unknown')}] {check.get('id')}: "
+                f"{check.get('message')} - {check.get('detail')}"
+            )
+        return lines
+
+    def _run_doctor(self) -> None:
+        self._write_log("$ omega doctor\n")
+        try:
+            report = run_doctor(SystemContext())
+            for line in self._render_report(report):
+                self._write_log(f"{line}\n")
+            severity = "error" if report.get("overall") == "error" else None
+            self._notify(f"Doctor complete: {report.get('overall', 'unknown')}", severity=severity)
+        except Exception as e:
+            self._write_log(f"[ERROR] {e}\n")
+            self._notify(f"Doctor error: {e}", severity="error")
+
+    def _run_doctor_fix(self) -> None:
+        self._write_log("$ omega doctor --fix\n")
+        try:
+            result = run_doctor_fix(SystemContext())
+            for fix in result.get("fixes", []):
+                self._write_log(
+                    f"[{fix.get('status')}] {fix.get('id')}: "
+                    f"{fix.get('message')} - {fix.get('detail')}\n"
+                )
+            for line in self._render_report(result.get("report", {})):
+                self._write_log(f"{line}\n")
+            overall = result.get("report", {}).get("overall", "unknown")
+            severity = "error" if overall == "error" else None
+            self._notify(f"Doctor fix complete: {overall}", severity=severity)
+        except Exception as e:
+            self._write_log(f"[ERROR] {e}\n")
+            self._notify(f"Doctor fix error: {e}", severity="error")
+
+    @on(Button.Pressed, "#btn-problems-refresh")
+    @work(exclusive=True, thread=True)
+    def refresh_problems(self) -> None:
+        self._run_doctor()
+
+    @on(Button.Pressed, "#btn-problems-recovery")
+    def open_recovery(self) -> None:
+        if hasattr(self.app, "action_switch_tab"):
+            self.app.action_switch_tab("tab-recovery")
+
+    @on(Button.Pressed, "#btn-problems-fix")
+    @work(exclusive=True, thread=True)
+    def run_fix(self) -> None:
+        self._run_doctor_fix()
 
 class RecoveryScreen(Vertical):
     """Pantalla para ejecutar recuperación shell con backups."""

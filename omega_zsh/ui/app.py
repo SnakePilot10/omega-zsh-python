@@ -14,6 +14,7 @@ from .screens import (
     FirstRunScreen,
     HeaderSelectScreen,
     PluginSelectScreen,
+    ProblemsScreen,
     RecoveryScreen,
     ThemeSelectScreen,
 )
@@ -88,14 +89,19 @@ class OmegaApp(App):
         padding: 1 2;
         margin-bottom: 1;
     }
-    #recovery-actions {
+    #problems-help {
+        border: double #00f5ff;
+        padding: 1 2;
+        margin-bottom: 1;
+    }
+    #recovery-actions, #problems-actions {
         height: 3;
         margin-bottom: 1;
     }
-    #recovery-actions Button {
+    #recovery-actions Button, #problems-actions Button {
         margin-right: 1;
     }
-    #recovery-log {
+    #recovery-log, #problems-log {
         height: 1fr;
         border: solid #00f5ff;
         background: #000000;
@@ -117,11 +123,12 @@ class OmegaApp(App):
         Binding("q", "quit", "Exit"),
         Binding("a", "apply_changes", "Apply"),
         Binding("d,1", "switch_tab('tab-dashboard')", "Dashboard"),
+        Binding("x,6", "switch_tab('tab-problems')", "Problems"),
         Binding("p,2", "switch_tab('tab-plugins')", "Plugins"),
         Binding("t,3", "switch_tab('tab-themes')", "Themes"),
         Binding("h,4", "switch_tab('tab-headers')", "Headers"),
         Binding("r,5", "switch_tab('tab-recovery')", "Recovery"),
-        Binding("s,6", "switch_tab('tab-setup')", "Setup"),
+        Binding("s,7", "switch_tab('tab-setup')", "Setup"),
     ]
 
     def __init__(self, **kwargs):
@@ -151,6 +158,8 @@ class OmegaApp(App):
                     yield FirstRunScreen(omz_found=self._omz_found())
             with TabPane("Dashboard", id="tab-dashboard"):
                 yield DashboardScreen()
+            with TabPane("Problems", id="tab-problems"):
+                yield ProblemsScreen()
             with TabPane("Plugins", id="tab-plugins"):
                 yield PluginSelectScreen(
                     all_plugins=DB_PLUGINS,

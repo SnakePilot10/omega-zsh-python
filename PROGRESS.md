@@ -380,6 +380,39 @@
 - Next:
   - Commit and push Item 32.
 
+### 2026-06-26 - Item 33
+
+- TODO item: `33. Add Problems screen`
+- Status: completed
+- Files changed:
+  - `omega_zsh/ui/app.py`
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_ui_problems.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added a TUI `Problems` tab that displays non-ok `omega doctor` findings using the existing read-only doctor core.
+  - Added explicit actions for Refresh, Open Recovery, and Doctor Fix.
+  - `Doctor Fix` remains user-triggered and delegates to the existing conservative `run_doctor_fix()` path.
+  - Added `X`/`6` navigation for Problems and moved setup shortcut to `S`/`7`.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_ui_problems.py tests/test_ui_nav.py tests/test_doctor.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused Problems/Doctor tests, `26 passed`.
+  - Passed: full pytest suite, `134 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 701 nodes, 1508 edges, 34 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Problems uses the existing doctor data model directly. If doctor messages grow longer, the Log remains readable but may need filtering/search later.
+- Next:
+  - Commit and push Item 33.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

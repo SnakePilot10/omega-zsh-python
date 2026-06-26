@@ -181,7 +181,7 @@
   - Impact: high
   - Verification: user can generate a minimal `.zshrc` with no visual/heavy commands.
 
-- [ ] 33. Add Problems screen
+- [x] 33. Add Problems screen
   - Impact: medium
   - Verification: TUI lists current doctor findings and actions.
 
