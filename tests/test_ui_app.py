@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from omega_zsh.core.manifest import record_managed_file
+from omega_zsh.core.state import AppState
 from omega_zsh.ui.app import OmegaApp, link_omega_themes
 
 
@@ -151,3 +152,50 @@ def test_link_omega_themes_omite_omz_inexistente(tmp_path):
 
     assert "Oh My Zsh no encontrado" in warnings[0]
     assert not (omz / "custom" / "themes").exists()
+
+
+def test_first_run_detects_empty_setup(tmp_path):
+    with patch("omega_zsh.ui.app.SystemContext"), \
+         patch("omega_zsh.ui.app.StateManager"):
+        app = OmegaApp()
+        app.state_manager.config_path = tmp_path / ".omega-zsh" / "state.json"
+        app.context.zshrc_path = tmp_path / ".zshrc"
+
+        assert app._detect_first_run() is True
+
+
+def test_first_run_disabled_when_zshrc_exists(tmp_path):
+    zshrc = tmp_path / ".zshrc"
+    zshrc.write_text("# user config", encoding="utf-8")
+
+    with patch("omega_zsh.ui.app.SystemContext"), \
+         patch("omega_zsh.ui.app.StateManager"):
+        app = OmegaApp()
+        app.state_manager.config_path = tmp_path / ".omega-zsh" / "state.json"
+        app.context.zshrc_path = zshrc
+
+        assert app._detect_first_run() is False
+
+
+def test_first_run_minimal_saves_state_without_apply():
+    with patch("omega_zsh.ui.app.SystemContext"), \
+         patch("omega_zsh.ui.app.StateManager"), \
+         patch("omega_zsh.ui.app.apply_config") as mock_apply:
+        app = OmegaApp()
+        app.state = AppState(
+            selected_plugins=["zoxide", "eza"],
+            allowed_custom_plugins=["local-plugin"],
+            selected_theme="bira",
+            selected_header="fastfetch",
+        )
+        app.state_manager = MagicMock()
+        app.notify = MagicMock()
+
+        app.action_first_run_minimal()
+
+        saved_state = app.state_manager.save.call_args.args[0]
+        assert saved_state.selected_plugins == []
+        assert saved_state.allowed_custom_plugins == ["local-plugin"]
+        assert saved_state.selected_theme == "robbyrussell"
+        assert saved_state.selected_header == "none"
+        mock_apply.assert_not_called()

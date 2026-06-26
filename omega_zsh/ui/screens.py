@@ -1,3 +1,4 @@
+import os
 import re
 import shutil
 import subprocess
@@ -28,6 +29,61 @@ from ..core.system_info import get_system_stats
 
 
 NAV_HINT = "[dim]Tabs: [bold]1-5[/] / [bold]D P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
+
+
+class FirstRunScreen(Vertical):
+    """Safe guided entry point for an empty Omega setup."""
+
+    def __init__(self, omz_found: bool):
+        super().__init__()
+        self.omz_found = omz_found
+
+    def compose(self) -> ComposeResult:
+        omz_status = (
+            "[bold green]Oh My Zsh found.[/] You can choose a theme/tools and apply safely."
+            if self.omz_found
+            else "[bold yellow]Oh My Zsh not found.[/] Install it first, then return to apply."
+        )
+        yield Label("[bold #ff006e]FIRST RUN SETUP[/]")
+        yield Label(
+            "[dim]Setup: [bold]S/6[/] · Plugins: [bold]P/2[/] · "
+            "Themes: [bold]T/3[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
+        )
+        yield Static(
+            "[bold #00f5ff]Recommended path:[/]\n"
+            "1. Confirm Oh My Zsh is available.\n"
+            "2. Pick a theme if you want one.\n"
+            "3. Pick only tools/plugins you actually want.\n"
+            "4. Press Apply to write a validated .zshrc with backup protection.\n\n"
+            f"{omz_status}\n\n"
+            "[dim]This screen does not install packages or modify shell files by itself.[/]",
+            id="first-run-help",
+        )
+        with Horizontal(id="first-run-actions"):
+            yield Button("Safe Minimal", variant="primary", id="btn-first-run-minimal")
+            yield Button("Choose Tools", id="btn-first-run-plugins")
+            yield Button("Choose Theme", id="btn-first-run-themes")
+            yield Button("Apply", variant="success", id="btn-first-run-apply")
+
+    @on(Button.Pressed, "#btn-first-run-minimal")
+    def use_safe_minimal(self) -> None:
+        if hasattr(self.app, "action_first_run_minimal"):
+            self.app.action_first_run_minimal()
+
+    @on(Button.Pressed, "#btn-first-run-plugins")
+    def choose_tools(self) -> None:
+        if hasattr(self.app, "action_switch_tab"):
+            self.app.action_switch_tab("tab-plugins")
+
+    @on(Button.Pressed, "#btn-first-run-themes")
+    def choose_theme(self) -> None:
+        if hasattr(self.app, "action_switch_tab"):
+            self.app.action_switch_tab("tab-themes")
+
+    @on(Button.Pressed, "#btn-first-run-apply")
+    def apply_current(self) -> None:
+        if hasattr(self.app, "action_apply_changes"):
+            self.app.action_apply_changes()
 
 
 class DashboardScreen(Static):

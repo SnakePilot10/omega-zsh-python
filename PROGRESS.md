@@ -280,6 +280,39 @@
 - Next:
   - Commit and push the mini-fix.
 
+### 2026-06-26 - Item 31
+
+- TODO item: `31. Add first-run guided flow`
+- Status: completed
+- Files changed:
+  - `omega_zsh/ui/app.py`
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_ui_app.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - The TUI now detects an empty setup when neither Omega `state.json` nor `~/.zshrc` exists.
+  - Empty setups get a first-run `Setup` tab with OMZ status, safe next steps, navigation to tools/themes, and an explicit Apply button.
+  - Added a conservative `Safe Minimal` action that saves a no-plugin, no-header baseline without installing packages or writing shell files.
+  - Added `S`/`6` navigation for the setup tab.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_ui_app.py tests/test_ui_apply.py tests/test_ui_nav.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused TUI tests, `18 passed`.
+  - Passed: full pytest suite, `127 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 670 nodes, 1430 edges, 25 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - The first-run guide intentionally does not install Oh My Zsh or packages. It only guides and delegates actual config writes to the existing Apply flow.
+- Next:
+  - Commit and push Item 31.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

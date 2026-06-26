@@ -173,7 +173,7 @@
 
 ## Phase 6 - TUI UX And Safety
 
-- [ ] 31. Add first-run guided flow
+- [x] 31. Add first-run guided flow
   - Impact: medium
   - Verification: empty setup guides through OMZ, theme, tools, and apply.
 

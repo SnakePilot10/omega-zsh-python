@@ -11,6 +11,7 @@ from ..core.context import SystemContext
 from ..core.state import AppState, StateManager, normalize_app_state
 from .screens import (
     DashboardScreen,
+    FirstRunScreen,
     HeaderSelectScreen,
     PluginSelectScreen,
     RecoveryScreen,
@@ -99,6 +100,17 @@ class OmegaApp(App):
         border: solid #00f5ff;
         background: #000000;
     }
+    #first-run-help {
+        border: double #00f5ff;
+        padding: 1 2;
+        margin-bottom: 1;
+    }
+    #first-run-actions {
+        height: 3;
+    }
+    #first-run-actions Button {
+        margin-right: 1;
+    }
     """
 
     BINDINGS = [
@@ -109,6 +121,7 @@ class OmegaApp(App):
         Binding("t,3", "switch_tab('tab-themes')", "Themes"),
         Binding("h,4", "switch_tab('tab-headers')", "Headers"),
         Binding("r,5", "switch_tab('tab-recovery')", "Recovery"),
+        Binding("s,6", "switch_tab('tab-setup')", "Setup"),
     ]
 
     def __init__(self, **kwargs):
@@ -127,11 +140,15 @@ class OmegaApp(App):
         except Exception as e:
             logging.error("Fallo al cargar estado: %s", e)
             self.state = AppState()
+        self.first_run = self._detect_first_run()
 
     def compose(self) -> ComposeResult:
         logging.info("Renderizando interfaz principal (compose)")
         yield Header()
         with TabbedContent():
+            if self.first_run:
+                with TabPane("Setup", id="tab-setup"):
+                    yield FirstRunScreen(omz_found=self._omz_found())
             with TabPane("Dashboard", id="tab-dashboard"):
                 yield DashboardScreen()
             with TabPane("Plugins", id="tab-plugins"):
@@ -154,6 +171,24 @@ class OmegaApp(App):
             with TabPane("Recovery", id="tab-recovery"):
                 yield RecoveryScreen()
         yield Footer()
+
+    def _detect_first_run(self) -> bool:
+        """True when Omega has no saved state and no existing shell config to import."""
+        try:
+            state_exists = self.state_manager.config_path.exists()
+        except Exception:
+            state_exists = False
+        try:
+            zshrc_exists = self.context.zshrc_path.exists()
+        except Exception:
+            zshrc_exists = False
+        return not state_exists and not zshrc_exists
+
+    def _omz_found(self) -> bool:
+        try:
+            return (self.context.omz_dir / "oh-my-zsh.sh").exists()
+        except Exception:
+            return False
 
     def _get_all_themes(self) -> list[ThemeDef]:
         """Escanea todos los directorios de temas posibles para construir el catálogo."""
@@ -243,6 +278,22 @@ class OmegaApp(App):
         else:
             logging.error("Fallo en Apply: %s", result.message)
             self.notify(result.message, severity="error")
+
+    def action_first_run_minimal(self) -> None:
+        """Persist a conservative first-run baseline without touching shell files."""
+        self.state = normalize_app_state(
+            {
+                "selected_plugins": [],
+                "allowed_custom_plugins": self.state.allowed_custom_plugins,
+                "selected_theme": "robbyrussell",
+                "selected_root_theme": self.state.selected_root_theme,
+                "selected_header": "none",
+                "header_text": self.state.header_text,
+                "header_font": self.state.header_font,
+            }
+        )
+        self.state_manager.save(self.state)
+        self.notify("Safe minimal profile saved. Press Apply when ready.")
 
 
 def main():
