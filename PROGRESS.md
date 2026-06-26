@@ -255,6 +255,31 @@
 - Next:
   - Commit and push the completed batch.
 
+### 2026-06-26 - Fallback Signature Fix
+
+- TODO item: review caveat after `320c83b`.
+- Status: completed
+- Files changed:
+  - `omega_zsh/cli/oz_tool.py`
+  - `tests/test_oz.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - The `oz_tool.py` fallback `inspect_plugin_core()` signature now accepts the same optional plugin path parameters used by the normal core implementation.
+  - Added test coverage that forces the fallback return path and verifies `inspect_plugin()` does not raise.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: `124 passed`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 653 nodes, 1395 edges, 39 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - None identified for normal runtime; this fixes an ImportError fallback path.
+- Next:
+  - Commit and push the mini-fix.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

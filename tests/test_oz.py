@@ -40,6 +40,15 @@ def test_inspect_plugin_not_found():
         assert info["found"] is False
 
 
+def test_inspect_plugin_core_fallback_signature(monkeypatch):
+    monkeypatch.setattr("omega_zsh.cli.oz_tool.inspect_plugin_core", lambda *args: None)
+
+    info = inspect_plugin("non-existent-plugin")
+
+    assert info["found"] is False
+    assert info["is_binary"] is True
+
+
 def test_inspect_plugin_parsing(tmp_path):
     """Verifica que extrae alias y funciones del código del plugin"""
     plugin_dir = tmp_path / "myplugin"

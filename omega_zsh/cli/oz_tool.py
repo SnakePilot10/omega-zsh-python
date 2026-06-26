@@ -31,7 +31,7 @@ except ImportError:
     def get_active_items(config_dir, zshrc_path):
         return _parse_zshrc_plugins(zshrc_path)
 
-    def inspect_plugin_core(plugin_name, omz_dir):
+    def inspect_plugin_core(plugin_name, omz_dir, custom_plugins=None, standard_plugins=None):
         return None
 
 
