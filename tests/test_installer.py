@@ -101,6 +101,16 @@ def test_install_binary_uses_catalog_fortune_package_on_debian(tmp_path):
     assert callable(kwargs["on_progress"])
 
 
+def test_install_binary_skips_unsupported_tool(tmp_path):
+    platform = MockPlatform()
+    platform.pkg_mgr = "pacman"
+    platform.install_package = MagicMock(return_value=True)
+    installer = PluginInstaller(platform, home_dir=tmp_path)
+
+    assert not installer.install_binary("lolcat")
+    platform.install_package.assert_not_called()
+
+
 def test_install_all_result_reports_installed_skipped_and_failed(tmp_path):
     platform = MockPlatform()
     platform.pkg_mgr = "apt-get"

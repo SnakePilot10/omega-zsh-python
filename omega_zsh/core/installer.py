@@ -82,7 +82,10 @@ class PluginInstaller:
             return False
         # Las plataformas deben implementar install_package(id, on_progress)
         # Aquí usamos un lambda vacío para on_progress si no se provee
-        package_name = binary_package_name(plugin, _platform_package_manager(self.platform))
+        package_manager = _platform_package_manager(self.platform)
+        if not binary_supported(plugin, package_manager):
+            return False
+        package_name = binary_package_name(plugin, package_manager)
         return self.platform.install_package(package_name, on_progress=lambda msg: None)
 
     def get_missing_zsh_plugins(self, plugins: List[str]) -> List[str]:

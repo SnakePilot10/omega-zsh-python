@@ -853,6 +853,37 @@
 - Next:
   - Continue with Item 27.
 
+### 2026-06-24 - Items 17b/26 Review Fixes
+
+- Review result: not approved as-is due to two P1 gaps.
+- Status: completed.
+- Files changed:
+  - `install.sh`
+  - `omega_zsh/core/installer.py`
+  - `tests/test_install_script.py`
+  - `tests/test_installer.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `install.sh --separation-smoke` now exits before creating `~/.config/omega-zsh`, making the smoke mode side-effect free for config paths.
+  - `PluginInstaller.install_binary()` now respects platform support metadata and returns `False` without calling `install_package()` for unsupported tools.
+- Verification commands:
+  - `bash -n install.sh`
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `HOME=/tmp/opencode/omega-install-separation-smoke bash install.sh --unattended --separation-smoke` plus assertions that `.zshrc`, `custom/themes`, and `.config/omega-zsh` were not created.
+- Verification result:
+  - Passed: install script syntax check.
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `122 passed`.
+  - Passed: side-effect-free install separation smoke.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 639 nodes, 1336 edges, 30 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `--separation-smoke` remains an internal test hook and is intentionally omitted from public help text.
+- Next:
+  - Continue with Item 27.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

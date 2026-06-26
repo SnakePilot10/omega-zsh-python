@@ -52,16 +52,16 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-# --- Configuración Omega ---
-OMEGA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/omega-zsh"
-mkdir -p "$OMEGA_CONFIG_DIR"
-
 if [ "$SEPARATION_SMOKE" = true ]; then
     echo "APPLY_CONFIG=$APPLY_CONFIG"
     echo "SYNC_THEMES=$SYNC_THEMES"
     echo "HOME=$HOME"
     exit 0
 fi
+
+# --- Configuración Omega ---
+OMEGA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/omega-zsh"
+mkdir -p "$OMEGA_CONFIG_DIR"
 
 PYTHON_BIN="$(command -v python3 || command -v python || true)"
 if [ -z "$PYTHON_BIN" ]; then

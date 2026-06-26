@@ -46,3 +46,4 @@ def test_install_script_separation_smoke_does_not_write_shell_files(tmp_path):
     assert "SYNC_THEMES=false" in result.stdout
     assert not (home / ".zshrc").exists()
     assert not (home / ".oh-my-zsh" / "custom" / "themes").exists()
+    assert not (home / ".config" / "omega-zsh").exists()
