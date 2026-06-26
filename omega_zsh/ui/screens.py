@@ -120,8 +120,8 @@ class DashboardScreen(Static):
 
         help_text = (
             "• [bold #00ff9f]A[/]: Apply config only\n"
-            "• [bold #00ff9f]D/P/T/H/R[/]: Dashboard, Plugins, Themes, Headers, Recovery\n"
-            "• [bold #00ff9f]1-5[/]: Same tab navigation\n"
+            "• [bold #00ff9f]D/X/P/T/H/R[/]: Dashboard, Problems, Plugins, Themes, Headers, Recovery\n"
+            "• [bold #00ff9f]1-6[/]: Same tab navigation\n"
             "• [bold #00ff9f]Q[/]: Exit"
         )
         yield Static(
@@ -132,6 +132,10 @@ class DashboardScreen(Static):
 
 class ProblemsScreen(Vertical):
     """Read-only doctor findings and explicit repair entry points."""
+
+    def __init__(self):
+        super().__init__()
+        self.fix_armed = False
 
     def compose(self) -> ComposeResult:
         yield Label("[bold #ff006e]PROBLEMS / DOCTOR FINDINGS[/]")
@@ -185,6 +189,7 @@ class ProblemsScreen(Vertical):
         return lines
 
     def _run_doctor(self) -> None:
+        self.fix_armed = False
         self._write_log("$ omega doctor\n")
         try:
             report = run_doctor(SystemContext())
@@ -197,6 +202,12 @@ class ProblemsScreen(Vertical):
             self._notify(f"Doctor error: {e}", severity="error")
 
     def _run_doctor_fix(self) -> None:
+        if not self.fix_armed:
+            self.fix_armed = True
+            self._write_log("[confirm] Press Doctor Fix again to run conservative repairs.\n")
+            self._notify("Press Doctor Fix again to confirm.", severity="warning")
+            return
+        self.fix_armed = False
         self._write_log("$ omega doctor --fix\n")
         try:
             result = run_doctor_fix(SystemContext())

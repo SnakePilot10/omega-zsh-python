@@ -53,7 +53,21 @@ def test_problems_screen_runs_explicit_doctor_fix():
             "report": {"overall": "warning", "checks": []},
         }
 
+        screen.fix_armed = True
         screen._run_doctor_fix()
 
         mock_fix.assert_called_once()
         screen._notify.assert_called_with("Doctor fix complete: warning", severity=None)
+
+
+def test_problems_screen_requires_fix_confirmation():
+    screen = ProblemsScreen()
+    screen._write_log = MagicMock()
+    screen._notify = MagicMock()
+
+    with patch("omega_zsh.ui.screens.run_doctor_fix") as mock_fix:
+        screen._run_doctor_fix()
+
+        mock_fix.assert_not_called()
+        assert screen.fix_armed is True
+        screen._notify.assert_called_with("Press Doctor Fix again to confirm.", severity="warning")

@@ -413,6 +413,36 @@
 - Next:
   - Commit and push Item 33.
 
+### 2026-06-26 - Problems UX Fixes
+
+- TODO item: review caveats after `1f602b7`.
+- Status: completed
+- Files changed:
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_ui_problems.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Dashboard shortcuts now include Problems via `X`/`6`.
+  - `Doctor Fix` in Problems now requires pressing the button twice before running conservative repairs.
+  - Refresh disarms a pending Doctor Fix confirmation.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_ui_problems.py tests/test_ui_nav.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused Problems/navigation tests, `7 passed`.
+  - Passed: full pytest suite, `135 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 704 nodes, 1513 edges, 37 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Confirmation is intentionally simple stateful button arming, not a modal dialog.
+- Next:
+  - Commit and push the Problems UX fixes.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`
