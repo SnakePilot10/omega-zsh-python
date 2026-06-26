@@ -10,8 +10,10 @@ from .constants import (
     THEMES_OMZ_BUILTIN,
     binary_commands,
     binary_package_name,
+    binary_supported,
     is_binary_tool,
     selected_custom_plugin_ids,
+    unsupported_binary_tools,
     unknown_plugin_ids,
     valid_selected_plugins,
 )
@@ -406,7 +408,24 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
     )
 
     selected = valid_selected_plugins(state.selected_plugins, state.allowed_custom_plugins)
-    missing_tools = [plugin for plugin in selected if is_binary_tool(plugin) and not _binary_available(plugin)]
+    unsupported_tools = unsupported_binary_tools(selected, context.package_manager_type)
+    checks.append(
+        _check(
+            "unsupported-binary-tools",
+            "ok" if not unsupported_tools else "warning",
+            "ok" if not unsupported_tools else "warning",
+            "herramientas soportadas en esta plataforma"
+            if not unsupported_tools
+            else "herramientas no soportadas en esta plataforma",
+            ", ".join(unsupported_tools) if unsupported_tools else context.package_manager_type,
+        )
+    )
+
+    missing_tools = [
+        plugin
+        for plugin in selected
+        if is_binary_tool(plugin) and binary_supported(plugin, context.package_manager_type) and not _binary_available(plugin)
+    ]
     checks.append(
         _check(
             "binary-tools",

@@ -117,6 +117,22 @@ def test_install_all_result_reports_installed_skipped_and_failed(tmp_path):
     assert "ID desconocido omitido: typo-plugin" in messages
 
 
+def test_install_all_result_skips_unsupported_binary_before_install(tmp_path):
+    platform = MockPlatform()
+    platform.pkg_mgr = "pacman"
+    platform.install_package = MagicMock(return_value=True)
+    installer = PluginInstaller(platform, home_dir=tmp_path)
+    messages = []
+
+    result = installer.install_all_result(["lolcat"], messages.append)
+
+    assert result.ok
+    assert result.unsupported == ["lolcat"]
+    assert result.skipped == ["lolcat"]
+    platform.install_package.assert_not_called()
+    assert "Herramienta no soportada en pacman: lolcat" in messages
+
+
 def test_install_all_keeps_bool_compatibility(tmp_path):
     platform = MockPlatform()
     platform.pkg_mgr = "apt-get"

@@ -22,6 +22,7 @@ STAR="***"
 UNATTENDED=false
 APPLY_CONFIG=false
 SYNC_THEMES=false
+SEPARATION_SMOKE=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -y|--unattended)
@@ -35,6 +36,9 @@ while [[ $# -gt 0 ]]; do
         --sync-themes)
             SYNC_THEMES=true
             echo -e "${INFO} Sincronización explícita de temas activada."
+            ;;
+        --separation-smoke)
+            SEPARATION_SMOKE=true
             ;;
         --help|-h)
             echo "Uso: bash install.sh [--unattended|-y] [--sync-themes] [--apply-config]"
@@ -51,6 +55,13 @@ done
 # --- Configuración Omega ---
 OMEGA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/omega-zsh"
 mkdir -p "$OMEGA_CONFIG_DIR"
+
+if [ "$SEPARATION_SMOKE" = true ]; then
+    echo "APPLY_CONFIG=$APPLY_CONFIG"
+    echo "SYNC_THEMES=$SYNC_THEMES"
+    echo "HOME=$HOME"
+    exit 0
+fi
 
 PYTHON_BIN="$(command -v python3 || command -v python || true)"
 if [ -z "$PYTHON_BIN" ]; then

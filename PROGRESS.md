@@ -808,6 +808,51 @@
 - Next:
   - Continue with Item 26.
 
+### 2026-06-24 - Items 17b, 26
+
+- TODO items:
+  - `17b. Add runtime smoke for install/apply separation`
+  - `26. Add platform support flags per item`
+- Status: completed.
+- Files changed:
+  - `install.sh`
+  - `omega_zsh/core/constants.py`
+  - `omega_zsh/core/doctor.py`
+  - `omega_zsh/core/installer.py`
+  - `tests/test_install_script.py`
+  - `tests/test_catalog.py`
+  - `tests/test_doctor.py`
+  - `tests/test_installer.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `--separation-smoke` to `install.sh` as a safe test mode that exercises flag parsing and exits before package, network, venv, plugin, theme, or config side effects.
+  - Added a runtime smoke proving `install.sh --unattended --separation-smoke` with temporary `HOME` does not create `.zshrc` or `~/.oh-my-zsh/custom/themes`.
+  - Added `supported_package_managers` to `BinaryToolDef` and helpers `binary_supported()` and `unsupported_binary_tools()`.
+  - Marked `lolcat` as supported for `apt`, `nala`, and `pkg`; unsupported package managers warn/skip before install.
+  - `PluginInstaller.install_all_result()` now records unsupported tools and does not call the platform installer for them.
+  - `omega doctor` now reports unsupported selected binary tools through `unsupported-binary-tools` and excludes them from missing-tool checks.
+- Verification commands:
+  - `bash -n install.sh`
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `HOME=/tmp/opencode/omega-install-separation-smoke bash install.sh --unattended --separation-smoke` plus assertions that `.zshrc` and `custom/themes` were not created.
+  - Runtime smoke: `PluginInstaller.install_all_result(["lolcat"])` on a fake `pacman` platform skips as unsupported and does not call `install_package()`.
+- Verification result:
+  - Passed: install script syntax check.
+  - Passed: compile checks.
+  - Passed: full pytest suite in temporary venv: `121 passed`.
+  - Passed: install separation smoke with temporary `HOME`.
+  - Passed: unsupported install skip smoke.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 637 nodes, 1331 edges, 38 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Platform support metadata is still sparse; only tools with explicit support lists can be flagged unsupported.
+  - `--separation-smoke` is an internal safe smoke path, not a full end-to-end installer run.
+- Next:
+  - Continue with Item 27.
+
 ### 2026-06-21 - Item 07 Edge Hardening
 
 - TODO item: `07. Normalize and validate state.json schema`

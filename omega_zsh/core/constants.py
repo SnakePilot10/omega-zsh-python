@@ -15,9 +15,13 @@ class BinaryToolDef:
     id: str
     commands: List[str]
     packages: Dict[str, str] = field(default_factory=dict)
+    supported_package_managers: List[str] | None = None
 
     def package_for(self, package_manager: str) -> str:
         return self.packages.get(package_manager, self.id)
+
+    def supports(self, package_manager: str) -> bool:
+        return self.supported_package_managers is None or package_manager in self.supported_package_managers
 
 
 @dataclass
@@ -84,6 +88,7 @@ BINARY_TOOLS.update(
         "bat": BinaryToolDef("bat", ["bat", "batcat"], {"apt": "bat", "nala": "bat"}),
         "fd": BinaryToolDef("fd", ["fd", "fdfind"], {"apt": "fd-find", "nala": "fd-find"}),
         "fortune": BinaryToolDef("fortune", ["fortune"], {"apt": "fortune-mod", "nala": "fortune-mod"}),
+        "lolcat": BinaryToolDef("lolcat", ["lolcat"], supported_package_managers=["apt", "nala", "pkg"]),
         "ripgrep": BinaryToolDef("ripgrep", ["rg", "ripgrep"], {"apt": "ripgrep", "nala": "ripgrep"}),
         "httpie": BinaryToolDef("httpie", ["http", "httpie"], {"apt": "httpie", "nala": "httpie"}),
     }
@@ -102,6 +107,15 @@ def binary_commands(plugin_id: str) -> List[str]:
 def binary_package_name(plugin_id: str, package_manager: str) -> str:
     tool = BINARY_TOOLS.get(plugin_id)
     return tool.package_for(package_manager) if tool else plugin_id
+
+
+def binary_supported(plugin_id: str, package_manager: str) -> bool:
+    tool = BINARY_TOOLS.get(plugin_id)
+    return tool.supports(package_manager) if tool else False
+
+
+def unsupported_binary_tools(plugin_ids: List[str], package_manager: str) -> List[str]:
+    return [plugin_id for plugin_id in plugin_ids if is_binary_tool(plugin_id) and not binary_supported(plugin_id, package_manager)]
 
 # --- ALL PLUGINS LIST (UI DATA) ---
 DB_PLUGINS: List[PluginDef] = [

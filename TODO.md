@@ -103,6 +103,10 @@
   - Impact: high
   - Verification: apply never installs packages; install never rewrites config unless requested.
 
+- [x] 17b. Add runtime smoke for install/apply separation
+  - Impact: medium
+  - Verification: installer separation smoke with temporary HOME does not create `.zshrc` or theme dirs without explicit flags.
+
 - [x] 18. Add dry-run apply mode
   - Impact: medium
   - Verification: dry run shows intended file changes without writing them.
@@ -145,7 +149,7 @@
   - Impact: medium
   - Verification: result includes installed, skipped, failed, and messages.
 
-- [ ] 26. Add platform support flags per item
+- [x] 26. Add platform support flags per item
   - Impact: medium
   - Verification: unsupported tools are hidden or warned before install.
 

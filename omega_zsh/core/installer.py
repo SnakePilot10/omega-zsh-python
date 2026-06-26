@@ -4,7 +4,14 @@ from pathlib import Path
 from shutil import which
 from typing import Callable, List
 
-from .constants import EXTERNAL_URLS, binary_commands, binary_package_name, is_binary_tool, unknown_plugin_ids
+from .constants import (
+    EXTERNAL_URLS,
+    binary_commands,
+    binary_package_name,
+    binary_supported,
+    is_binary_tool,
+    unknown_plugin_ids,
+)
 
 
 def _binary_available(plugin_id: str) -> bool:
@@ -24,6 +31,7 @@ class InstallResult:
     installed: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
     failed: list[str] = field(default_factory=list)
+    unsupported: list[str] = field(default_factory=list)
     messages: list[str] = field(default_factory=list)
 
 
@@ -138,7 +146,15 @@ class PluginInstaller:
                 continue
             # 1. ¿Es un paquete binario del sistema?
             if is_binary_tool(plugin_id):
-                package_name = binary_package_name(plugin_id, _platform_package_manager(self.platform))
+                package_manager = _platform_package_manager(self.platform)
+                if not binary_supported(plugin_id, package_manager):
+                    message = f"Herramienta no soportada en {package_manager}: {plugin_id}"
+                    on_progress(message)
+                    result.messages.append(message)
+                    result.unsupported.append(plugin_id)
+                    result.skipped.append(plugin_id)
+                    continue
+                package_name = binary_package_name(plugin_id, package_manager)
                 on_progress(f"Instalando paquete binario: {plugin_id}")
                 if not self.platform.install_package(package_name, on_progress=on_progress):
                     on_progress(f"Error instalando paquete binario: {plugin_id}")

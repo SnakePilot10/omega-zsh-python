@@ -29,3 +29,20 @@ def test_install_script_uses_core_apply_not_ui_for_theme_sync():
 
     assert "from omega_zsh.core.apply import link_omega_themes" in content
     assert "from omega_zsh.ui.app import link_omega_themes" not in content
+
+
+def test_install_script_separation_smoke_does_not_write_shell_files(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    result = subprocess.run(
+        ["bash", str(INSTALL_SH), "--unattended", "--separation-smoke"],
+        env={"HOME": str(home), "PATH": "/usr/bin:/bin"},
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "APPLY_CONFIG=false" in result.stdout
+    assert "SYNC_THEMES=false" in result.stdout
+    assert not (home / ".zshrc").exists()
+    assert not (home / ".oh-my-zsh" / "custom" / "themes").exists()

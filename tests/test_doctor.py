@@ -167,6 +167,26 @@ def test_doctor_reports_actionable_missing_binary_details(tmp_path, monkeypatch)
     assert "instalar:" in tool_check["detail"]
 
 
+def test_doctor_reports_unsupported_binary_tools(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    omega_dir = home / ".omega-zsh"
+    omega_dir.mkdir(parents=True)
+    (omega_dir / "state.json").write_text(
+        json.dumps({"selected_plugins": ["lolcat"], "selected_header": "none"}),
+        encoding="utf-8",
+    )
+    context = SystemContext(home=home, env={})
+    context.package_manager_type = "pacman"
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    report = run_doctor(context)
+
+    unsupported_check = _check(report, "unsupported-binary-tools")
+    assert unsupported_check["status"] == "warning"
+    assert unsupported_check["detail"] == "lolcat"
+    assert _check(report, "binary-tools")["status"] == "ok"
+
+
 def test_doctor_reports_actionable_missing_external_plugin_details(tmp_path, monkeypatch):
     home = tmp_path / "home"
     omega_dir = home / ".omega-zsh"

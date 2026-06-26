@@ -5,9 +5,11 @@ from omega_zsh.core.constants import (
     DB_ZSH_PLUGINS,
     binary_commands,
     binary_package_name,
+    binary_supported,
     is_binary_tool,
     selected_custom_plugin_ids,
     unknown_plugin_ids,
+    unsupported_binary_tools,
     valid_selected_plugins,
 )
 
@@ -36,6 +38,13 @@ def test_catalog_exposes_platform_package_names():
     assert binary_package_name("fortune", "apt") == "fortune-mod"
     assert binary_package_name("fortune", "nala") == "fortune-mod"
     assert binary_package_name("zoxide", "apt") == "zoxide"
+
+
+def test_catalog_exposes_platform_support_flags():
+    assert binary_supported("lolcat", "apt")
+    assert binary_supported("lolcat", "pkg")
+    assert not binary_supported("lolcat", "pacman")
+    assert unsupported_binary_tools(["lolcat", "zoxide"], "pacman") == ["lolcat"]
 
 
 def test_catalog_validates_selected_plugin_ids():
