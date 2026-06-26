@@ -8,6 +8,7 @@ from omega_zsh.core.constants import (
     binary_supported,
     is_binary_tool,
     selected_custom_plugin_ids,
+    startup_impact,
     unknown_plugin_ids,
     unsupported_binary_tools,
     valid_selected_plugins,
@@ -61,3 +62,10 @@ def test_catalog_allows_explicit_custom_plugin_ids():
     assert unknown_plugin_ids(selected, allowed) == ["typo-plugin"]
     assert valid_selected_plugins(selected, allowed) == ["git", "mi-plugin"]
     assert selected_custom_plugin_ids(selected, allowed) == ["mi-plugin"]
+
+
+def test_catalog_exposes_startup_impact_labels():
+    assert startup_impact("fastfetch") == "high"
+    assert startup_impact("zsh-autosuggestions") == "medium"
+    assert startup_impact("zoxide") == "low"
+    assert startup_impact("unknown") == "low"

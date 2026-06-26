@@ -211,6 +211,7 @@ def test_plugin_select_status_labels(tmp_path, monkeypatch):
     monkeypatch.setattr("omega_zsh.ui.screens.shutil.which", lambda cmd: "/bin/fd" if cmd == "fdfind" else None)
 
     assert "installed" in screen._label_for("zsh-autosuggestions", context)
+    assert "impact: medium" in screen._label_for("zsh-autosuggestions", context)
     assert "installed" in screen._label_for("fd", context)
     assert "missing" in screen._label_for("zoxide", context)
     assert "unmanaged" in screen._label_for("git", context)

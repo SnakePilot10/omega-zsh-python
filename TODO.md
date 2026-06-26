@@ -193,7 +193,7 @@
   - Impact: medium
   - Verification: plugin/tool selectors show real status.
 
-- [ ] 36. Add startup impact labels for plugins/tools
+- [x] 36. Add startup impact labels for plugins/tools
   - Impact: low
   - Verification: UI can show low/medium/high startup impact.
 

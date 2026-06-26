@@ -511,6 +511,39 @@
 - Next:
   - Commit and push Item 35.
 
+### 2026-06-26 - Item 36
+
+- TODO item: `36. Add startup impact labels for plugins/tools`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/constants.py`
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_catalog.py`
+  - `tests/test_ui_app.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added catalog-level startup impact metadata via `startup_impact()` with low/medium/high labels.
+  - Plugin/tool selector labels now show status plus startup impact.
+  - Unknown items default to low impact.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_catalog.py tests/test_ui_app.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused catalog/UI tests, `16 passed`.
+  - Passed: full pytest suite, `140 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 723 nodes, 1589 edges, 35 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Impact labels are static guidance, not measured benchmarks.
+- Next:
+  - Commit and push Item 36.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

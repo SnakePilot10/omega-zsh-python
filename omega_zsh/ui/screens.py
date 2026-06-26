@@ -22,7 +22,7 @@ from textual.widgets import (
 )
 from textual.widgets.selection_list import Selection
 
-from ..core.constants import EXTERNAL_URLS, binary_commands, binary_supported, is_binary_tool
+from ..core.constants import EXTERNAL_URLS, binary_commands, binary_supported, is_binary_tool, startup_impact
 from ..core.context import SystemContext
 from ..core.doctor import run_doctor, run_doctor_fix
 from ..core.figlet import FigletManager
@@ -423,8 +423,9 @@ class PluginSelectScreen(Vertical):
 
     def _label_for(self, plugin_id: str, context: SystemContext) -> str:
         status = self._status_for(plugin_id, context)
+        impact = startup_impact(plugin_id)
         prefix = "tool" if is_binary_tool(plugin_id) else "plugin"
-        return f"{plugin_id} [dim]({prefix}; {status})[/]"
+        return f"{plugin_id} [dim]({prefix}; {status}; impact: {impact})[/]"
 
 
 class ThemeSelectScreen(Horizontal):

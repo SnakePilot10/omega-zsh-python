@@ -220,6 +220,32 @@ def selected_custom_plugin_ids(plugin_ids: List[str], custom_plugin_ids: List[st
     custom = set(custom_plugin_ids)
     return [plugin_id for plugin_id in plugin_ids if plugin_id in custom]
 
+
+STARTUP_IMPACT: Dict[str, str] = {
+    "zsh-autosuggestions": "medium",
+    "zsh-syntax-highlighting": "medium",
+    "fast-syntax-highlighting": "medium",
+    "fzf-tab": "medium",
+    "zsh-completions": "medium",
+    "zsh-navigation-tools": "high",
+    "zsh-history-substring-search": "medium",
+    "powerlevel10k": "high",
+    "k": "medium",
+    "zoxide": "low",
+    "eza": "low",
+    "yazi": "low",
+    "fzf": "low",
+    "fastfetch": "high",
+    "neofetch": "high",
+    "figlet": "medium",
+    "cowsay": "medium",
+    "lolcat": "medium",
+}
+
+
+def startup_impact(plugin_id: str) -> str:
+    return STARTUP_IMPACT.get(plugin_id, "low")
+
 THEMES_OMZ_BUILTIN: List[ThemeDef] = [
     ThemeDef("robbyrussell", "Clásico (Default)"),
     ThemeDef("agnoster", "Powerline Style"),
