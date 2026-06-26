@@ -70,6 +70,28 @@ def normalize_app_state(data) -> AppState:
     )
 
 
+def safe_minimal_state(previous: AppState | None = None) -> AppState:
+    """Return a conservative profile that renders a small, non-visual .zshrc."""
+    base = previous or AppState()
+    return AppState(
+        selected_plugins=[],
+        allowed_custom_plugins=base.allowed_custom_plugins,
+        selected_theme="robbyrussell",
+        selected_root_theme=base.selected_root_theme,
+        selected_header="none",
+        header_text=base.header_text,
+        header_font=base.header_font,
+    )
+
+
+def is_safe_minimal_state(state: AppState) -> bool:
+    return (
+        not state.selected_plugins
+        and state.selected_theme == "robbyrussell"
+        and state.selected_header == "none"
+    )
+
+
 class StateManager:
     def __init__(self, config_dir: Path):
         self.config_path = config_dir / "state.json"

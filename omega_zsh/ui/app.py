@@ -8,7 +8,7 @@ from textual.widgets import Footer, Header, TabbedContent, TabPane
 from ..core.apply import apply_config, build_config_context, build_header_command, link_omega_themes
 from ..core.constants import BIN_PLUGINS, DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeDef
 from ..core.context import SystemContext
-from ..core.state import AppState, StateManager, normalize_app_state
+from ..core.state import AppState, StateManager, normalize_app_state, safe_minimal_state
 from .screens import (
     DashboardScreen,
     FirstRunScreen,
@@ -290,19 +290,20 @@ class OmegaApp(App):
 
     def action_first_run_minimal(self) -> None:
         """Persist a conservative first-run baseline without touching shell files."""
-        self.state = normalize_app_state(
-            {
-                "selected_plugins": [],
-                "allowed_custom_plugins": self.state.allowed_custom_plugins,
-                "selected_theme": "robbyrussell",
-                "selected_root_theme": self.state.selected_root_theme,
-                "selected_header": "none",
-                "header_text": self.state.header_text,
-                "header_font": self.state.header_font,
-            }
-        )
+        self.state = safe_minimal_state(self.state)
         self.state_manager.save(self.state)
         self.notify("Safe minimal profile saved. Press Apply when ready.")
+
+    def action_apply_safe_minimal(self) -> None:
+        """Apply the safe minimal profile through the normal validated apply path."""
+        self.state = safe_minimal_state(self.state)
+        self.state_manager.save(self.state)
+        result = apply_config(self.context, self.state)
+        if result.ok:
+            self.notify(result.message)
+        else:
+            logging.error("Fallo en Apply Minimal: %s", result.message)
+            self.notify(result.message, severity="error")
 
 
 def main():

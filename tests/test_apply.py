@@ -2,7 +2,7 @@ from pathlib import Path
 
 from omega_zsh.core.apply import apply_config, build_config_context, preview_config, render_config
 from omega_zsh.core.context import SystemContext
-from omega_zsh.core.state import AppState
+from omega_zsh.core.state import AppState, safe_minimal_state
 
 
 def test_build_config_context_keeps_binary_tools_out_of_omz_plugins(tmp_path):
@@ -169,3 +169,24 @@ def test_apply_config_never_invokes_installer_for_selected_binary_tools(tmp_path
 
     assert result.ok
     assert context.zshrc_path.exists()
+
+
+def test_safe_minimal_render_omits_visual_and_heavy_commands(tmp_path):
+    home = tmp_path / "home"
+    omz = home / ".oh-my-zsh"
+    omz.mkdir(parents=True)
+    (omz / "oh-my-zsh.sh").write_text("# omz\n", encoding="utf-8")
+    context = SystemContext(home=home, env={"ZSH": str(omz)})
+
+    content = render_config(context, safe_minimal_state())
+
+    assert "plugins=()" in content
+    assert "safe minimal mode" in content.lower()
+    assert "fastfetch" not in content
+    assert "figlet" not in content
+    assert "cowsay" not in content
+    assert "zoxide init" not in content
+    assert "eza --icons" not in content
+    assert "omega_zcompile" not in content
+    assert "compinit" not in content
+    assert not context.zshrc_path.exists()

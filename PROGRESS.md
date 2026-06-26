@@ -342,6 +342,44 @@
 - Next:
   - Commit and push the navigation guard.
 
+### 2026-06-26 - Item 32
+
+- TODO item: `32. Add safe minimal config mode`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `omega_zsh/core/apply.py`
+  - `omega_zsh/assets/templates/.zshrc.j2`
+  - `omega_zsh/ui/app.py`
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_state.py`
+  - `tests/test_apply.py`
+  - `tests/test_ui_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `safe_minimal_state()` and `is_safe_minimal_state()` as core helpers for a conservative no-plugin, no-header, `robbyrussell` profile.
+  - Safe minimal rendering now omits visual/heavy startup behavior including header commands, binary tool hooks, zcompile loop, and extra compinit block.
+  - First-run setup can now apply the safe minimal profile through the normal validated `apply_config()` path.
+  - The existing `Safe Minimal` action still only saves the safe profile without writing shell files.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_state.py tests/test_apply.py tests/test_ui_apply.py tests/test_ui_app.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused state/apply/UI tests, `40 passed`.
+  - Passed: full pytest suite, `131 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 684 nodes, 1463 edges, 31 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Safe minimal mode is inferred from the exact minimal state instead of persisted as a separate mode flag. This avoids sticky mode behavior when users later select plugins/tools.
+- Next:
+  - Commit and push Item 32.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

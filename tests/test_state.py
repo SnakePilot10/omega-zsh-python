@@ -2,7 +2,13 @@ import json
 
 import pytest
 
-from omega_zsh.core.state import AppState, StateManager, normalize_app_state
+from omega_zsh.core.state import (
+    AppState,
+    StateManager,
+    is_safe_minimal_state,
+    normalize_app_state,
+    safe_minimal_state,
+)
 
 
 @pytest.fixture
@@ -181,3 +187,20 @@ def test_save_state_normaliza_antes_de_escribir(manager, tmp_path):
     data = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
     assert data["selected_plugins"] == ["git"]
     assert data["selected_header"] == "fastfetch"
+
+
+def test_safe_minimal_state_preserves_custom_allowlist():
+    state = safe_minimal_state(
+        AppState(
+            selected_plugins=["zoxide", "eza"],
+            allowed_custom_plugins=["local-plugin"],
+            selected_theme="bira",
+            selected_header="fastfetch",
+        )
+    )
+
+    assert state.selected_plugins == []
+    assert state.allowed_custom_plugins == ["local-plugin"]
+    assert state.selected_theme == "robbyrussell"
+    assert state.selected_header == "none"
+    assert is_safe_minimal_state(state)

@@ -177,7 +177,7 @@
   - Impact: medium
   - Verification: empty setup guides through OMZ, theme, tools, and apply.
 
-- [ ] 32. Add safe minimal config mode
+- [x] 32. Add safe minimal config mode
   - Impact: high
   - Verification: user can generate a minimal `.zshrc` with no visual/heavy commands.
 

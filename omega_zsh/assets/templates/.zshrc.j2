@@ -1,4 +1,7 @@
 # OMEGA-ZSH {{ version }} (Python/Jinja2 Generated)
+{% if safe_minimal %}
+# Safe minimal mode: no visual headers, binary tool hooks, or startup compile loop.
+{% else %}
 # --- HYPERDRIVE PERFORMANCE ENGINE ---
 # 1. Modo Asíncrono para sugerencias (evita lag al escribir)
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
@@ -18,11 +21,14 @@ function omega_zcompile() {
         fi
     fi
 }
+{% endif %}
 
 export ZSH="{{ omz_dir }}"
 if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
+{% if not safe_minimal %}
     # Aplicar a los archivos base de Oh My Zsh solo si la instalación existe.
     for _f in "$ZSH"/oh-my-zsh.sh "$ZSH"/lib/*.zsh; do omega_zcompile "$_f"; done
+{% endif %}
 else
     echo "[omega-zsh] Oh My Zsh no encontrado en $ZSH. Ejecuta omega para reparar la instalación." >&2
 fi
@@ -52,6 +58,7 @@ if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
     source "$ZSH/oh-my-zsh.sh"
 fi
 
+{% if not safe_minimal %}
 # --- Optimización de arranque ---
 # compinit con caché: evita compaudit en cada inicio (ahorra ~60ms)
 autoload -Uz compinit
@@ -60,6 +67,7 @@ if [[ -f ~/.zcompdump && $(date +%j) == $(date +%j -r ~/.zcompdump 2>/dev/null |
 else
     compinit     # Re-genera caché una vez al día
 fi
+{% endif %}
 
 {% if default_user %}
 export DEFAULT_USER="{{ default_user }}"

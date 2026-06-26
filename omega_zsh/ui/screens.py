@@ -61,6 +61,7 @@ class FirstRunScreen(Vertical):
         )
         with Horizontal(id="first-run-actions"):
             yield Button("Safe Minimal", variant="primary", id="btn-first-run-minimal")
+            yield Button("Apply Minimal", variant="success", id="btn-first-run-apply-minimal")
             yield Button("Choose Tools", id="btn-first-run-plugins")
             yield Button("Choose Theme", id="btn-first-run-themes")
             yield Button("Apply", variant="success", id="btn-first-run-apply")
@@ -74,6 +75,11 @@ class FirstRunScreen(Vertical):
     def choose_tools(self) -> None:
         if hasattr(self.app, "action_switch_tab"):
             self.app.action_switch_tab("tab-plugins")
+
+    @on(Button.Pressed, "#btn-first-run-apply-minimal")
+    def apply_safe_minimal(self) -> None:
+        if hasattr(self.app, "action_apply_safe_minimal"):
+            self.app.action_apply_safe_minimal()
 
     @on(Button.Pressed, "#btn-first-run-themes")
     def choose_theme(self) -> None:

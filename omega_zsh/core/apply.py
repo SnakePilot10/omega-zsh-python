@@ -8,7 +8,7 @@ from .figlet import FigletManager
 from .generator import ConfigGenerator
 from .manifest import record_managed_file, require_managed_or_absent
 from .operations import write_operation_log
-from .state import AppState
+from .state import AppState, is_safe_minimal_state
 
 
 @dataclass
@@ -41,15 +41,17 @@ def build_header_command(state: AppState) -> str:
 
 def build_config_context(context: Any, state: AppState) -> dict[str, Any]:
     selected_plugins = valid_selected_plugins(state.selected_plugins, state.allowed_custom_plugins)
+    safe_minimal = is_safe_minimal_state(state)
     return {
         "version": get_app_version(),
         "omz_dir": str(context.omz_dir),
         "user_theme": state.selected_theme,
         "root_theme": state.selected_root_theme,
-        "plugins": [p for p in selected_plugins if not is_binary_tool(p)],
-        "header_cmd": build_header_command(state),
+        "plugins": [] if safe_minimal else [p for p in selected_plugins if not is_binary_tool(p)],
+        "header_cmd": "" if safe_minimal else build_header_command(state),
         "is_termux": context.is_termux,
-        "active_tools": [p for p in selected_plugins if is_binary_tool(p)],
+        "active_tools": [] if safe_minimal else [p for p in selected_plugins if is_binary_tool(p)],
+        "safe_minimal": safe_minimal,
         "default_user": "",
         "personal_zsh": str(context.home / ".omega-zsh" / "personal.zsh"),
         "custom_zsh": str(context.home / ".omega-zsh" / "custom.zsh"),
