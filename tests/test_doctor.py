@@ -52,6 +52,17 @@ def test_doctor_reports_expected_installation_checks(tmp_path, monkeypatch):
     assert _check(report, "theme")["status"] == "missing"
 
 
+def test_doctor_read_only_does_not_create_logs(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    home.mkdir()
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.doctor.which", lambda command: None)
+
+    run_doctor(context)
+
+    assert not (context.omega_dir / "logs").exists()
+
+
 def test_doctor_accepts_present_external_plugin_and_builtin_theme(tmp_path, monkeypatch):
     home = tmp_path / "home"
     omz = home / ".oh-my-zsh"
@@ -329,6 +340,7 @@ def test_doctor_fix_creates_only_low_risk_missing_files(tmp_path, monkeypatch):
         "# Created by Omega-ZSH doctor --fix"
     )
     assert _check(result["report"], ".zshrc")["status"] == "ok"
+    assert (context.omega_dir / "logs" / "doctor-fix.log").exists()
 
 
 def test_doctor_fix_preserves_existing_zshrc(tmp_path, monkeypatch):

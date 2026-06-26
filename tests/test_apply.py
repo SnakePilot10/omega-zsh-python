@@ -60,6 +60,7 @@ def test_apply_config_orchestrates_theme_links_and_zshrc_write(tmp_path, monkeyp
     assert result.ok
     assert context.zshrc_path.exists()
     assert (omz / "custom" / "themes" / "omega-test.zsh-theme").is_symlink()
+    assert (context.omega_dir / "logs" / "apply.log").exists()
 
 
 def test_apply_config_does_not_create_fake_omz_tree_when_omz_is_missing(tmp_path, monkeypatch):
@@ -94,6 +95,7 @@ def test_apply_config_dry_run_reports_plan_without_writing(tmp_path, monkeypatch
     assert result.preview
     assert str(context.zshrc_path) in result.changed
     assert not context.zshrc_path.exists()
+    assert not (context.omega_dir / "logs").exists()
 
 
 def test_preview_config_returns_rendered_content_before_write(tmp_path):

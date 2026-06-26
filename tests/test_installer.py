@@ -125,6 +125,7 @@ def test_install_all_result_reports_installed_skipped_and_failed(tmp_path):
     assert result.failed == ["fd"]
     assert result.skipped == ["git", "typo-plugin"]
     assert "ID desconocido omitido: typo-plugin" in messages
+    assert (tmp_path / ".omega-zsh" / "logs" / "install.log").exists()
 
 
 def test_install_all_result_skips_unsupported_binary_before_install(tmp_path):

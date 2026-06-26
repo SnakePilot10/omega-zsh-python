@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import re
 import subprocess
 import sys
@@ -16,18 +15,24 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 try:
-    from omega_zsh.core.plugins_db import get_description
     from omega_zsh.core.doctor import run_doctor, run_doctor_fix
+    from omega_zsh.core.system_info import get_active_items, get_system_stats, inspect_plugin as inspect_plugin_core
 except ImportError:
-
-    def get_description(name):
-        return "Sin descripción disponible."
 
     def run_doctor():
         return {"overall": "missing", "checks": []}
 
     def run_doctor_fix():
         return {"fixes": [], "report": run_doctor()}
+
+    def get_system_stats():
+        return {"os": sys.platform, "mem_usage": "N/A", "disk_usage": "N/A", "uptime": "N/A"}
+
+    def get_active_items(config_dir, zshrc_path):
+        return _parse_zshrc_plugins(zshrc_path)
+
+    def inspect_plugin_core(plugin_name, omz_dir):
+        return None
 
 
 try:
@@ -91,77 +96,6 @@ def run_command(
     return None
 
 
-def _get_ram_usage() -> str:
-    """Obtiene el uso de RAM leyendo /proc/meminfo de forma nativa."""
-    try:
-        with open("/proc/meminfo", encoding="utf-8") as f:
-            lines = f.readlines()
-        mem = {}
-        for line in lines:
-            parts = line.split(":")
-            if len(parts) == 2:
-                mem[parts[0].strip()] = int(parts[1].split()[0].strip())
-
-        total = mem.get("MemTotal", 1)
-        free = mem.get("MemFree", 0)
-        buffers = mem.get("Buffers", 0)
-        cached = mem.get("Cached", 0)
-        used = total - free - buffers - cached
-        return f"{int((used / total) * 100)}%"
-    except Exception:
-        return "N/A"
-
-
-def _get_disk_usage(path: str = "/") -> str:
-    """Obtiene el uso de disco usando os.statvfs."""
-    try:
-        st = os.statvfs(path)
-        total = st.f_blocks * st.f_frsize
-        free = st.f_bavail * st.f_frsize
-        used = total - free
-        return f"{int((used / total) * 100)}%"
-    except Exception:
-        return "N/A"
-
-
-def _get_uptime_simple() -> str:
-    """Obtiene el uptime leyendo /proc/uptime."""
-    try:
-        with open("/proc/uptime", encoding="utf-8") as f:
-            uptime_seconds = float(f.readline().split()[0])
-            hours, remainder = divmod(int(uptime_seconds), 3600)
-            minutes, _ = divmod(remainder, 60)
-            return f"{hours}h {minutes}m"
-    except Exception:
-        return "N/A"
-
-
-def _get_os_label() -> str:
-    if os.path.exists("/data/data/com.termux") or "com.termux" in os.environ.get("PREFIX", ""):
-        return "Android/Termux"
-
-    os_release = Path("/etc/os-release")
-    if os_release.exists():
-        try:
-            for line in os_release.read_text(encoding="utf-8", errors="ignore").splitlines():
-                if line.startswith("PRETTY_NAME="):
-                    return line.split("=", 1)[1].strip().strip('"')
-        except Exception:
-            pass
-
-    return sys.platform
-
-
-def get_system_stats() -> dict[str, str]:
-    """Obtiene estadísticas básicas del sistema sin psutil."""
-    return {
-        "os": _get_os_label(),
-        "mem_usage": _get_ram_usage(),
-        "disk_usage": _get_disk_usage(),
-        "uptime": _get_uptime_simple(),
-    }
-
-
 def _parse_zshrc_plugins(path: Path) -> list[str]:
     if not path.exists():
         return []
@@ -175,61 +109,26 @@ def _parse_zshrc_plugins(path: Path) -> list[str]:
 
 def get_omega_active_items() -> list[str]:
     """Lee el estado oficial de Omega para saber qué está activado."""
-    if StateManager:
-        try:
-            return StateManager(OMEGA_CONFIG_DIR).load().selected_plugins
-        except Exception as exc:
-            console.print(f"[dim yellow]No se pudo leer state.json, usando .zshrc: {exc}[/]")
-
-    return _parse_zshrc_plugins(ZSHRC)
+    if StateManager is None:
+        return _parse_zshrc_plugins(ZSHRC)
+    return get_active_items(OMEGA_CONFIG_DIR, ZSHRC)
 
 
 def inspect_plugin(plugin_name: str) -> dict:
     """Obtiene la info del plugin/herramienta priorizando la base amigable."""
-    paths = [
-        CUSTOM_PLUGINS / plugin_name / f"{plugin_name}.plugin.zsh",
-        STANDARD_PLUGINS / plugin_name / f"{plugin_name}.plugin.zsh",
-        CUSTOM_PLUGINS / plugin_name / f"{plugin_name}.zsh",
-        STANDARD_PLUGINS / plugin_name / f"{plugin_name}.zsh",
-    ]
-    plugin_path = next((p for p in paths if p.exists()), None)
-    description = get_description(plugin_name)
-
-    if (
-        "Sin descripción" in description
-        or description == "Plugin de Oh My Zsh (sin descripción documentada en la base de datos)."
-    ):
-        for p_def in DB_PLUGINS:
-            if p_def.id == plugin_name:
-                description = p_def.desc
-                break
-
-    if not plugin_path or plugin_name in BIN_PLUGINS:
-        return {
-            "found": False,
-            "is_binary": True,
-            "description": description,
-            "aliases": [],
-            "functions": [],
-        }
-
-    try:
-        content = plugin_path.read_text(errors="ignore")
-        aliases = re.findall(r"^alias\s+([\w-]+)=", content, re.MULTILINE)
-        functions = re.findall(r"^function\s+([\w-]+)", content, re.MULTILINE)
-        functions += re.findall(r"^([\w-]+)\(\)\s*\{", content, re.MULTILINE)
-        functions = [f for f in functions if not f.startswith("_")]
-    except Exception:
-        aliases, functions = [], []
-
-    return {
-        "found": True,
-        "is_binary": False,
-        "path": str(plugin_path),
-        "description": description,
-        "aliases": sorted(set(aliases)),
-        "functions": sorted(set(functions)),
+    info = inspect_plugin_core(plugin_name, OMZ, CUSTOM_PLUGINS, STANDARD_PLUGINS)
+    if info is None:
+        return {"found": False, "is_binary": True, "description": "Sin descripción disponible.", "aliases": [], "functions": []}
+    result = {
+        "found": info.found,
+        "is_binary": info.is_binary,
+        "description": info.description,
+        "aliases": info.aliases,
+        "functions": info.functions,
     }
+    if info.path:
+        result["path"] = info.path
+    return result
 
 
 def benchmark_shell() -> None:

@@ -155,19 +155,19 @@
 
 ## Phase 5 - CLI And System Context
 
-- [ ] 27. Remove duplicated system detection from `oz_tool.py`
+- [x] 27. Remove duplicated system detection from `oz_tool.py`
   - Impact: medium
   - Verification: CLI uses shared core system stats/detection helpers.
 
-- [ ] 28. Remove duplicated system detection from `DashboardScreen`
+- [x] 28. Remove duplicated system detection from `DashboardScreen`
   - Impact: medium
   - Verification: dashboard uses shared core stats/detection helpers.
 
-- [ ] 29. Make CLI commands thin wrappers around core services
+- [x] 29. Make CLI commands thin wrappers around core services
   - Impact: medium
   - Verification: CLI contains presentation logic, not filesystem/business logic.
 
-- [ ] 30. Add operation logs under `~/.omega-zsh/logs/`
+- [x] 30. Add operation logs under `~/.omega-zsh/logs/`
   - Impact: medium
   - Verification: apply/install/doctor write separate logs.
 

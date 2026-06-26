@@ -211,6 +211,50 @@
 - Next:
   - Continue with Item 07: normalize and validate `state.json` schema.
 
+### 2026-06-26 - Items 27-30
+
+- TODO items:
+  - `27. Remove duplicated system detection from oz_tool.py`
+  - `28. Remove duplicated system detection from DashboardScreen`
+  - `29. Make CLI commands thin wrappers around core services`
+  - `30. Add operation logs under ~/.omega-zsh/logs/`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/system_info.py`
+  - `omega_zsh/core/operations.py`
+  - `omega_zsh/cli/oz_tool.py`
+  - `omega_zsh/ui/screens.py`
+  - `omega_zsh/core/apply.py`
+  - `omega_zsh/core/installer.py`
+  - `omega_zsh/core/doctor.py`
+  - `tests/test_apply.py`
+  - `tests/test_doctor.py`
+  - `tests/test_installer.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added `core/system_info.py` for shared OS label, memory, disk, uptime, active item discovery, `.zshrc` plugin parsing, and plugin inspection.
+  - `oz_tool.py` now delegates system stats, active item discovery, and plugin inspection to core helpers while keeping Rich presentation and command dispatch.
+  - `DashboardScreen` now renders shared core system stats instead of duplicating `/proc` and `statvfs` detection.
+  - Added `core/operations.py` for append-only operation logs under `~/.omega-zsh/logs/`.
+  - Non-dry-run apply writes `apply.log`; plugin install orchestration writes `install.log`; `doctor --fix` writes `doctor-fix.log`.
+  - Read-only `run_doctor()` and dry-run apply remain side-effect free and do not create logs.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: `123 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 651 nodes, 1392 edges, 25 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - CLI still contains presentation-adjacent local logic for history analysis, benchmarking, theme listing, and self-update. Item 29 was completed for the duplicated/test-covered system and plugin discovery paths; a broader CLI service extraction can be split into future backlog if needed.
+- Next:
+  - Commit and push the completed batch.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

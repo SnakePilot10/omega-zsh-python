@@ -19,6 +19,7 @@ from .constants import (
 )
 from .context import SystemContext
 from .manifest import load_manifest, record_managed_file, save_manifest
+from .operations import write_operation_log
 from .shell import validate_zsh_syntax
 from .state import AppState, StateManager
 
@@ -295,7 +296,16 @@ def run_doctor_fix(context: SystemContext | None = None) -> dict[str, Any]:
                 str(context.zshrc_path),
             )
         )
-    return {"fixes": fixes, "report": run_doctor(context)}
+    result = {"fixes": fixes, "report": run_doctor(context)}
+    write_operation_log(
+        context.omega_dir,
+        "doctor-fix",
+        [
+            f"overall={result['report']['overall']}",
+            *[f"{fix['id']}={fix['status']} {fix['message']} {fix['detail']}" for fix in fixes],
+        ],
+    )
+    return result
 
 
 def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:

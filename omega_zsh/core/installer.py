@@ -12,6 +12,7 @@ from .constants import (
     is_binary_tool,
     unknown_plugin_ids,
 )
+from .operations import write_operation_log
 
 
 def _binary_available(plugin_id: str) -> bool:
@@ -192,7 +193,22 @@ class PluginInstaller:
             message = "Fallaron: " + ", ".join(result.failed)
             on_progress(message)
             result.messages.append(message)
+        self._log_install(result)
         return result
+
+    def _log_install(self, result: InstallResult) -> None:
+        write_operation_log(
+            self.home / ".omega-zsh",
+            "install",
+            [
+                f"ok={result.ok}",
+                "installed=" + ", ".join(result.installed),
+                "skipped=" + ", ".join(result.skipped),
+                "failed=" + ", ".join(result.failed),
+                "unsupported=" + ", ".join(result.unsupported),
+                "messages=" + " | ".join(result.messages),
+            ],
+        )
 
     def _git_clone(self, url: str, target: Path, on_progress: Callable[[str], None]) -> bool:
         """

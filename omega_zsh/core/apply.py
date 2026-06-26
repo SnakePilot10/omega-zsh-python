@@ -7,6 +7,7 @@ from .constants import is_binary_tool, unknown_plugin_ids, valid_selected_plugin
 from .figlet import FigletManager
 from .generator import ConfigGenerator
 from .manifest import record_managed_file, require_managed_or_absent
+from .operations import write_operation_log
 from .state import AppState
 
 
@@ -153,19 +154,41 @@ def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyR
             )
         ok = generator.generate_zshrc(context.zshrc_path, build_config_context(context, state))
         if not ok:
-            return ApplyResult(
+            result = ApplyResult(
                 False,
                 "Error al generar .zshrc. Revisa el log para detalles.",
                 warnings=warnings,
                 errors=["generate_zshrc failed"],
             )
+            _log_apply(context, result)
+            return result
         if warnings:
-            return ApplyResult(
+            result = ApplyResult(
                 True,
                 "Configuración actualizada con advertencias: " + "; ".join(warnings),
                 changed=[str(context.zshrc_path)],
                 warnings=warnings,
             )
-        return ApplyResult(True, "Configuración actualizada con éxito.", changed=[str(context.zshrc_path)])
+            _log_apply(context, result)
+            return result
+        result = ApplyResult(True, "Configuración actualizada con éxito.", changed=[str(context.zshrc_path)])
+        _log_apply(context, result)
+        return result
     except Exception as exc:
-        return ApplyResult(False, f"Error al aplicar: {exc}", errors=[str(exc)])
+        result = ApplyResult(False, f"Error al aplicar: {exc}", errors=[str(exc)])
+        _log_apply(context, result)
+        return result
+
+
+def _log_apply(context: Any, result: ApplyResult) -> None:
+    write_operation_log(
+        context.omega_dir,
+        "apply",
+        [
+            f"ok={result.ok}",
+            f"message={result.message}",
+            "changed=" + ", ".join(result.changed),
+            "warnings=" + ", ".join(result.warnings),
+            "errors=" + ", ".join(result.errors),
+        ],
+    )

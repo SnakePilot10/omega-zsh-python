@@ -1,4 +1,3 @@
-import os
 import re
 import shutil
 import subprocess
@@ -25,6 +24,7 @@ from textual.widgets.selection_list import Selection
 from ..core.context import SystemContext
 from ..core.figlet import FigletManager
 from ..core.recovery import cleanup_shell_files, nuclear_fix_shell, recovery_dry_run, restore_latest_zshrc_backup
+from ..core.system_info import get_system_stats
 
 
 NAV_HINT = "[dim]Tabs: [bold]1-5[/] / [bold]D P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
@@ -35,7 +35,7 @@ class DashboardScreen(Static):
 
     def compose(self) -> ComposeResult:
         self.context = SystemContext()
-        stats = self._get_stats()
+        stats = get_system_stats(self.context._env)
 
         header_art = Text.from_markup(
             "[bold #ff006e]OMEGA[/][bold #00f5ff] ZSH[/]\n"
@@ -65,51 +65,6 @@ class DashboardScreen(Static):
             f"[bold #ff006e]◄ SHORTCUTS ►[/]\n{help_text}",
             id="dashboard-shortcuts"
         )
-
-    def _get_stats(self):
-        """Obtiene estadísticas del sistema sin depender de psutil."""
-        try:
-            mem_p = "N/A"
-            if os.path.exists("/proc/meminfo"):
-                with open("/proc/meminfo", encoding="utf-8") as f:
-                    lines = f.readlines()
-                mem = {}
-                for line in lines:
-                    parts = line.split(":")
-                    if len(parts) == 2:
-                        mem[parts[0].strip()] = int(parts[1].split()[0].strip())
-                total = mem.get("MemTotal", 1)
-                free = mem.get("MemFree", 0)
-                used = total - free
-                mem_p = f"{int((used / total) * 100)}%"
-
-            disk_p = "N/A"
-            try:
-                st = os.statvfs("/")
-                total = st.f_blocks * st.f_frsize
-                free = st.f_bavail * st.f_frsize
-                used = total - free
-                disk_p = f"{int((used / total) * 100)}%"
-            except Exception:
-                pass
-
-            uptime_str = "N/A"
-            if os.path.exists("/proc/uptime"):
-                with open("/proc/uptime", "r", encoding="utf-8") as f:
-                    uptime_seconds = float(f.readline().split()[0])
-                    hours, remainder = divmod(int(uptime_seconds), 3600)
-                    minutes, _ = divmod(remainder, 60)
-                    uptime_str = f"{hours}h {minutes}m"
-
-            return {
-                "os": "Android/Termux" if os.path.exists("/data/data/com.termux") else "Linux",
-                "mem_usage": mem_p,
-                "disk_usage": disk_p,
-                "uptime": uptime_str,
-            }
-        except Exception:
-            return {"os": "Unknown", "mem_usage": "N/A", "disk_usage": "N/A", "uptime": "N/A"}
-
 
 class RecoveryScreen(Vertical):
     """Pantalla para ejecutar recuperación shell con backups."""
