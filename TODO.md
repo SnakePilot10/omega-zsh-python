@@ -207,7 +207,7 @@
 
 ## Phase 7 - Template And Script Cleanup
 
-- [ ] 39. Reduce `personal.zsh.j2` to a minimal safe file
+- [x] 39. Reduce `personal.zsh.j2` to a minimal safe file
   - Impact: high
   - Verification: generated personal config has no surprise dashboard or opinionated functions by default.
 

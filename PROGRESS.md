@@ -610,6 +610,36 @@
 - Next:
   - Commit and push Item 38.
 
+### 2026-06-26 - Item 39
+
+- TODO item: `39. Reduce personal.zsh.j2 to a minimal safe file`
+- Status: completed
+- Files changed:
+  - `omega_zsh/assets/templates/personal.zsh.j2`
+  - `tests/test_generator.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `personal.zsh.j2` now renders only explicit user-provided paths, environment variables, and aliases.
+  - Removed automatic `oz --banner`, opinionated edit aliases, implicit `$HOME/.local/bin` insertion, and the `up()` helper function from generated personal config.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_generator.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused generator tests, `2 passed`.
+  - Passed: full pytest suite, `143 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 735 nodes, 1617 edges, 37 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Existing user `personal.zsh` files are not overwritten by `generate_personal_config()`, so this affects newly generated files only.
+- Next:
+  - Commit and push Item 39.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

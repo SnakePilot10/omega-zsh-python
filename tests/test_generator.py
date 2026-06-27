@@ -78,3 +78,6 @@ def test_generate_personal_config(generator, temp_home):
     content = output_path.read_text()
     assert 'export MY_VAR="123"' in content
     assert "alias ll='ls -l'" in content
+    assert "oz --banner" not in content
+    assert "function up" not in content
+    assert "alias zr=" not in content
