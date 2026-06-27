@@ -1506,3 +1506,28 @@
   - Jinja2 template loader must correctly find the new partials in the same directory. Tests verified this.
 - Next:
   - Commit and push Item 41.
+### 2026-06-26 - Item 42
+
+- TODO item: `42. Reduce generated .zshrc comments to practical debug information`
+- Status: completed
+- Files changed:
+  - `omega_zsh/assets/templates/.zshrc.j2`
+  - `omega_zsh/assets/templates/_omz.j2`
+  - `omega_zsh/assets/templates/_core.j2`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Removed verbose comments from the main template and partials.
+  - Kept only essential debug context in rendered config.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: full pytest suite, `145 passed`.
+- Graphify update:
+  - Pending final verification.
+- Risks:
+  - None; this is a purely aesthetic documentation change to the template.
+- Next:
+  - Commit and push Item 42.

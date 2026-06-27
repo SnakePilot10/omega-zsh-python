@@ -219,7 +219,7 @@
   - Impact: medium
   - Verification: OMZ, tools, header, and Termux sections can be rendered independently.
 
-- [ ] 42. Reduce generated `.zshrc` comments to practical debug information
+- [x] 42. Reduce generated `.zshrc` comments to practical debug information
   - Impact: low
   - Verification: generated config is shorter and easier to read.
 

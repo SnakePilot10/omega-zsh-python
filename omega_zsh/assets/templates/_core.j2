@@ -1,17 +1,14 @@
 export TERM=xterm-256color
 export COLORTERM=truecolor
 
-# Ensure User Python Binaries are in PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# Theme selection
 if [ "$(id -u)" -eq 0 ]; then
     ZSH_THEME="{{ root_theme }}"
 else
     ZSH_THEME="{{ user_theme }}"
 fi
 
-# Plugins selection
 plugins=({% for plugin in plugins %}{{ plugin }} {% endfor %})
 
 if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
@@ -19,13 +16,11 @@ if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
 fi
 
 {% if not safe_minimal %}
-# --- Optimización de arranque ---
-# compinit con caché: evita compaudit en cada inicio (ahorra ~60ms)
 autoload -Uz compinit
 if [[ -f ~/.zcompdump && $(date +%j) == $(date +%j -r ~/.zcompdump 2>/dev/null || echo 0) ]]; then
-    compinit -C  # Carga desde caché sin re-auditar
+    compinit -C
 else
-    compinit     # Re-genera caché una vez al día
+    compinit
 fi
 {% endif %}
 
@@ -33,13 +28,8 @@ fi
 export DEFAULT_USER="{{ default_user }}"
 {% endif %}
 
-# --- DEFAULT EDITOR ---
 export EDITOR='nano'
 export VISUAL='nano'
 
-# --- User Customizations ---
-# Cargamos primero el archivo estructurado personal
 [[ -f "{{ personal_zsh }}" ]] && source "{{ personal_zsh }}"
-
-# Luego cualquier ajuste manual extra
 [[ -f "{{ custom_zsh }}" ]] && source "{{ custom_zsh }}"
