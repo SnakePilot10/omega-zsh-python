@@ -1603,3 +1603,38 @@
   - None; fonts were not integrated into the TUI.
 - Next:
   - Commit and push Item 44.
+
+### 2026-06-26 - Item 43 Fix (Bootstrap Orchestration Audit)
+
+- TODO item: `43. Convert install.sh into a minimal wrapper around Python logic`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/bootstrap.py`
+  - `omega_zsh/platforms/arch.py` (new)
+  - `tests/test_install_script.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Bootstrap now selects the plugin installer platform from `SystemContext.package_manager_type` instead of defaulting all non-Termux systems to Debian.
+  - Added `ArchPlatform` for pacman-backed binary installation on Arch/CachyOS-style systems.
+  - Bootstrap now calls `PluginInstaller.ensure_omz()` before plugin installation and fails visibly if Oh My Zsh cannot be cloned.
+  - Bootstrap now fails if `install_all_result()` reports plugin install failures.
+  - Bootstrap errors are printed to stderr and logged with exception context.
+  - Removed the unused `is_binary_tool` import from bootstrap.
+- Verification commands:
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_install_script.py`
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+  - `graphify update`
+- Verification result:
+  - Passed: install script/bootstrap tests, `7 passed`.
+  - Passed: source and tests compiled.
+  - Passed: full pytest suite, `148 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 734 nodes, 1652 edges, 40 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - `install_core_packages()` still installs base packages eagerly and does not run package-manager-specific preflight checks; this was existing behavior and remains a future production-hardening concern.
+- Next:
+  - Commit and push the completed fix.

@@ -1,18 +1,18 @@
-import sys
-import subprocess
-import os
 import logging
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 # Importaciones core
+from omega_zsh.core.apply import apply_config, link_omega_themes
 from omega_zsh.core.context import SystemContext
 from omega_zsh.core.installer import PluginInstaller
+from omega_zsh.core.manifest import default_manifest_path
+from omega_zsh.core.state import StateManager
+from omega_zsh.platforms.arch import ArchPlatform
 from omega_zsh.platforms.debian import DebianPlatform
 from omega_zsh.platforms.termux import TermuxPlatform
-from omega_zsh.core.state import StateManager
-from omega_zsh.core.apply import apply_config, link_omega_themes
-from omega_zsh.core.manifest import default_manifest_path
-from omega_zsh.core.constants import is_binary_tool
 
 # Definimos paquetes base por sistema
 CORE_PACKAGES = {
@@ -30,6 +30,7 @@ def detect_os() -> str:
         return "arch"
     return "unknown"
 
+
 def install_core_packages(os_id: str):
     packages = CORE_PACKAGES.get(os_id, [])
     cmd = []
@@ -44,12 +45,24 @@ def install_core_packages(os_id: str):
         print(f"Instalando paquetes base: {', '.join(packages)}")
         subprocess.run(cmd + packages, check=True)
 
+
 def setup_venv(project_dir: Path):
     venv_dir = project_dir / ".venv"
     if not venv_dir.exists():
         print(f"Creando venv en {venv_dir}")
         subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True)
     return venv_dir
+
+
+def make_platform(ctx: SystemContext):
+    if ctx.is_termux:
+        return TermuxPlatform()
+    if ctx.package_manager_type in {"apt", "nala"}:
+        return DebianPlatform(use_nala=ctx.package_manager_type == "nala")
+    if ctx.package_manager_type == "pacman":
+        return ArchPlatform()
+    raise RuntimeError(f"Package manager no soportado: {ctx.package_manager_type}")
+
 
 def main():
     import argparse
@@ -81,7 +94,7 @@ def main():
 
         # Orquestación de instalación
         ctx = SystemContext()
-        plat = TermuxPlatform() if ctx.is_termux else DebianPlatform()
+        plat = make_platform(ctx)
         inst = PluginInstaller(plat, ctx.home)
         sm = StateManager(ctx.omega_dir)
 
@@ -89,16 +102,26 @@ def main():
 
         # Download plugins
         print("Sincronizando plugins...")
+
         def progress(msg):
             if not args.unattended:
                 print(f"  {msg}")
 
-        inst.install_all_result(state.selected_plugins, progress)
+        if not inst.ensure_omz(progress):
+            raise RuntimeError("No se pudo instalar Oh My Zsh")
+
+        install_result = inst.install_all_result(state.selected_plugins, progress)
+        if not install_result.ok:
+            raise RuntimeError("No se pudieron instalar todos los plugins")
 
         # Sync themes
         if args.sync_themes:
             print("Sincronizando temas...")
-            for warning in link_omega_themes(ctx.assets_dir, ctx.omz_dir, default_manifest_path(ctx.home)):
+            for warning in link_omega_themes(
+                ctx.assets_dir,
+                ctx.omz_dir,
+                default_manifest_path(ctx.home),
+            ):
                 print(f"  {warning}")
 
         # Apply
@@ -110,7 +133,8 @@ def main():
 
         print("Bootstrap/Install completado.")
     except Exception as e:
-        logging.error(f"Error en bootstrap: {e}")
+        print(f"Error en bootstrap: {e}", file=sys.stderr)
+        logging.exception("Error en bootstrap")
         sys.exit(1)
 
 if __name__ == "__main__":
