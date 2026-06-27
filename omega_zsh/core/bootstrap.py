@@ -1,12 +1,18 @@
 import sys
 import subprocess
 import os
+import logging
 from pathlib import Path
-from typing import List
 
-# Importamos la lógica de detección de plataformas desde el instalador
-from .context import SystemContext
-from .installer import PluginInstaller
+# Importaciones core
+from omega_zsh.core.context import SystemContext
+from omega_zsh.core.installer import PluginInstaller
+from omega_zsh.platforms.debian import DebianPlatform
+from omega_zsh.platforms.termux import TermuxPlatform
+from omega_zsh.core.state import StateManager
+from omega_zsh.core.apply import apply_config, link_omega_themes
+from omega_zsh.core.manifest import default_manifest_path
+from omega_zsh.core.constants import is_binary_tool
 
 # Definimos paquetes base por sistema
 CORE_PACKAGES = {
@@ -24,13 +30,8 @@ def detect_os() -> str:
         return "arch"
     return "unknown"
 
-def install_core_packages(os_id: str, unattended: bool):
-    if os_id == "unknown":
-        print("Entorno desconocido, saltando instalación de paquetes base.")
-        return
-    
+def install_core_packages(os_id: str):
     packages = CORE_PACKAGES.get(os_id, [])
-    # Detección simplificada de gestor de paquetes
     cmd = []
     if os_id == "debian":
         cmd = ["sudo", "apt-get", "install", "-y"]
@@ -38,7 +39,7 @@ def install_core_packages(os_id: str, unattended: bool):
         cmd = ["pkg", "install", "-y"]
     elif os_id == "arch":
         cmd = ["sudo", "pacman", "-S", "--noconfirm", "--needed"]
-    
+
     if cmd:
         print(f"Instalando paquetes base: {', '.join(packages)}")
         subprocess.run(cmd + packages, check=True)
@@ -65,23 +66,51 @@ def main():
         print(f"HOME={os.environ.get('HOME')}")
         sys.exit(0)
 
-    if args.apply_config or args.sync_themes:
-        parser.error("--apply-config and --sync-themes are temporarily unsupported in bootstrap.py")
-
     project_dir = Path(__file__).parent.parent.parent
     os_id = detect_os()
-    
+
     try:
-        install_core_packages(os_id, args.unattended)
+        install_core_packages(os_id)
         venv_dir = setup_venv(project_dir)
+
         # Sincronizar dependencias Python
         print("Sincronizando dependencias Python...")
         pip_bin = venv_dir / "bin" / "pip"
         subprocess.run([str(pip_bin), "install", "--upgrade", "pip", "--quiet"], check=True)
         subprocess.run([str(pip_bin), "install", "-e", str(project_dir), "--quiet"], check=True)
-        print("Bootstrap completado.")
+
+        # Orquestación de instalación
+        ctx = SystemContext()
+        plat = TermuxPlatform() if ctx.is_termux else DebianPlatform()
+        inst = PluginInstaller(plat, ctx.home)
+        sm = StateManager(ctx.omega_dir)
+
+        state = sm.load()
+
+        # Download plugins
+        print("Sincronizando plugins...")
+        def progress(msg):
+            if not args.unattended:
+                print(f"  {msg}")
+
+        inst.install_all_result(state.selected_plugins, progress)
+
+        # Sync themes
+        if args.sync_themes:
+            print("Sincronizando temas...")
+            for warning in link_omega_themes(ctx.assets_dir, ctx.omz_dir, default_manifest_path(ctx.home)):
+                print(f"  {warning}")
+
+        # Apply
+        if args.apply_config:
+            print("Aplicando configuración...")
+            result = apply_config(ctx, state)
+            if not result.ok:
+                raise RuntimeError(result.message)
+
+        print("Bootstrap/Install completado.")
     except Exception as e:
-        print(f"Error en bootstrap: {e}")
+        logging.error(f"Error en bootstrap: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
