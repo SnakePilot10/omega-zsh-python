@@ -223,13 +223,13 @@
   - Impact: low
   - Verification: generated config is shorter and easier to read.
 
-- [ ] 43. Convert `install.sh` into a minimal wrapper around Python logic
+- [x] 43. Convert `install.sh` into a minimal wrapper around Python logic
   - Impact: high
   - Verification: install logic lives in one Python path, shell only bootstraps.
 
-- [ ] 44. Decide whether `Figlet_Fonts/` is demo code or product code
+- [x] 44. Decide whether `Figlet_Fonts/` is demo code or product code
   - Impact: low
-  - Verification: dead/demo code is removed or documented as optional tool.
+  - Verification: dead/demo code is removed.
 
 - [ ] 45. Run final graphify update and architecture audit
   - Impact: high

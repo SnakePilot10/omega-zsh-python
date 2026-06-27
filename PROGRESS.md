@@ -1532,3 +1532,52 @@
   - None; this is a purely aesthetic documentation change to the template.
 - Next:
   - Commit and push Item 42.
+### 2026-06-26 - Item 43
+
+- TODO item: `43. Convert install.sh into a minimal wrapper around Python logic`
+- Status: completed
+- Files changed:
+  - `install.sh`
+  - `omega_zsh/core/bootstrap.py` (new)
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `install.sh` reduced to a minimal shell wrapper that delegates detection, venv creation, and dependency installation to `omega_zsh.core.bootstrap`.
+  - Moved platform detection and `CORE_PACKAGES` list to Python.
+- Verification commands:
+  - `bash -n install.sh`
+  - `python3 -m compileall omega_zsh tests`
+  - Runtime smoke: `HOME=/tmp/test-home bash install.sh --unattended` installs packages and venv.
+- Verification result:
+  - Passed: shell syntax check.
+  - Passed: Python compile check.
+  - Passed: smoke installation of core packages and venv creation.
+- Graphify update:
+  - Pending final verification.
+- Risks:
+  - Requires `python3` to exist on the system *before* bootstrapping.
+- Next:
+  - Run full verification, graphify update, commit, and push.
+### 2026-06-26 - Item 44
+
+- TODO item: `44. Decide whether Figlet_Fonts/ is demo code or product code`
+- Status: completed
+- Files changed:
+  - `Figlet_Fonts/` (deleted)
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Removed legacy/demo `Figlet_Fonts/` directory which contained unintegrated demo content.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: full pytest suite, `144 passed`.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 718 nodes, 1594 edges, 43 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - None; fonts were not integrated into the TUI.
+- Next:
+  - Commit and push Item 44.
