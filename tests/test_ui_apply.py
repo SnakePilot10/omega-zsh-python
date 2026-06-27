@@ -135,3 +135,13 @@ def test_apply_safe_minimal_uses_validated_apply_path(mock_app):
         assert saved_state.selected_header == "none"
         mock_apply.assert_called_once_with(mock_app.context, mock_app.state)
         mock_app.notify.assert_called_with("Configuración actualizada con éxito.")
+
+
+def test_apply_preset_saves_state_without_apply(mock_app):
+    with patch("omega_zsh.ui.app.apply_config") as mock_apply:
+        mock_app.action_apply_preset("fast")
+
+        saved_state = mock_app.state_manager.save.call_args.args[0]
+        assert saved_state.selected_plugins == ["git", "zsh-autosuggestions", "zoxide"]
+        assert saved_state.selected_header == "none"
+        mock_apply.assert_not_called()

@@ -242,6 +242,37 @@ class ProblemsScreen(Vertical):
     def run_fix(self) -> None:
         self._run_doctor_fix()
 
+
+class PresetScreen(Vertical):
+    """Predictable starter profiles that only update saved state."""
+
+    PRESET_BUTTONS = [
+        ("Minimal", "minimal"),
+        ("Fast", "fast"),
+        ("Pretty", "pretty"),
+        ("Power User", "power-user"),
+        ("Termux Safe", "termux-safe"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        yield Label("[bold #ff006e]PRESETS[/]")
+        yield Label(NAV_HINT, id="presets-nav-hint")
+        yield Static(
+            "[bold #00f5ff]Presets update saved state only.[/] Review Plugins/Themes, then press Apply.",
+            id="presets-help",
+        )
+        with Horizontal(id="presets-actions"):
+            for label, preset_id in self.PRESET_BUTTONS:
+                yield Button(label, id=f"btn-preset-{preset_id}")
+
+    @on(Button.Pressed)
+    def choose_preset(self, event: Button.Pressed) -> None:
+        if not event.button.id or not event.button.id.startswith("btn-preset-"):
+            return
+        preset_id = event.button.id.removeprefix("btn-preset-")
+        if hasattr(self.app, "action_apply_preset"):
+            self.app.action_apply_preset(preset_id)
+
 class RecoveryScreen(Vertical):
     """Pantalla para ejecutar recuperación shell con backups."""
 

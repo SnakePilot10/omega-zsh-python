@@ -544,6 +544,41 @@
 - Next:
   - Commit and push Item 36.
 
+### 2026-06-26 - Item 37
+
+- TODO item: `37. Add presets: Minimal, Fast, Pretty, Power User, Termux Safe`
+- Status: completed
+- Files changed:
+  - `omega_zsh/core/state.py`
+  - `omega_zsh/ui/app.py`
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_state.py`
+  - `tests/test_ui_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added deterministic presets for Minimal, Fast, Pretty, Power User, and Termux Safe.
+  - Added a Presets TUI tab with buttons for each preset.
+  - Choosing a preset saves state only and does not call Apply or install packages.
+  - Existing custom plugin allowlist and root theme are preserved when applying presets.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_state.py tests/test_ui_apply.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused preset state/UI tests, `24 passed`.
+  - Passed: full pytest suite, `142 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 733 nodes, 1616 edges, 35 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Presets update saved state while already-mounted selector widgets may not visually refresh until tab/app reload. Apply uses saved `self.state`.
+- Next:
+  - Commit and push Item 37.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

@@ -19,6 +19,45 @@ class AppState:
 
 VALID_HEADERS = {"fastfetch", "figlet", "cowsay", "none"}
 
+PRESETS = {
+    "minimal": {
+        "selected_plugins": [],
+        "selected_theme": "robbyrussell",
+        "selected_header": "none",
+    },
+    "fast": {
+        "selected_plugins": ["git", "zsh-autosuggestions", "zoxide"],
+        "selected_theme": "robbyrussell",
+        "selected_header": "none",
+    },
+    "pretty": {
+        "selected_plugins": ["git", "zsh-autosuggestions", "zsh-syntax-highlighting", "eza", "fastfetch"],
+        "selected_theme": "bira",
+        "selected_header": "fastfetch",
+    },
+    "power-user": {
+        "selected_plugins": [
+            "git",
+            "zsh-autosuggestions",
+            "zsh-syntax-highlighting",
+            "fzf-tab",
+            "zoxide",
+            "eza",
+            "fzf",
+            "ripgrep",
+            "fd",
+            "jq",
+        ],
+        "selected_theme": "agnoster",
+        "selected_header": "fastfetch",
+    },
+    "termux-safe": {
+        "selected_plugins": ["git", "zoxide", "fzf", "nano"],
+        "selected_theme": "robbyrussell",
+        "selected_header": "none",
+    },
+}
+
 
 def _clean_string(value, default: str) -> str:
     return value.strip() if isinstance(value, str) and value.strip() else default
@@ -89,6 +128,25 @@ def is_safe_minimal_state(state: AppState) -> bool:
         not state.selected_plugins
         and state.selected_theme == "robbyrussell"
         and state.selected_header == "none"
+    )
+
+
+def apply_preset(name: str, previous: AppState | None = None) -> AppState:
+    key = name.strip().lower()
+    if key not in PRESETS:
+        raise ValueError(f"Unknown preset: {name}")
+    base = previous or AppState()
+    preset = PRESETS[key]
+    return normalize_app_state(
+        {
+            "selected_plugins": preset["selected_plugins"],
+            "allowed_custom_plugins": base.allowed_custom_plugins,
+            "selected_theme": preset["selected_theme"],
+            "selected_root_theme": base.selected_root_theme,
+            "selected_header": preset["selected_header"],
+            "header_text": base.header_text,
+            "header_font": base.header_font,
+        }
     )
 
 

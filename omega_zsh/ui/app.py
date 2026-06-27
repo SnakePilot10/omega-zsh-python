@@ -8,12 +8,13 @@ from textual.widgets import Footer, Header, TabbedContent, TabPane
 from ..core.apply import apply_config, build_config_context, build_header_command, link_omega_themes
 from ..core.constants import BIN_PLUGINS, DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeDef
 from ..core.context import SystemContext
-from ..core.state import AppState, StateManager, normalize_app_state, safe_minimal_state
+from ..core.state import AppState, StateManager, apply_preset, normalize_app_state, safe_minimal_state
 from .screens import (
     DashboardScreen,
     FirstRunScreen,
     HeaderSelectScreen,
     PluginSelectScreen,
+    PresetScreen,
     ProblemsScreen,
     RecoveryScreen,
     ThemeSelectScreen,
@@ -111,10 +112,10 @@ class OmegaApp(App):
         padding: 1 2;
         margin-bottom: 1;
     }
-    #first-run-actions {
+    #first-run-actions, #presets-actions {
         height: 3;
     }
-    #first-run-actions Button {
+    #first-run-actions Button, #presets-actions Button {
         margin-right: 1;
     }
     """
@@ -124,6 +125,7 @@ class OmegaApp(App):
         Binding("a", "apply_changes", "Apply"),
         Binding("d,1", "switch_tab('tab-dashboard')", "Dashboard"),
         Binding("x,6", "switch_tab('tab-problems')", "Problems"),
+        Binding("y", "switch_tab('tab-presets')", "Presets"),
         Binding("p,2", "switch_tab('tab-plugins')", "Plugins"),
         Binding("t,3", "switch_tab('tab-themes')", "Themes"),
         Binding("h,4", "switch_tab('tab-headers')", "Headers"),
@@ -160,6 +162,8 @@ class OmegaApp(App):
                 yield DashboardScreen()
             with TabPane("Problems", id="tab-problems"):
                 yield ProblemsScreen()
+            with TabPane("Presets", id="tab-presets"):
+                yield PresetScreen()
             with TabPane("Plugins", id="tab-plugins"):
                 yield PluginSelectScreen(
                     all_plugins=DB_PLUGINS,
@@ -313,6 +317,15 @@ class OmegaApp(App):
         else:
             logging.error("Fallo en Apply Minimal: %s", result.message)
             self.notify(result.message, severity="error")
+
+    def action_apply_preset(self, preset_id: str) -> None:
+        try:
+            self.state = apply_preset(preset_id, self.state)
+            self.state_manager.save(self.state)
+            self.notify(f"Preset saved: {preset_id}. Press Apply when ready.")
+        except Exception as e:
+            logging.error("Fallo al aplicar preset: %s", e)
+            self.notify(f"Preset error: {e}", severity="error")
 
 
 def main():

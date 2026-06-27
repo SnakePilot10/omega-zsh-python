@@ -5,6 +5,7 @@ import pytest
 from omega_zsh.core.state import (
     AppState,
     StateManager,
+    apply_preset,
     is_safe_minimal_state,
     normalize_app_state,
     safe_minimal_state,
@@ -204,3 +205,26 @@ def test_safe_minimal_state_preserves_custom_allowlist():
     assert state.selected_theme == "robbyrussell"
     assert state.selected_header == "none"
     assert is_safe_minimal_state(state)
+
+
+def test_apply_preset_updates_state_predictably():
+    previous = AppState(allowed_custom_plugins=["local-plugin"], selected_root_theme="root_warning")
+
+    state = apply_preset("power-user", previous)
+
+    assert state.selected_plugins == [
+        "git",
+        "zsh-autosuggestions",
+        "zsh-syntax-highlighting",
+        "fzf-tab",
+        "zoxide",
+        "eza",
+        "fzf",
+        "ripgrep",
+        "fd",
+        "jq",
+    ]
+    assert state.allowed_custom_plugins == ["local-plugin"]
+    assert state.selected_root_theme == "root_warning"
+    assert state.selected_theme == "agnoster"
+    assert state.selected_header == "fastfetch"

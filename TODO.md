@@ -197,7 +197,7 @@
   - Impact: low
   - Verification: UI can show low/medium/high startup impact.
 
-- [ ] 37. Add presets: Minimal, Fast, Pretty, Power User, Termux Safe
+- [x] 37. Add presets: Minimal, Fast, Pretty, Power User, Termux Safe
   - Impact: medium
   - Verification: selecting a preset updates state predictably.
 
