@@ -211,7 +211,7 @@
   - Impact: high
   - Verification: generated personal config has no surprise dashboard or opinionated functions by default.
 
-- [ ] 40. Consider merging `personal.zsh` and `custom.zsh` into one user file
+- [x] 40. Consider merging `personal.zsh` and `custom.zsh` into one user file
   - Impact: medium
   - Verification: user customization path is simpler and backward risk is documented.
 

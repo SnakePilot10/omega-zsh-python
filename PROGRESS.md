@@ -640,6 +640,36 @@
 - Next:
   - Commit and push Item 39.
 
+### 2026-06-26 - Item 40
+
+- TODO item: `40. Consider merging personal.zsh and custom.zsh into one user file`
+- Status: completed
+- Files changed:
+  - `docs/config-files.md`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - No runtime behavior changed.
+  - Documented the decision to keep `personal.zsh` and `custom.zsh` separate for now.
+  - Documented compatibility risks and future migration requirements if the files are merged later.
+- Verification commands:
+  - Documentation review.
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: risk and rationale documented.
+  - Passed: source and tests compiled.
+  - Passed: full pytest suite, `143 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 741 nodes, 1622 edges, 38 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - None for runtime behavior. The tradeoff is keeping two customization files until an explicit safe migration exists.
+- Next:
+  - Commit and push Item 40.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`
