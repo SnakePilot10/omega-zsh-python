@@ -1682,3 +1682,31 @@
   - Bootstrap package preflight/idempotency should be split into a future production-hardening item if package installation becomes a release blocker.
 - Next:
   - Commit and push final audit cleanup.
+
+### 2026-06-26 - README Alignment
+
+- TODO item: post-audit documentation alignment
+- Status: completed
+- Files changed:
+  - `README.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - No runtime behavior changed.
+  - README now documents Python `>=3.10`, `--unattended`, `--sync-themes`, `--apply-config`, explicit apply behavior, current TUI screens, `oz doctor`, and known limitations.
+  - Removed stale claims about `-y`, hash cache, decision memory, and unverifiable Hyperdrive/ultra-performance marketing.
+- Verification commands:
+  - Grep audit for stale README claims: `3.13`, `-y`, `Hyperdrive`, `Caché de Hash`, `Memoria de Decisión`, `Ultra`, `God Tier`.
+  - Grep audit for expected README claims: `--unattended`, `--apply-config`, `--sync-themes`, `oz doctor`, `Problems`, `Presets`, `Recovery`, `Python-3.10`.
+  - `git diff --check`
+  - `graphify update`
+- Verification result:
+  - Passed: stale README claims absent.
+  - Passed: expected README claims present.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 741 nodes, 1661 edges, 36 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - This is documentation-only. Release hardening for package preflight, Arch repo updates, CI, and full-repo Ruff remains future work.
+- Next:
+  - Commit and push README alignment.
