@@ -579,6 +579,37 @@
 - Next:
   - Commit and push Item 37.
 
+### 2026-06-26 - Item 38
+
+- TODO item: `38. Make expensive previews explicit instead of automatic on navigation`
+- Status: completed
+- Files changed:
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_ui_header_preview.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Theme preview now renders only when the user presses `Render Preview`.
+  - Header preview now renders only when the user presses `Render Header Preview`.
+  - Navigation/highlight/input changes no longer run subprocess-backed previews automatically.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_ui_header_preview.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused header preview tests, `4 passed`.
+  - Passed: full pytest suite, `143 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 734 nodes, 1616 edges, 36 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Users must press the preview button after changing selection; this is intentional to avoid surprise subprocess work.
+- Next:
+  - Commit and push Item 38.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`

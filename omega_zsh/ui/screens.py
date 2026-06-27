@@ -484,6 +484,7 @@ class ThemeSelectScreen(Horizontal):
 
         with Vertical(id="theme-preview-container"):
             yield Label("[bold #00f5ff]PREVISUALIZACIÓN[/]")
+            yield Button("Render Preview", variant="primary", id="btn-theme-preview")
             yield Static("Select a theme to see preview...", id="preview-area")
 
     def get_selected(self) -> str:
@@ -492,9 +493,9 @@ class ThemeSelectScreen(Horizontal):
             return self.all_themes[idx].id
         return self.selected_theme
 
-    @on(ListView.Highlighted)
+    @on(Button.Pressed, "#btn-theme-preview")
     @work(exclusive=True, thread=True)
-    def update_preview(self, event: ListView.Highlighted) -> None:
+    def update_preview(self) -> None:
         idx = self.query_one(ListView).index
         if idx is None:
             return
@@ -587,6 +588,7 @@ class HeaderSelectScreen(Vertical):
                 yield lv
 
         yield Label("[bold #00f5ff]PREVIEW:[/]")
+        yield Button("Render Header Preview", variant="primary", id="btn-header-preview")
         yield Static("", id="preview-area")
 
     def get_selected(self) -> tuple[str, str, str]:
@@ -610,9 +612,7 @@ class HeaderSelectScreen(Vertical):
 
         return h_type, text, font
 
-    @on(RadioSet.Changed)
-    @on(Input.Changed)
-    @on(ListView.Highlighted)
+    @on(Button.Pressed, "#btn-header-preview")
     @work(exclusive=True, thread=True)
     def update_header_preview(self) -> None:
         h_type, text, font = self.get_selected()

@@ -201,7 +201,7 @@
   - Impact: medium
   - Verification: selecting a preset updates state predictably.
 
-- [ ] 38. Make expensive previews explicit instead of automatic on navigation
+- [x] 38. Make expensive previews explicit instead of automatic on navigation
   - Impact: medium
   - Verification: theme/header previews run only by user action or debounced request.
 

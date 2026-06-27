@@ -55,3 +55,11 @@ def test_none_no_lanza_subproceso():
 
         mock_run.assert_not_called()
         assert preview.update.called
+
+
+def test_header_preview_is_explicit_button_action():
+    callbacks = getattr(HeaderSelectScreen.update_header_preview, "_textual_on", [])
+
+    assert any("Button.Pressed" in str(callback) for callback in callbacks)
+    assert not any("Input.Changed" in str(callback) for callback in callbacks)
+    assert not any("ListView.Highlighted" in str(callback) for callback in callbacks)
