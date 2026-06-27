@@ -1526,7 +1526,8 @@
   - Passed: source and tests compiled.
   - Passed: full pytest suite, `145 passed`.
 - Graphify update:
-  - Pending final verification.
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 747 nodes, 1632 edges, 40 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
 - Risks:
   - None; this is a purely aesthetic documentation change to the template.
 - Next:

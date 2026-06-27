@@ -23,5 +23,5 @@ if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
     for _f in "$ZSH"/oh-my-zsh.sh "$ZSH"/lib/*.zsh; do omega_zcompile "$_f"; done
 {% endif %}
 else
-    echo "[omega-zsh] Oh My Zsh not found." >&2
+    echo "[omega-zsh] Oh My Zsh not found. Run 'omega doctor'." >&2
 fi
