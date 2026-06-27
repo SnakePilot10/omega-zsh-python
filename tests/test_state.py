@@ -2,8 +2,10 @@ import json
 
 import pytest
 
+from omega_zsh.core.constants import unknown_plugin_ids
 from omega_zsh.core.state import (
     AppState,
+    PRESETS,
     StateManager,
     apply_preset,
     is_safe_minimal_state,
@@ -228,3 +230,8 @@ def test_apply_preset_updates_state_predictably():
     assert state.selected_root_theme == "root_warning"
     assert state.selected_theme == "agnoster"
     assert state.selected_header == "fastfetch"
+
+
+def test_all_preset_plugin_ids_are_known():
+    for preset in PRESETS.values():
+        assert unknown_plugin_ids(preset["selected_plugins"], []) == []

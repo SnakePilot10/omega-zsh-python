@@ -276,6 +276,10 @@ class PresetScreen(Vertical):
 class RecoveryScreen(Vertical):
     """Pantalla para ejecutar recuperación shell con backups."""
 
+    def __init__(self):
+        super().__init__()
+        self.restore_armed = False
+
     def compose(self) -> ComposeResult:
         yield Label("[bold #ff006e]RECOVERY / NUCLEAR FIX[/]")
         yield Label(NAV_HINT, id="recovery-nav-hint")
@@ -337,6 +341,8 @@ class RecoveryScreen(Vertical):
         context = SystemContext()
         self._write_log(f"$ omega recovery {action}\n")
         try:
+            if action != "restore-zshrc":
+                self.restore_armed = False
             if action == "dry-run":
                 result = recovery_dry_run(context)
             elif action == "cleanup":
@@ -344,6 +350,12 @@ class RecoveryScreen(Vertical):
             elif action == "nuclear-fix":
                 result = nuclear_fix_shell(context)
             elif action == "restore-zshrc":
+                if not self.restore_armed:
+                    self.restore_armed = True
+                    self._write_log("[confirm] Press Restore Backup again to overwrite .zshrc.\n")
+                    self._notify("Press Restore Backup again to confirm.", severity="warning")
+                    return
+                self.restore_armed = False
                 selected_backup = self._selected_backup()
                 result = (
                     restore_zshrc_backup(selected_backup, context)

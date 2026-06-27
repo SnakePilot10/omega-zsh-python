@@ -8,6 +8,7 @@ def test_recovery_screen_uses_core_restore_action():
     screen = RecoveryScreen()
     screen._write_log = MagicMock()
     screen._notify = MagicMock()
+    screen.restore_armed = True
 
     with patch("omega_zsh.ui.screens.SystemContext"), \
          patch("omega_zsh.ui.screens.restore_latest_zshrc_backup") as mock_restore:
@@ -28,6 +29,7 @@ def test_recovery_screen_reports_core_errors():
     screen = RecoveryScreen()
     screen._write_log = MagicMock()
     screen._notify = MagicMock()
+    screen.restore_armed = True
 
     with patch("omega_zsh.ui.screens.SystemContext"), \
          patch("omega_zsh.ui.screens.restore_latest_zshrc_backup") as mock_restore:
@@ -48,6 +50,7 @@ def test_recovery_screen_restores_selected_backup(tmp_path):
     screen._write_log = MagicMock()
     screen._notify = MagicMock()
     screen._selected_backup = MagicMock(return_value=selected)
+    screen.restore_armed = True
 
     with patch("omega_zsh.ui.screens.SystemContext"), \
          patch("omega_zsh.ui.screens.restore_zshrc_backup") as mock_restore:
@@ -63,3 +66,16 @@ def test_recovery_screen_restores_selected_backup(tmp_path):
         mock_restore.assert_called_once()
         assert mock_restore.call_args.args[0] == selected
         screen._notify.assert_called_with("Restored selected backup")
+
+
+def test_recovery_screen_requires_restore_confirmation():
+    screen = RecoveryScreen()
+    screen._write_log = MagicMock()
+    screen._notify = MagicMock()
+
+    with patch("omega_zsh.ui.screens.restore_latest_zshrc_backup") as mock_restore:
+        screen._run_recovery("restore-zshrc")
+
+        mock_restore.assert_not_called()
+        assert screen.restore_armed is True
+        screen._notify.assert_called_with("Press Restore Backup again to confirm.", severity="warning")

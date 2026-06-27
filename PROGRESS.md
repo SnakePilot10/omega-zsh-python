@@ -670,6 +670,37 @@
 - Next:
   - Commit and push Item 40.
 
+### 2026-06-26 - Preset And Restore Hygiene
+
+- TODO item: review caveats after `36edb51`.
+- Status: completed
+- Files changed:
+  - `omega_zsh/ui/screens.py`
+  - `tests/test_state.py`
+  - `tests/test_ui_recovery.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - Added coverage that every preset plugin ID is known by the catalog.
+  - Restore Backup now requires pressing the button twice before overwriting `.zshrc`.
+  - Running another recovery action disarms a pending restore confirmation.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q tests/test_state.py tests/test_ui_recovery.py`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: focused preset/recovery tests, `19 passed`.
+  - Passed: full pytest suite, `145 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 745 nodes, 1630 edges, 38 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Restore confirmation is intentionally simple stateful button arming, not a modal dialog.
+- Next:
+  - Commit and push the hygiene fixes.
+
 ### 2026-06-21 - Item 07
 
 - TODO item: `07. Normalize and validate state.json schema`
