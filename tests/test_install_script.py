@@ -11,24 +11,17 @@ def test_install_script_syntax_ok():
     assert result.returncode == 0, result.stderr
 
 
-def test_install_script_requires_explicit_apply_and_theme_sync_flags():
-    content = INSTALL_SH.read_text(encoding="utf-8")
+def test_install_script_delegates_flags_to_bootstrap():
+    result = subprocess.run(
+        ["bash", str(INSTALL_SH), "--apply-config", "--separation-smoke"],
+        env={"HOME": "/tmp", "PATH": "/usr/bin:/bin"},
+        capture_output=True,
+        text=True,
+    )
 
-    assert "APPLY_CONFIG=false" in content
-    assert "SYNC_THEMES=false" in content
-    assert "--apply-config" in content
-    assert "--sync-themes" in content
-    assert 'if [ "$APPLY_CONFIG" = true ]; then' in content
-    assert 'if [ "$SYNC_THEMES" = true ]; then' in content
-    assert ".zshrc no modificado" in content
-    assert "Temas Omega no sincronizados" in content
-
-
-def test_install_script_uses_core_apply_not_ui_for_theme_sync():
-    content = INSTALL_SH.read_text(encoding="utf-8")
-
-    assert "from omega_zsh.core.apply import link_omega_themes" in content
-    assert "from omega_zsh.ui.app import link_omega_themes" not in content
+    assert result.returncode == 0, result.stderr
+    assert "APPLY_CONFIG=true" in result.stdout
+    assert "SYNC_THEMES=false" in result.stdout
 
 
 def test_install_script_separation_smoke_does_not_write_shell_files(tmp_path):
