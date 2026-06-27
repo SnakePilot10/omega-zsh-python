@@ -1710,3 +1710,29 @@
   - This is documentation-only. Release hardening for package preflight, Arch repo updates, CI, and full-repo Ruff remains future work.
 - Next:
   - Commit and push README alignment.
+
+### 2026-06-26 - README Polish
+
+- TODO item: post-review documentation precision
+- Status: completed
+- Files changed:
+  - `README.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - No runtime behavior changed.
+  - README now clarifies that bootstrap installs plugins/tools from saved or imported state.
+  - Development instructions now separate targeted audited Ruff checks from full-repo Ruff, which still exposes inherited debt.
+- Verification commands:
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m ruff check omega_zsh/core/constants.py omega_zsh/core/generator.py tests/test_catalog.py tests/test_generator.py tests/test_install_script.py`
+  - `git diff --check`
+  - `graphify update`
+- Verification result:
+  - Passed: targeted Ruff check.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 742 nodes, 1662 edges, 36 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Documentation-only polish.
+- Next:
+  - Commit and push README polish.

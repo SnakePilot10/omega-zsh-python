@@ -87,7 +87,7 @@ Bootstrap currently does this:
 - Runs `pip install --upgrade pip` and `pip install -e .`.
 - Loads saved Omega state from `~/.omega-zsh`.
 - Ensures Oh My Zsh exists.
-- Installs selected plugins and supported binary tools.
+- Installs selected plugins and supported binary tools from saved/imported state.
 - Syncs themes only when `--sync-themes` is passed.
 - Writes `.zshrc` only when `--apply-config` is passed.
 
@@ -193,6 +193,16 @@ pip install -e '.[dev]'
 
 python3 -m compileall omega_zsh tests
 python -m pytest -q
+
+# Targeted lint for the final audited files.
+python -m ruff check \
+  omega_zsh/core/constants.py \
+  omega_zsh/core/generator.py \
+  tests/test_catalog.py \
+  tests/test_generator.py \
+  tests/test_install_script.py
+
+# Full lint currently exposes inherited debt outside the final audit scope.
 python -m ruff check omega_zsh tests
 ```
 
