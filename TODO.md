@@ -231,6 +231,6 @@
   - Impact: low
   - Verification: dead/demo code is removed.
 
-- [ ] 45. Run final graphify update and architecture audit
+- [x] 45. Run final graphify update and architecture audit
   - Impact: high
   - Verification: `graphify update` completes and `GRAPH_REPORT.md` reflects the simplified architecture.

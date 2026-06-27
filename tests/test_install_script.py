@@ -4,6 +4,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+
 from omega_zsh.core import bootstrap
 from omega_zsh.platforms.arch import ArchPlatform
 from omega_zsh.platforms.debian import DebianPlatform
@@ -68,6 +70,31 @@ def test_bootstrap_ensures_omz_before_installing_plugins(monkeypatch, tmp_path):
     )
     call_names = [call[0] for call in installer.mock_calls]
     assert call_names.index("ensure_omz") < call_names.index("install_all_result")
+
+
+def test_bootstrap_aborts_when_ensure_omz_fails(monkeypatch, tmp_path):
+    ctx = _ctx(tmp_path)
+    state = SimpleNamespace(selected_plugins=["zsh-autosuggestions"])
+    installer = MagicMock()
+    installer.ensure_omz.return_value = False
+
+    monkeypatch.setattr(sys, "argv", ["bootstrap", "--unattended"])
+    monkeypatch.setattr(bootstrap, "detect_os", lambda: "debian")
+    monkeypatch.setattr(bootstrap, "install_core_packages", lambda os_id: None)
+    monkeypatch.setattr(bootstrap, "setup_venv", lambda project_dir: tmp_path / ".venv")
+    monkeypatch.setattr(bootstrap.subprocess, "run", MagicMock())
+    monkeypatch.setattr(bootstrap, "SystemContext", lambda: ctx)
+    monkeypatch.setattr(bootstrap, "PluginInstaller", MagicMock(return_value=installer))
+    monkeypatch.setattr(
+        bootstrap, "StateManager", MagicMock(return_value=SimpleNamespace(load=lambda: state))
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        bootstrap.main()
+
+    assert exc.value.code == 1
+    installer.ensure_omz.assert_called_once()
+    installer.install_all_result.assert_not_called()
 
 
 def test_bootstrap_sync_themes_and_apply_config(monkeypatch, tmp_path):

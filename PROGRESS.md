@@ -1638,3 +1638,47 @@
   - `install_core_packages()` still installs base packages eagerly and does not run package-manager-specific preflight checks; this was existing behavior and remains a future production-hardening concern.
 - Next:
   - Commit and push the completed fix.
+
+### 2026-06-26 - Item 45 Final Architecture Audit
+
+- TODO item: `45. Run final graphify update and architecture audit`
+- Status: completed
+- Files changed:
+  - `TODO.md`
+  - `PROGRESS.md`
+  - `omega_zsh/core/constants.py`
+  - `omega_zsh/core/generator.py`
+  - `tests/test_catalog.py`
+  - `tests/test_generator.py`
+  - `tests/test_install_script.py`
+- Behavior changed:
+  - Custom plugin doctor checks now exclude known catalog/native/binary IDs even if they are accidentally allowlisted as custom plugins.
+  - Dormant default `custom.zsh` generation is now minimal and no longer injects opinionated aliases or `auto_venv`.
+  - Bootstrap has negative coverage ensuring a failed Oh My Zsh install aborts before plugin installation.
+  - `constants.py` line-length lint debt touched by the catalog fix was cleaned without behavior changes.
+- Architecture audit:
+  - Graphify reports no import cycles.
+  - Core hubs are expected: `SystemContext`, `AppState`, `PluginInstaller`, doctor/recovery screens, and apply flow.
+  - Bootstrap/platform/install logic is now separated across `bootstrap.py`, `PluginInstaller`, and `platforms/*` without the previous Debian fallback for pacman systems.
+  - UI still bridges to core services by design; no new UI-to-installer ownership path was introduced.
+  - `install_core_packages()` remains the main production-hardening risk because it still installs base packages eagerly without per-package preflight.
+  - `ArchPlatform.update_repos()` remains conservative-use only; automatic invocation would be too aggressive because it performs `pacman -Syu`.
+- Verification commands:
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m ruff check omega_zsh/core/constants.py omega_zsh/core/generator.py tests/test_catalog.py tests/test_generator.py tests/test_install_script.py`
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+  - `graphify update`
+- Verification result:
+  - Passed: Ruff on touched files.
+  - Passed: source and tests compiled.
+  - Passed: full pytest suite, `151 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 738 nodes, 1658 edges, 35 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Full-repo Ruff still has unrelated pre-existing lint debt outside this final cleanup.
+  - Bootstrap package preflight/idempotency should be split into a future production-hardening item if package installation becomes a release blocker.
+- Next:
+  - Commit and push final audit cleanup.

@@ -21,7 +21,10 @@ class BinaryToolDef:
         return self.packages.get(package_manager, self.id)
 
     def supports(self, package_manager: str) -> bool:
-        return self.supported_package_managers is None or package_manager in self.supported_package_managers
+        return (
+            self.supported_package_managers is None
+            or package_manager in self.supported_package_managers
+        )
 
 
 @dataclass
@@ -87,9 +90,21 @@ BINARY_TOOLS.update(
     {
         "bat": BinaryToolDef("bat", ["bat", "batcat"], {"apt": "bat", "nala": "bat"}),
         "fd": BinaryToolDef("fd", ["fd", "fdfind"], {"apt": "fd-find", "nala": "fd-find"}),
-        "fortune": BinaryToolDef("fortune", ["fortune"], {"apt": "fortune-mod", "nala": "fortune-mod"}),
-        "lolcat": BinaryToolDef("lolcat", ["lolcat"], supported_package_managers=["apt", "nala", "pkg"]),
-        "ripgrep": BinaryToolDef("ripgrep", ["rg", "ripgrep"], {"apt": "ripgrep", "nala": "ripgrep"}),
+        "fortune": BinaryToolDef(
+            "fortune",
+            ["fortune"],
+            {"apt": "fortune-mod", "nala": "fortune-mod"},
+        ),
+        "lolcat": BinaryToolDef(
+            "lolcat",
+            ["lolcat"],
+            supported_package_managers=["apt", "nala", "pkg"],
+        ),
+        "ripgrep": BinaryToolDef(
+            "ripgrep",
+            ["rg", "ripgrep"],
+            {"apt": "ripgrep", "nala": "ripgrep"},
+        ),
         "httpie": BinaryToolDef("httpie", ["http", "httpie"], {"apt": "httpie", "nala": "httpie"}),
     }
 )
@@ -115,7 +130,11 @@ def binary_supported(plugin_id: str, package_manager: str) -> bool:
 
 
 def unsupported_binary_tools(plugin_ids: List[str], package_manager: str) -> List[str]:
-    return [plugin_id for plugin_id in plugin_ids if is_binary_tool(plugin_id) and not binary_supported(plugin_id, package_manager)]
+    return [
+        plugin_id
+        for plugin_id in plugin_ids
+        if is_binary_tool(plugin_id) and not binary_supported(plugin_id, package_manager)
+    ]
 
 # --- ALL PLUGINS LIST (UI DATA) ---
 DB_PLUGINS: List[PluginDef] = [
@@ -203,21 +222,32 @@ NATIVE_ZSH_PLUGIN_IDS = {"git"}
 
 def known_plugin_ids(custom_plugin_ids: List[str] | None = None) -> set[str]:
     custom = set(custom_plugin_ids or [])
-    return {plugin.id for plugin in DB_PLUGINS} | set(EXTERNAL_URLS) | set(BINARY_TOOLS) | NATIVE_ZSH_PLUGIN_IDS | custom
+    return (
+        {plugin.id for plugin in DB_PLUGINS}
+        | set(EXTERNAL_URLS)
+        | set(BINARY_TOOLS)
+        | NATIVE_ZSH_PLUGIN_IDS
+        | custom
+    )
 
 
-def unknown_plugin_ids(plugin_ids: List[str], custom_plugin_ids: List[str] | None = None) -> List[str]:
+def unknown_plugin_ids(
+    plugin_ids: List[str], custom_plugin_ids: List[str] | None = None
+) -> List[str]:
     known = known_plugin_ids(custom_plugin_ids)
     return [plugin_id for plugin_id in plugin_ids if plugin_id not in known]
 
 
-def valid_selected_plugins(plugin_ids: List[str], custom_plugin_ids: List[str] | None = None) -> List[str]:
+def valid_selected_plugins(
+    plugin_ids: List[str], custom_plugin_ids: List[str] | None = None
+) -> List[str]:
     known = known_plugin_ids(custom_plugin_ids)
     return [plugin_id for plugin_id in plugin_ids if plugin_id in known]
 
 
 def selected_custom_plugin_ids(plugin_ids: List[str], custom_plugin_ids: List[str]) -> List[str]:
-    custom = set(custom_plugin_ids)
+    base_known = known_plugin_ids([])
+    custom = set(custom_plugin_ids) - base_known
     return [plugin_id for plugin_id in plugin_ids if plugin_id in custom]
 
 

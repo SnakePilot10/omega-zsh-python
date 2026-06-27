@@ -95,17 +95,8 @@ class ConfigGenerator:
             return
 
         path.parent.mkdir(parents=True, exist_ok=True)
-        content = """# --- OMEGA-ZSH USER CUSTOMIZATIONS ---
-# Agrega aquí tus alias, funciones y variables personales.
-alias zr='source ~/.zshrc'
-alias zc='nano ~/.zshrc'
-
-# Ejemplo de función auto-venv
-function auto_venv() {
-    if [[ -d ".venv" ]]; then
-        source .venv/bin/activate
-    fi
-}
+        content = """# Omega-ZSH user customizations.
+# Put manual aliases/functions here.
 """
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)

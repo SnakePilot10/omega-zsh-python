@@ -81,3 +81,15 @@ def test_generate_personal_config(generator, temp_home):
     assert "oz --banner" not in content
     assert "function up" not in content
     assert "alias zr=" not in content
+
+
+def test_create_default_custom_zsh_is_minimal(generator, temp_home):
+    output_path = temp_home / ".omega-zsh" / "custom.zsh"
+
+    generator.create_default_custom_zsh(output_path)
+
+    content = output_path.read_text(encoding="utf-8")
+    assert "Put manual aliases/functions here." in content
+    assert "alias zr=" not in content
+    assert "alias zc=" not in content
+    assert "auto_venv" not in content

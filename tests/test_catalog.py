@@ -64,6 +64,13 @@ def test_catalog_allows_explicit_custom_plugin_ids():
     assert selected_custom_plugin_ids(selected, allowed) == ["mi-plugin"]
 
 
+def test_catalog_does_not_treat_known_ids_as_custom_plugins():
+    selected = ["git", "fd", "zsh-autosuggestions", "mi-plugin"]
+    allowed = ["git", "fd", "zsh-autosuggestions", "mi-plugin"]
+
+    assert selected_custom_plugin_ids(selected, allowed) == ["mi-plugin"]
+
+
 def test_catalog_exposes_startup_impact_labels():
     assert startup_impact("fastfetch") == "high"
     assert startup_impact("zsh-autosuggestions") == "medium"
