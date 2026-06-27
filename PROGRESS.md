@@ -1736,3 +1736,43 @@
   - Documentation-only polish.
 - Next:
   - Commit and push README polish.
+
+### 2026-06-27 - Post-audit blockers: Recovery ordering and Ruff CI
+
+- TODO item: post-audit blocker cleanup
+- Status: completed
+- Commit:
+  - `1c7a68d Fix backup restore ordering and Ruff CI`
+- Files changed:
+  - `README.md`
+  - `omega_zsh/core/recovery.py`
+  - `tests/test_recovery.py`
+  - `tests/test_oz.py`
+  - Runtime and test files formatted for full-repo Ruff compliance.
+  - `.github/workflows/ci.yml` was reviewed and left unchanged because it already runs `ruff check .` and `ruff format --check .`.
+- Behavior changed:
+  - `.zshrc` backups are sorted by filename timestamp first, with `mtime` as a fallback/tiebreaker.
+  - Restore Backup now chooses the deterministic latest `.zshrc.YYYYMMDD-HHMMSS.bak` entry instead of relying on filesystem modification time.
+  - README development checks now match the full-repo Ruff gates used by CI.
+  - CLI doctor smoke coverage was expanded for read-only and `--fix` flows.
+- Verification commands:
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m ruff check .`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m ruff format --check .`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m compileall omega_zsh tests`
+  - `git diff --check`
+  - `graphify update`
+- Verification result:
+  - Passed: full-repo Ruff check.
+  - Passed: full-repo Ruff format check.
+  - Passed: full pytest suite, `152 passed`.
+  - Passed: source and tests compiled.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 746 nodes, 1675 edges, 37 communities; graph outputs were already current in git after the rebuild.
+- Risks:
+  - GitHub Actions run was not verified from the connector; confirm in the Actions tab.
+  - TUI smoke coverage and `install_core_packages()` package preflight remain future release-hardening items.
+- Next:
+  - Commit and push this progress entry.
