@@ -1,0 +1,16 @@
+{% if is_termux %}
+# --- Root/Sudo Logic ---
+if [ -x "$(command -v su)" ]; then
+    # Fallback for Termux if tsu is missing: handle arguments or default to shell
+    unalias sudo 2>/dev/null
+    sudo() {
+        if [ "$#" -eq 0 ]; then
+            su -c "unset LD_PRELOAD; export PATH=$PREFIX/bin:$PATH; export HOME=$HOME; exec zsh"
+        else
+            su -c "unset LD_PRELOAD; export PATH=$PREFIX/bin:$PATH; export HOME=$HOME; \"$@\""
+        fi
+    }
+elif command -v tsu > /dev/null 2>&1; then
+    alias sudo='tsu'
+fi
+{% endif %}

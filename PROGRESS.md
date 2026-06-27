@@ -1473,3 +1473,36 @@
   - Importing `link_omega_themes()` from `omega_zsh.ui.app` works because Textual is a runtime dependency, but a future refactor should move theme sync to a core module.
 - Next:
   - Continue with Item 07: normalize and validate `state.json` schema.
+### 2026-06-26 - Item 41
+
+- TODO item: `41. Split .zshrc.j2 into smaller template blocks`
+- Status: completed
+- Files changed:
+  - `omega_zsh/assets/templates/.zshrc.j2`
+  - `omega_zsh/assets/templates/_omz.j2` (new)
+  - `omega_zsh/assets/templates/_tools.j2` (new)
+  - `omega_zsh/assets/templates/_header.j2` (new)
+  - `omega_zsh/assets/templates/_termux.j2` (new)
+  - `omega_zsh/assets/templates/_core.j2` (new)
+  - `tests/test_apply.py`
+  - `TODO.md`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `.zshrc.j2` is now a orchestrator template using `{% include %}` for modularity.
+  - Logic split into `_omz.j2`, `_core.j2`, `_tools.j2`, `_header.j2`, and `_termux.j2`.
+  - No change in final rendered `.zshrc` content, verified by existing tests.
+- Verification commands:
+  - `python3 -m compileall omega_zsh tests`
+  - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
+  - `git diff --check`
+- Verification result:
+  - Passed: source and tests compiled.
+  - Passed: full pytest suite, `143 passed`.
+  - Passed: diff whitespace check.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 735 nodes, 1617 edges, 37 communities; updated `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md`.
+- Risks:
+  - Jinja2 template loader must correctly find the new partials in the same directory. Tests verified this.
+- Next:
+  - Commit and push Item 41.

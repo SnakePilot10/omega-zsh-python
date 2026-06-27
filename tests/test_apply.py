@@ -49,7 +49,9 @@ def test_apply_config_orchestrates_theme_links_and_zshrc_write(tmp_path, monkeyp
     themes.mkdir()
     (themes / "omega-test.zsh-theme").write_text("PROMPT=test\n", encoding="utf-8")
     repo_templates = Path(__file__).parent.parent / "omega_zsh" / "assets" / "templates"
-    (templates / ".zshrc.j2").write_text((repo_templates / ".zshrc.j2").read_text(encoding="utf-8"), encoding="utf-8")
+    # Copiar todas las plantillas
+    for template in repo_templates.glob("*.j2"):
+        (templates / template.name).write_text(template.read_text(encoding="utf-8"), encoding="utf-8")
     context = SystemContext(home=home, env={"ZSH": str(omz)})
     context.assets_dir = assets
     state = AppState(selected_plugins=["git"], selected_header="none")

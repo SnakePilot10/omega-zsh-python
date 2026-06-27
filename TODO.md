@@ -215,7 +215,7 @@
   - Impact: medium
   - Verification: user customization path is simpler and backward risk is documented.
 
-- [ ] 41. Split `.zshrc.j2` into smaller template blocks
+- [x] 41. Split `.zshrc.j2` into smaller template blocks
   - Impact: medium
   - Verification: OMZ, tools, header, and Termux sections can be rendered independently.
 

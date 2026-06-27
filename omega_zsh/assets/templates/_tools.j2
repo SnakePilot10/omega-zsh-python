@@ -1,0 +1,27 @@
+# --- Modern Tools Configuration ---
+{% if 'zoxide' in active_tools %}
+if (( $+commands[zoxide] )); then
+    eval "$(zoxide init zsh)"
+fi
+{% endif %}
+
+{% if 'eza' in active_tools %}
+if (( $+commands[eza] )); then
+    alias ls="eza --icons --group-directories-first"
+    alias ll="eza -lh --icons --group-directories-first"
+    alias la="eza -lah --icons --group-directories-first"
+fi
+{% endif %}
+
+{% if 'yazi' in active_tools %}
+if (( $+commands[yazi] )); then
+    function yy() {
+        local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+        yazi "$@" --cwd-file="$tmp"
+        if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+            builtin cd -- "$cwd"
+        fi
+        rm -f -- "$tmp"
+    }
+fi
+{% endif %}
