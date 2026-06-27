@@ -1,3 +1,5 @@
+import os
+
 from omega_zsh.core.context import SystemContext
 from omega_zsh.core.recovery import (
     cleanup_shell_files,
@@ -62,6 +64,24 @@ def test_recovery_lists_valid_zshrc_backups_newest_first(tmp_path, monkeypatch):
     backups = list_zshrc_backups(context)
 
     assert backups == [newer, older]
+
+
+def test_recovery_lists_backups_by_filename_timestamp_before_mtime(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    backup_dir = home / ".omega-backups"
+    backup_dir.mkdir(parents=True)
+    older_name_newer_mtime = backup_dir / ".zshrc.20260624-120000.bak"
+    newer_name_older_mtime = backup_dir / ".zshrc.20260625-120000.bak"
+    older_name_newer_mtime.write_text("# older filename\n", encoding="utf-8")
+    newer_name_older_mtime.write_text("# newer filename\n", encoding="utf-8")
+    os.utime(older_name_newer_mtime, (3_000_000_000, 3_000_000_000))
+    os.utime(newer_name_older_mtime, (1_000_000_000, 1_000_000_000))
+    context = SystemContext(home=home, env={})
+    monkeypatch.setattr("omega_zsh.core.recovery.validate_zsh_syntax", lambda path: (True, ""))
+
+    backups = list_zshrc_backups(context)
+
+    assert backups == [newer_name_older_mtime, older_name_newer_mtime]
 
 
 def test_recovery_restores_selected_zshrc_backup(tmp_path, monkeypatch):

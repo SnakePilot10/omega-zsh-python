@@ -31,8 +31,10 @@ def test_problems_screen_runs_read_only_doctor():
     screen._write_log = MagicMock()
     screen._notify = MagicMock()
 
-    with patch("omega_zsh.ui.screens.SystemContext"), \
-         patch("omega_zsh.ui.screens.run_doctor") as mock_doctor:
+    with (
+        patch("omega_zsh.ui.screens.SystemContext"),
+        patch("omega_zsh.ui.screens.run_doctor") as mock_doctor,
+    ):
         mock_doctor.return_value = {"overall": "ok", "checks": []}
 
         screen._run_doctor()
@@ -46,8 +48,10 @@ def test_problems_screen_runs_explicit_doctor_fix():
     screen._write_log = MagicMock()
     screen._notify = MagicMock()
 
-    with patch("omega_zsh.ui.screens.SystemContext"), \
-         patch("omega_zsh.ui.screens.run_doctor_fix") as mock_fix:
+    with (
+        patch("omega_zsh.ui.screens.SystemContext"),
+        patch("omega_zsh.ui.screens.run_doctor_fix") as mock_fix,
+    ):
         mock_fix.return_value = {
             "fixes": [{"id": "manifest", "status": "fixed", "message": "ok", "detail": "x"}],
             "report": {"overall": "warning", "checks": []},

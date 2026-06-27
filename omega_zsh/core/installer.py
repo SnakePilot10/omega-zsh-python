@@ -126,8 +126,9 @@ class PluginInstaller:
     def install_all(self, selected_ids: List[str], on_progress: Callable[[str], None]) -> bool:
         return self.install_all_result(selected_ids, on_progress).ok
 
-    def install_all_result(self, selected_ids: List[str], on_progress: Callable[[str], None]) -> InstallResult:
-
+    def install_all_result(
+        self, selected_ids: List[str], on_progress: Callable[[str], None]
+    ) -> InstallResult:
         """
         Orquestador principal de instalación de plugins.
 
@@ -264,6 +265,4 @@ class PluginInstaller:
             return True
 
         on_progress("Oh My Zsh no encontrado. Clonando...")
-        return self._git_clone(
-            "https://github.com/ohmyzsh/ohmyzsh.git", omz_dir, on_progress
-        )
+        return self._git_clone("https://github.com/ohmyzsh/ohmyzsh.git", omz_dir, on_progress)

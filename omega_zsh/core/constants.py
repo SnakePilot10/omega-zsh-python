@@ -136,6 +136,7 @@ def unsupported_binary_tools(plugin_ids: List[str], package_manager: str) -> Lis
         if is_binary_tool(plugin_id) and not binary_supported(plugin_id, package_manager)
     ]
 
+
 # --- ALL PLUGINS LIST (UI DATA) ---
 DB_PLUGINS: List[PluginDef] = [
     PluginDef(
@@ -150,9 +151,7 @@ DB_PLUGINS: List[PluginDef] = [
         "CORE",
         EXTERNAL_URLS["zsh-syntax-highlighting"],
     ),
-    PluginDef(
-        "fzf-tab", "Menú autocompletado visual", "CORE", EXTERNAL_URLS["fzf-tab"]
-    ),
+    PluginDef("fzf-tab", "Menú autocompletado visual", "CORE", EXTERNAL_URLS["fzf-tab"]),
     PluginDef(
         "zsh-completions",
         "Más definiciones de tabulación",
@@ -182,9 +181,7 @@ DB_PLUGINS: List[PluginDef] = [
         "UI",
         EXTERNAL_URLS["zsh-navigation-tools"],
     ),
-    PluginDef(
-        "alias-tips", "Te recuerda usar tus alias", "EDU", EXTERNAL_URLS["alias-tips"]
-    ),
+    PluginDef("alias-tips", "Te recuerda usar tus alias", "EDU", EXTERNAL_URLS["alias-tips"]),
     PluginDef("zoxide", "El 'cd' inteligente (z)", "NAV"),
     PluginDef("eza", "El 'ls' moderno con iconos", "UI"),
     PluginDef("yazi", "Gestor de archivos TUI rápido", "NAV"),
@@ -275,6 +272,7 @@ STARTUP_IMPACT: Dict[str, str] = {
 
 def startup_impact(plugin_id: str) -> str:
     return STARTUP_IMPACT.get(plugin_id, "low")
+
 
 THEMES_OMZ_BUILTIN: List[ThemeDef] = [
     ThemeDef("robbyrussell", "Clásico (Default)"),

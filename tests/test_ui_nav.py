@@ -7,8 +7,7 @@ from omega_zsh.ui.app import OmegaApp
 
 def test_action_switch_tab_cambia_tab_activo():
     """Verifica que action_switch_tab asigna el tab correcto en TabbedContent."""
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"):
+    with patch("omega_zsh.ui.app.SystemContext"), patch("omega_zsh.ui.app.StateManager"):
         app = OmegaApp()
         mock_tabs = MagicMock(spec=TabbedContent)
         app.query_one = MagicMock(return_value=mock_tabs)
@@ -21,8 +20,7 @@ def test_action_switch_tab_cambia_tab_activo():
 
 def test_action_switch_tab_fallo_silencioso():
     """Verifica que si TabbedContent no existe, no lanza excepción."""
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"):
+    with patch("omega_zsh.ui.app.SystemContext"), patch("omega_zsh.ui.app.StateManager"):
         app = OmegaApp()
         app.query_one = MagicMock(side_effect=Exception("widget not found"))
 
@@ -35,8 +33,7 @@ def test_action_switch_tab_fallo_silencioso():
 
 def test_action_switch_tab_setup_unavailable_noop():
     """Setup shortcut should not target a missing tab outside first-run."""
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"):
+    with patch("omega_zsh.ui.app.SystemContext"), patch("omega_zsh.ui.app.StateManager"):
         app = OmegaApp()
         app.first_run = False
         app.query_one = MagicMock()

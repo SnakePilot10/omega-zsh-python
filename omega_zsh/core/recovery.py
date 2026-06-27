@@ -1,13 +1,14 @@
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 from .backup import create_backup, restore_backup
 from .context import SystemContext
 from .shell import validate_zsh_syntax
 
-
 OMEGA_RE = re.compile(r"omega[-_]?zsh|omega_zsh|omegazsh|omega-zsh-python", re.IGNORECASE)
+ZSHRC_BACKUP_RE = re.compile(r"\.zshrc\.(\d{8}-\d{6})\.bak$")
 
 
 @dataclass
@@ -60,7 +61,9 @@ def _backup_file(context: SystemContext, path: Path, result: RecoveryResult, dry
     _record_backup(result, create_backup(path, _backup_dir(context)))
 
 
-def _clean_shell_file(context: SystemContext, path: Path, result: RecoveryResult, dry_run: bool) -> None:
+def _clean_shell_file(
+    context: SystemContext, path: Path, result: RecoveryResult, dry_run: bool
+) -> None:
     if not path.exists() or not path.is_file():
         return
     content = path.read_text(encoding="utf-8", errors="ignore")
@@ -152,6 +155,17 @@ def _latest_valid_zshrc_backup(context: SystemContext) -> Path | None:
     return backups[0] if backups else None
 
 
+def _backup_sort_key(path: Path) -> tuple[datetime, float]:
+    match = ZSHRC_BACKUP_RE.search(path.name)
+    if match:
+        try:
+            timestamp = datetime.strptime(match.group(1), "%Y%m%d-%H%M%S")
+            return timestamp, path.stat().st_mtime
+        except ValueError:
+            pass
+    return datetime.fromtimestamp(0), path.stat().st_mtime
+
+
 def list_zshrc_backups(context: SystemContext | None = None) -> list[Path]:
     context = context or SystemContext()
     candidates: list[Path] = []
@@ -167,7 +181,7 @@ def list_zshrc_backups(context: SystemContext | None = None) -> list[Path]:
 
     backups = sorted(
         [path for path in candidates if path.is_file()],
-        key=lambda path: path.stat().st_mtime,
+        key=_backup_sort_key,
         reverse=True,
     )
     valid_backups = []
@@ -207,7 +221,9 @@ def restore_zshrc_backup(
     return result
 
 
-def restore_latest_zshrc_backup(context: SystemContext | None = None, dry_run: bool = False) -> RecoveryResult:
+def restore_latest_zshrc_backup(
+    context: SystemContext | None = None, dry_run: bool = False
+) -> RecoveryResult:
     context = context or SystemContext()
     result = RecoveryResult(ok=True, action="restore-zshrc")
     backup = _latest_valid_zshrc_backup(context)
@@ -218,7 +234,9 @@ def restore_latest_zshrc_backup(context: SystemContext | None = None, dry_run: b
     return restore_zshrc_backup(backup, context, dry_run=dry_run)
 
 
-def cleanup_shell_files(context: SystemContext | None = None, dry_run: bool = False) -> RecoveryResult:
+def cleanup_shell_files(
+    context: SystemContext | None = None, dry_run: bool = False
+) -> RecoveryResult:
     context = context or SystemContext()
     result = RecoveryResult(ok=True, action="cleanup")
     for path in _config_files(context):
@@ -228,7 +246,9 @@ def cleanup_shell_files(context: SystemContext | None = None, dry_run: bool = Fa
     return result
 
 
-def nuclear_fix_shell(context: SystemContext | None = None, dry_run: bool = False) -> RecoveryResult:
+def nuclear_fix_shell(
+    context: SystemContext | None = None, dry_run: bool = False
+) -> RecoveryResult:
     context = context or SystemContext()
     result = RecoveryResult(ok=True, action="nuclear-fix")
     for path in _config_files(context):
@@ -249,7 +269,10 @@ def nuclear_fix_shell(context: SystemContext | None = None, dry_run: bool = Fals
 def recovery_dry_run(context: SystemContext | None = None) -> RecoveryResult:
     context = context or SystemContext()
     result = RecoveryResult(ok=True, action="dry-run")
-    for partial in (cleanup_shell_files(context, dry_run=True), nuclear_fix_shell(context, dry_run=True)):
+    for partial in (
+        cleanup_shell_files(context, dry_run=True),
+        nuclear_fix_shell(context, dry_run=True),
+    ):
         result.messages.extend(partial.messages)
         result.warnings.extend(partial.warnings)
         result.errors.extend(partial.errors)

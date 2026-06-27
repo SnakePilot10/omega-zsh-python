@@ -47,8 +47,10 @@ class BasePlatform(ABC):
                         on_progress("No se pudo confirmar cierre del proceso tras kill().")
 
                 if on_progress:
+                    command_text = " ".join(cmd)
                     on_progress(
-                        f"Timeout ejecutando comando tras {self.COMMAND_TIMEOUT_SECONDS}s: {' '.join(cmd)}"
+                        f"Timeout ejecutando comando tras "
+                        f"{self.COMMAND_TIMEOUT_SECONDS}s: {command_text}"
                     )
                 return False
         except Exception as e:

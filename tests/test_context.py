@@ -60,15 +60,11 @@ def test_detect_linux_debian(mock_platform):
         patch(
             "builtins.open",
             MagicMock(
-                side_effect=[
-                    MagicMock(__enter__=lambda s: ["ID=debian\n", "VERSION_ID=12\n"])
-                ]
+                side_effect=[MagicMock(__enter__=lambda s: ["ID=debian\n", "VERSION_ID=12\n"])]
             ),
         ),
     ):
-        with patch(
-            "shutil.which", side_effect=lambda x: "/usr/bin/apt" if x == "apt" else None
-        ):
+        with patch("shutil.which", side_effect=lambda x: "/usr/bin/apt" if x == "apt" else None):
             ctx = SystemContext()
             assert ctx.distro_id == "debian"
             assert ctx.package_manager_type == "apt"
@@ -124,9 +120,7 @@ def test_detect_fedora(mock_platform):
             MagicMock(side_effect=[MagicMock(__enter__=lambda s: ["ID=fedora\n"])]),
         ),
     ):
-        with patch(
-            "shutil.which", side_effect=lambda x: "/usr/bin/dnf" if x == "dnf" else None
-        ):
+        with patch("shutil.which", side_effect=lambda x: "/usr/bin/dnf" if x == "dnf" else None):
             ctx = SystemContext()
             assert ctx.package_manager_type == "dnf"
 
@@ -139,7 +133,8 @@ def test_detect_fallback(mock_platform):
         patch("pathlib.Path.exists", return_value=False),
     ):
         with patch(
-            "omega_zsh.core.context.which", side_effect=lambda x: "/usr/bin/apk" if x == "apk" else None
+            "omega_zsh.core.context.which",
+            side_effect=lambda x: "/usr/bin/apk" if x == "apk" else None,
         ):
             ctx = SystemContext()
             assert ctx.package_manager_type == "apk"

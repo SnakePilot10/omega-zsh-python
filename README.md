@@ -178,7 +178,6 @@ See `docs/config-files.md` for the rationale.
 
 - `install_core_packages()` still installs base packages eagerly and does not yet do per-package preflight/idempotency checks.
 - `ArchPlatform.update_repos()` uses `pacman -Syu`; it should not be invoked automatically without user confirmation.
-- Full-repo Ruff still has inherited lint debt. The final audited files passed targeted Ruff checks.
 - If `zsh` is unavailable, syntax validation is skipped so bootstrap/setup can continue; `doctor` reports missing shell dependencies.
 - Fresh-install behavior is covered by mocked tests, but release-grade Debian/Arch/Termux smoke automation is still future hardening.
 
@@ -193,17 +192,8 @@ pip install -e '.[dev]'
 
 python3 -m compileall omega_zsh tests
 python -m pytest -q
-
-# Targeted lint for the final audited files.
-python -m ruff check \
-  omega_zsh/core/constants.py \
-  omega_zsh/core/generator.py \
-  tests/test_catalog.py \
-  tests/test_generator.py \
-  tests/test_install_script.py
-
-# Full lint currently exposes inherited debt outside the final audit scope.
-python -m ruff check omega_zsh tests
+python -m ruff check .
+python -m ruff format --check .
 ```
 
 The audited closeout used:

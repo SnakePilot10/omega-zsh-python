@@ -31,15 +31,15 @@ class SystemContext:
         # Rutas del proyecto y del entorno
         self._detect_paths()
 
-
     def _detect_paths(self):
         """Calcula rutas críticas del proyecto y del entorno del usuario."""
         # Raíz del paquete (vía __file__ del paquete para máxima compatibilidad)
         import omega_zsh
+
         pkg_file = os.path.abspath(omega_zsh.__file__)
         self.package_root = Path(os.path.dirname(pkg_file))
         self.assets_dir = self.package_root / "assets"
-        
+
         # Mantener project_root para compatibilidad hacia atrás
         self.project_root = self.package_root.parent
 
@@ -136,12 +136,10 @@ class SystemContext:
         """Ejecuta un comando shell de forma segura y devuelve stdout limpio."""
         try:
             # Usamos shlex.split para tokenizar el comando correctamente
-            # y evitar el uso de shell=True. 
+            # y evitar el uso de shell=True.
             # Redirigimos stderr a DEVNULL para evitar ruidos de permisos.
             args = shlex.split(cmd)
-            return subprocess.check_output(
-                args, text=True, stderr=subprocess.DEVNULL
-            ).strip()
+            return subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL).strip()
         except Exception:
             return ""
 

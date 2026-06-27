@@ -48,7 +48,10 @@ def test_doctor_reports_expected_installation_checks(tmp_path, monkeypatch):
     assert "zoxide" in _check(report, "binary-tools")["detail"]
     assert "instalar:" in _check(report, "binary-tools")["detail"]
     assert "zsh-autosuggestions" in _check(report, "external-plugins")["detail"]
-    assert "https://github.com/zsh-users/zsh-autosuggestions.git" in _check(report, "external-plugins")["detail"]
+    assert (
+        "https://github.com/zsh-users/zsh-autosuggestions.git"
+        in _check(report, "external-plugins")["detail"]
+    )
     assert _check(report, "theme")["status"] == "missing"
 
 

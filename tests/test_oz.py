@@ -55,7 +55,9 @@ def test_inspect_plugin_parsing(tmp_path):
     plugin_dir.mkdir()
     plugin_file = plugin_dir / "myplugin.plugin.zsh"
     plugin_file.write_text(
-        "\nalias gst='git status'\nalias gp='git push'\nfunction myfunc() { echo 1 }\nother_func() { echo 2 }\n    ")
+        "\nalias gst='git status'\nalias gp='git push'\n"
+        "function myfunc() { echo 1 }\nother_func() { echo 2 }\n    "
+    )
 
     # Simulamos que lo encuentra en CUSTOM_PLUGINS
     with (
@@ -86,7 +88,9 @@ def test_show_doctor_renders_report(monkeypatch, capsys):
             ],
         },
     )
-    monkeypatch.setattr("omega_zsh.cli.oz_tool.console", Console(force_terminal=False, color_system=None))
+    monkeypatch.setattr(
+        "omega_zsh.cli.oz_tool.console", Console(force_terminal=False, color_system=None)
+    )
 
     show_doctor()
 
@@ -100,12 +104,19 @@ def test_show_doctor_fix_renders_fix_results(monkeypatch, capsys):
         "omega_zsh.cli.oz_tool.run_doctor_fix",
         lambda: {
             "fixes": [
-                {"id": "manifest", "status": "fixed", "message": "manifest inicializado", "detail": "x"}
+                {
+                    "id": "manifest",
+                    "status": "fixed",
+                    "message": "manifest inicializado",
+                    "detail": "x",
+                }
             ],
             "report": {"overall": "ok", "checks": []},
         },
     )
-    monkeypatch.setattr("omega_zsh.cli.oz_tool.console", Console(force_terminal=False, color_system=None))
+    monkeypatch.setattr(
+        "omega_zsh.cli.oz_tool.console", Console(force_terminal=False, color_system=None)
+    )
 
     show_doctor(fix=True)
 

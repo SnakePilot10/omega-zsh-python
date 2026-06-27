@@ -4,8 +4,8 @@ import pytest
 
 from omega_zsh.core.constants import unknown_plugin_ids
 from omega_zsh.core.state import (
-    AppState,
     PRESETS,
+    AppState,
     StateManager,
     apply_preset,
     is_safe_minimal_state,

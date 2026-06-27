@@ -19,9 +19,7 @@ class FigletManager:
 
         # 2. Fuentes Locales (Package / assets / fonts)
         # src/core/figlet.py -> src/core -> src
-        self.local_fonts_dir = (
-            Path(__file__).resolve().parent.parent / "assets" / "fonts"
-        )
+        self.local_fonts_dir = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
         # Cache de fuentes: { "nombre_fuente": "ruta_absoluta" }
         self._font_cache: Dict[str, str] = {}

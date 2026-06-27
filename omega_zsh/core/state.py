@@ -31,7 +31,13 @@ PRESETS = {
         "selected_header": "none",
     },
     "pretty": {
-        "selected_plugins": ["git", "zsh-autosuggestions", "zsh-syntax-highlighting", "eza", "fastfetch"],
+        "selected_plugins": [
+            "git",
+            "zsh-autosuggestions",
+            "zsh-syntax-highlighting",
+            "eza",
+            "fastfetch",
+        ],
         "selected_theme": "bira",
         "selected_header": "fastfetch",
     },
@@ -164,9 +170,7 @@ class StateManager:
                     data = json.load(f)
                 return normalize_app_state(data)
             except Exception as e:
-                logging.warning(
-                    "No se pudo cargar state.json, usando .zshrc como fallback: %s", e
-                )
+                logging.warning("No se pudo cargar state.json, usando .zshrc como fallback: %s", e)
 
         # 2. Fallback: Intentar leer el .zshrc existente
         return self._import_from_zshrc()
@@ -193,8 +197,8 @@ class StateManager:
             with open(self.zshrc_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
-            # Detectar Tema (Buscamos la asignación del usuario, que suele estar en el 'else' o al final)
-            # Estrategia: Buscar todas las asignaciones y tomar la última que no sea root, o usar lógica específica
+            # Detectar Tema: buscar todas las asignaciones y tomar la última
+            # que no sea root, o usar lógica específica.
             themes_found = re.findall(r'ZSH_THEME="([^"]+)"', content)
             for t in themes_found:
                 if "root" in t:

@@ -8,8 +8,7 @@ from omega_zsh.ui.app import OmegaApp
 
 @pytest.fixture
 def mock_app():
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"):
+    with patch("omega_zsh.ui.app.SystemContext"), patch("omega_zsh.ui.app.StateManager"):
         app = OmegaApp()
         app.context = MagicMock()
         app.context.omz_dir = MagicMock()

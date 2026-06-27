@@ -5,10 +5,16 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Footer, Header, TabbedContent, TabPane
 
-from ..core.apply import apply_config, build_config_context, build_header_command, link_omega_themes
+from ..core.apply import apply_config, link_omega_themes  # noqa: F401
 from ..core.constants import BIN_PLUGINS, DB_PLUGINS, THEMES_OMZ_BUILTIN, ThemeDef
 from ..core.context import SystemContext
-from ..core.state import AppState, StateManager, apply_preset, normalize_app_state, safe_minimal_state
+from ..core.state import (
+    AppState,
+    StateManager,
+    apply_preset,
+    normalize_app_state,
+    safe_minimal_state,
+)
 from .screens import (
     DashboardScreen,
     FirstRunScreen,

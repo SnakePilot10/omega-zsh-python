@@ -21,6 +21,7 @@ CORE_PACKAGES = {
     "arch": ["python", "zsh", "git", "curl", "wget", "which", "bc"],
 }
 
+
 def detect_os() -> str:
     if Path("/etc/debian_version").exists():
         return "debian"
@@ -66,6 +67,7 @@ def make_platform(ctx: SystemContext):
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--unattended", action="store_true")
     parser.add_argument("--apply-config", action="store_true")
@@ -136,6 +138,7 @@ def main():
         print(f"Error en bootstrap: {e}", file=sys.stderr)
         logging.exception("Error en bootstrap")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

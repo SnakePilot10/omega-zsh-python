@@ -114,7 +114,9 @@ def test_install_binary_skips_unsupported_tool(tmp_path):
 def test_install_all_result_reports_installed_skipped_and_failed(tmp_path):
     platform = MockPlatform()
     platform.pkg_mgr = "apt-get"
-    platform.install_package = MagicMock(side_effect=lambda package, on_progress=None: package != "fd-find")
+    platform.install_package = MagicMock(
+        side_effect=lambda package, on_progress=None: package != "fd-find"
+    )
     installer = PluginInstaller(platform, home_dir=tmp_path)
     messages = []
 

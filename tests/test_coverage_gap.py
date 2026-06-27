@@ -106,4 +106,3 @@ def test_oz_tool_help(mock_print):
     """Cubre el punto de entrada de oz_tool."""
     oz_main()
     mock_print.assert_called()
-

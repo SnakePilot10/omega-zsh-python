@@ -10,8 +10,10 @@ def test_recovery_screen_uses_core_restore_action():
     screen._notify = MagicMock()
     screen.restore_armed = True
 
-    with patch("omega_zsh.ui.screens.SystemContext"), \
-         patch("omega_zsh.ui.screens.restore_latest_zshrc_backup") as mock_restore:
+    with (
+        patch("omega_zsh.ui.screens.SystemContext"),
+        patch("omega_zsh.ui.screens.restore_latest_zshrc_backup") as mock_restore,
+    ):
         mock_restore.return_value = RecoveryResult(
             ok=True,
             action="restore-zshrc",
@@ -31,8 +33,10 @@ def test_recovery_screen_reports_core_errors():
     screen._notify = MagicMock()
     screen.restore_armed = True
 
-    with patch("omega_zsh.ui.screens.SystemContext"), \
-         patch("omega_zsh.ui.screens.restore_latest_zshrc_backup") as mock_restore:
+    with (
+        patch("omega_zsh.ui.screens.SystemContext"),
+        patch("omega_zsh.ui.screens.restore_latest_zshrc_backup") as mock_restore,
+    ):
         mock_restore.return_value = RecoveryResult(
             ok=False,
             action="restore-zshrc",
@@ -52,8 +56,10 @@ def test_recovery_screen_restores_selected_backup(tmp_path):
     screen._selected_backup = MagicMock(return_value=selected)
     screen.restore_armed = True
 
-    with patch("omega_zsh.ui.screens.SystemContext"), \
-         patch("omega_zsh.ui.screens.restore_zshrc_backup") as mock_restore:
+    with (
+        patch("omega_zsh.ui.screens.SystemContext"),
+        patch("omega_zsh.ui.screens.restore_zshrc_backup") as mock_restore,
+    ):
         mock_restore.return_value = RecoveryResult(
             ok=True,
             action="restore-zshrc",
@@ -78,4 +84,6 @@ def test_recovery_screen_requires_restore_confirmation():
 
         mock_restore.assert_not_called()
         assert screen.restore_armed is True
-        screen._notify.assert_called_with("Press Restore Backup again to confirm.", severity="warning")
+        screen._notify.assert_called_with(
+            "Press Restore Backup again to confirm.", severity="warning"
+        )

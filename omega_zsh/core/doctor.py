@@ -13,8 +13,8 @@ from .constants import (
     binary_supported,
     is_binary_tool,
     selected_custom_plugin_ids,
-    unsupported_binary_tools,
     unknown_plugin_ids,
+    unsupported_binary_tools,
     valid_selected_plugins,
 )
 from .context import SystemContext
@@ -70,7 +70,9 @@ def _package_hint(context: SystemContext) -> str:
         "zypper": "sudo zypper install zsh git curl",
         "xbps": "sudo xbps-install -S zsh git curl",
     }
-    return commands.get(context.package_manager_type, "instala zsh, git y curl con tu gestor de paquetes")
+    return commands.get(
+        context.package_manager_type, "instala zsh, git y curl con tu gestor de paquetes"
+    )
 
 
 def _omz_status(context: SystemContext) -> tuple[dict[str, str], dict[str, str]]:
@@ -145,7 +147,9 @@ def _binary_detail(context: SystemContext, missing_tools: list[str]) -> str:
     for tool in missing_tools:
         commands = "/".join(binary_commands(tool))
         package = binary_package_name(tool, context.package_manager_type)
-        details.append(f"{tool} (comando: {commands}; paquete: {package}; instalar: {install_hint})")
+        details.append(
+            f"{tool} (comando: {commands}; paquete: {package}; instalar: {install_hint})"
+        )
     return "; ".join(details)
 
 
@@ -198,7 +202,9 @@ def _manifest_needs_rewrite(path: Path) -> bool:
 
 def _create_minimal_zshrc(context: SystemContext) -> dict[str, str]:
     if context.zshrc_path.exists():
-        return _fix_result("zshrc", "skipped", ".zshrc existente preservado", str(context.zshrc_path))
+        return _fix_result(
+            "zshrc", "skipped", ".zshrc existente preservado", str(context.zshrc_path)
+        )
 
     backup_path = _latest_valid_zshrc_backup(context)
     if backup_path:
@@ -211,7 +217,9 @@ def _create_minimal_zshrc(context: SystemContext) -> dict[str, str]:
                 "doctor-restored",
                 {"source": str(backup_path)},
             )
-            return _fix_result("zshrc", "fixed", ".zshrc restaurado desde backup válido", str(backup_path))
+            return _fix_result(
+                "zshrc", "fixed", ".zshrc restaurado desde backup válido", str(backup_path)
+            )
         except Exception as exc:
             return _fix_result("zshrc", "failed", "no se pudo restaurar backup de .zshrc", str(exc))
 
@@ -226,7 +234,9 @@ def _create_minimal_zshrc(context: SystemContext) -> dict[str, str]:
             return _fix_result("zshrc", "failed", "validación zsh falló", message)
         temp_path.replace(context.zshrc_path)
         created_zshrc = True
-        record_managed_file(context.omega_dir / "manifest.json", context.zshrc_path, "config", "doctor-created")
+        record_managed_file(
+            context.omega_dir / "manifest.json", context.zshrc_path, "config", "doctor-created"
+        )
         return _fix_result("zshrc", "fixed", ".zshrc mínimo creado", str(context.zshrc_path))
     except Exception as exc:
         temp_path.unlink(missing_ok=True)
@@ -243,21 +253,43 @@ def run_doctor_fix(context: SystemContext | None = None) -> dict[str, Any]:
 
     if context.omega_dir.exists() and context.omega_dir.is_dir():
         omega_dir_ready = True
-        fixes.append(_fix_result("omega-dir", "skipped", "directorio Omega ya existe", str(context.omega_dir)))
+        fixes.append(
+            _fix_result(
+                "omega-dir", "skipped", "directorio Omega ya existe", str(context.omega_dir)
+            )
+        )
     elif context.omega_dir.exists():
-        fixes.append(_fix_result("omega-dir", "failed", "ruta Omega existe y no es directorio", str(context.omega_dir)))
+        fixes.append(
+            _fix_result(
+                "omega-dir",
+                "failed",
+                "ruta Omega existe y no es directorio",
+                str(context.omega_dir),
+            )
+        )
     else:
         try:
             context.omega_dir.mkdir(parents=True, exist_ok=True)
             omega_dir_ready = True
-            fixes.append(_fix_result("omega-dir", "fixed", "directorio Omega creado", str(context.omega_dir)))
+            fixes.append(
+                _fix_result("omega-dir", "fixed", "directorio Omega creado", str(context.omega_dir))
+            )
         except Exception as exc:
-            fixes.append(_fix_result("omega-dir", "failed", "no se pudo crear directorio Omega", str(exc)))
+            fixes.append(
+                _fix_result("omega-dir", "failed", "no se pudo crear directorio Omega", str(exc))
+            )
 
     manifest_path = context.omega_dir / "manifest.json"
     manifest_ready = False
     if not omega_dir_ready:
-        fixes.append(_fix_result("manifest", "failed", "manifest omitido porque Omega dir no está listo", str(manifest_path)))
+        fixes.append(
+            _fix_result(
+                "manifest",
+                "failed",
+                "manifest omitido porque Omega dir no está listo",
+                str(manifest_path),
+            )
+        )
     elif _manifest_needs_rewrite(manifest_path):
         try:
             backup_path = create_backup(manifest_path, context.omega_dir / "backups")
@@ -275,7 +307,9 @@ def run_doctor_fix(context: SystemContext | None = None) -> dict[str, Any]:
                 _fix_result(
                     "manifest",
                     "fixed",
-                    "manifest inicializado" if backup_path is None else "manifest reparado con backup",
+                    "manifest inicializado"
+                    if backup_path is None
+                    else "manifest reparado con backup",
                     str(manifest_path),
                 )
             )
@@ -283,7 +317,9 @@ def run_doctor_fix(context: SystemContext | None = None) -> dict[str, Any]:
             fixes.append(_fix_result("manifest", "failed", "no se pudo reparar manifest", str(exc)))
     else:
         manifest_ready = True
-        fixes.append(_fix_result("manifest", "skipped", "manifest válido preservado", str(manifest_path)))
+        fixes.append(
+            _fix_result("manifest", "skipped", "manifest válido preservado", str(manifest_path))
+        )
 
     if manifest_ready:
         fixes.append(_create_minimal_zshrc(context))
@@ -390,14 +426,22 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
             "unknown-selected-ids",
             "ok" if not unknown_selected else "warning",
             "ok" if not unknown_selected else "warning",
-            "IDs seleccionados conocidos" if not unknown_selected else "IDs seleccionados desconocidos",
-            ", ".join(unknown_selected) if unknown_selected else "todos los IDs seleccionados están en catálogo",
+            "IDs seleccionados conocidos"
+            if not unknown_selected
+            else "IDs seleccionados desconocidos",
+            ", ".join(unknown_selected)
+            if unknown_selected
+            else "todos los IDs seleccionados están en catálogo",
         )
     )
 
-    custom_selected = selected_custom_plugin_ids(state.selected_plugins, state.allowed_custom_plugins)
+    custom_selected = selected_custom_plugin_ids(
+        state.selected_plugins, state.allowed_custom_plugins
+    )
     missing_custom = [
-        plugin for plugin in custom_selected if not (context.omz_dir / "custom" / "plugins" / plugin).exists()
+        plugin
+        for plugin in custom_selected
+        if not (context.omz_dir / "custom" / "plugins" / plugin).exists()
     ]
     checks.append(
         _check(
@@ -434,7 +478,9 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
     missing_tools = [
         plugin
         for plugin in selected
-        if is_binary_tool(plugin) and binary_supported(plugin, context.package_manager_type) and not _binary_available(plugin)
+        if is_binary_tool(plugin)
+        and binary_supported(plugin, context.package_manager_type)
+        and not _binary_available(plugin)
     ]
     checks.append(
         _check(
@@ -459,7 +505,9 @@ def run_doctor(context: SystemContext | None = None) -> dict[str, Any]:
             "external-plugins",
             "ok" if not missing_plugins else "missing",
             "ok" if not missing_plugins else "warning",
-            "plugins externos disponibles" if not missing_plugins else "faltan plugins externos seleccionados",
+            "plugins externos disponibles"
+            if not missing_plugins
+            else "faltan plugins externos seleccionados",
             _external_plugin_detail(context, missing_plugins),
         )
     )

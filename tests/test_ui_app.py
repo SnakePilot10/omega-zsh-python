@@ -9,16 +9,20 @@ from omega_zsh.ui.screens import PluginSelectScreen
 
 def test_get_all_themes_discovery():
     # Parcheamos SystemContext y StateManager para el arranque de la app
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"):
-        
+    with patch("omega_zsh.ui.app.SystemContext"), patch("omega_zsh.ui.app.StateManager"):
         app = OmegaApp()
         app.context = MagicMock()
 
         # 1. Preparar Mocks de archivos
-        t1 = MagicMock(); t1.stem = "omega_theme"; t1.name = "omega_theme.zsh-theme"
-        t2 = MagicMock(); t2.stem = "robbyrussell"; t2.name = "robbyrussell.zsh-theme"
-        t3 = MagicMock(); t3.stem = "my_custom"; t3.name = "my_custom.zsh-theme"
+        t1 = MagicMock()
+        t1.stem = "omega_theme"
+        t1.name = "omega_theme.zsh-theme"
+        t2 = MagicMock()
+        t2.stem = "robbyrussell"
+        t2.name = "robbyrussell.zsh-theme"
+        t3 = MagicMock()
+        t3.stem = "my_custom"
+        t3.name = "my_custom.zsh-theme"
 
         # 2. Configurar assets_dir (Temas Omega)
         omega_dir_mock = MagicMock()
@@ -30,11 +34,11 @@ def test_get_all_themes_discovery():
         # 3. Configurar omz_dir (Temas OMZ y Custom)
         omz_dir_mock = MagicMock()
         app.context.omz_dir = omz_dir_mock
-        
+
         omz_themes_mock = MagicMock()
         omz_themes_mock.exists.return_value = True
         omz_themes_mock.glob.return_value = [t2]
-        
+
         custom_base_mock = MagicMock()
         custom_themes_mock = MagicMock()
         custom_themes_mock.exists.return_value = True
@@ -42,25 +46,31 @@ def test_get_all_themes_discovery():
         custom_base_mock.__truediv__.return_value = custom_themes_mock
 
         def omz_div_effect(x):
-            if x == "themes": return omz_themes_mock
-            if x == "custom": return custom_base_mock
+            if x == "themes":
+                return omz_themes_mock
+            if x == "custom":
+                return custom_base_mock
             return MagicMock()
-        
+
         omz_dir_mock.__truediv__.side_effect = omz_div_effect
 
         # 4. Parchear Path para que devuelva nuestros mocks cuando se convierta a str
         # El código hace: Path(str(self.context.assets_dir / "themes"))
         original_path = Path
+
         def path_mock_factory(x):
-            if x == str(omega_dir_mock): return omega_dir_mock
-            if x == str(omz_themes_mock): return omz_themes_mock
-            if x == str(custom_themes_mock): return custom_themes_mock
+            if x == str(omega_dir_mock):
+                return omega_dir_mock
+            if x == str(omz_themes_mock):
+                return omz_themes_mock
+            if x == str(custom_themes_mock):
+                return custom_themes_mock
             return original_path(x)
 
         with patch("omega_zsh.ui.app.Path", side_effect=path_mock_factory):
             themes = app._get_all_themes()
             ids = [t.id for t in themes]
-            
+
             # Verificaciones
             assert "omega_theme" in ids
             assert "robbyrussell" in ids
@@ -156,8 +166,7 @@ def test_link_omega_themes_omite_omz_inexistente(tmp_path):
 
 
 def test_first_run_detects_empty_setup(tmp_path):
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"):
+    with patch("omega_zsh.ui.app.SystemContext"), patch("omega_zsh.ui.app.StateManager"):
         app = OmegaApp()
         app.state_manager.config_path = tmp_path / ".omega-zsh" / "state.json"
         app.context.zshrc_path = tmp_path / ".zshrc"
@@ -169,8 +178,7 @@ def test_first_run_disabled_when_zshrc_exists(tmp_path):
     zshrc = tmp_path / ".zshrc"
     zshrc.write_text("# user config", encoding="utf-8")
 
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"):
+    with patch("omega_zsh.ui.app.SystemContext"), patch("omega_zsh.ui.app.StateManager"):
         app = OmegaApp()
         app.state_manager.config_path = tmp_path / ".omega-zsh" / "state.json"
         app.context.zshrc_path = zshrc
@@ -179,9 +187,11 @@ def test_first_run_disabled_when_zshrc_exists(tmp_path):
 
 
 def test_first_run_minimal_saves_state_without_apply():
-    with patch("omega_zsh.ui.app.SystemContext"), \
-         patch("omega_zsh.ui.app.StateManager"), \
-         patch("omega_zsh.ui.app.apply_config") as mock_apply:
+    with (
+        patch("omega_zsh.ui.app.SystemContext"),
+        patch("omega_zsh.ui.app.StateManager"),
+        patch("omega_zsh.ui.app.apply_config") as mock_apply,
+    ):
         app = OmegaApp()
         app.state = AppState(
             selected_plugins=["zoxide", "eza"],
@@ -208,7 +218,9 @@ def test_plugin_select_status_labels(tmp_path, monkeypatch):
     context.omz_dir = tmp_path / ".oh-my-zsh"
     (context.omz_dir / "custom" / "plugins" / "zsh-autosuggestions").mkdir(parents=True)
     screen = PluginSelectScreen([], [], [])
-    monkeypatch.setattr("omega_zsh.ui.screens.shutil.which", lambda cmd: "/bin/fd" if cmd == "fdfind" else None)
+    monkeypatch.setattr(
+        "omega_zsh.ui.screens.shutil.which", lambda cmd: "/bin/fd" if cmd == "fdfind" else None
+    )
 
     assert "installed" in screen._label_for("zsh-autosuggestions", context)
     assert "impact: medium" in screen._label_for("zsh-autosuggestions", context)

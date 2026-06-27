@@ -22,16 +22,29 @@ from textual.widgets import (
 )
 from textual.widgets.selection_list import Selection
 
-from ..core.constants import EXTERNAL_URLS, binary_commands, binary_supported, is_binary_tool, startup_impact
+from ..core.constants import (
+    EXTERNAL_URLS,
+    binary_commands,
+    binary_supported,
+    is_binary_tool,
+    startup_impact,
+)
 from ..core.context import SystemContext
 from ..core.doctor import run_doctor, run_doctor_fix
 from ..core.figlet import FigletManager
-from ..core.recovery import cleanup_shell_files, nuclear_fix_shell, recovery_dry_run, restore_latest_zshrc_backup
-from ..core.recovery import list_zshrc_backups, restore_zshrc_backup
+from ..core.recovery import (
+    cleanup_shell_files,
+    list_zshrc_backups,
+    nuclear_fix_shell,
+    recovery_dry_run,
+    restore_latest_zshrc_backup,
+    restore_zshrc_backup,
+)
 from ..core.system_info import get_system_stats
 
-
-NAV_HINT = "[dim]Tabs: [bold]1-6[/] / [bold]D X P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
+NAV_HINT = (
+    "[dim]Tabs: [bold]1-6[/] / [bold]D X P T H R[/] · Apply: [bold]A[/] · Exit: [bold]Q[/][/dim]"
+)
 
 
 class FirstRunScreen(Vertical):
@@ -115,21 +128,16 @@ class DashboardScreen(Static):
             f"[bold #00ff9f]DISCO:[/]   [white]{stats['disk_usage']}[/]\n"
             f"[bold yellow]UPTIME:[/]  [white]{stats['uptime']}[/]"
         )
-        yield Static(
-            f"[bold #ff006e]◄ STATUS OMEGA ►[/]\n{telemetry}",
-            id="dashboard-telemetry"
-        )
+        yield Static(f"[bold #ff006e]◄ STATUS OMEGA ►[/]\n{telemetry}", id="dashboard-telemetry")
 
         help_text = (
             "• [bold #00ff9f]A[/]: Apply config only\n"
-            "• [bold #00ff9f]D/X/P/T/H/R[/]: Dashboard, Problems, Plugins, Themes, Headers, Recovery\n"
+            "• [bold #00ff9f]D/X/P/T/H/R[/]: Dashboard, Problems, Plugins, Themes, "
+            "Headers, Recovery\n"
             "• [bold #00ff9f]1-6[/]: Same tab navigation\n"
             "• [bold #00ff9f]Q[/]: Exit"
         )
-        yield Static(
-            f"[bold #ff006e]◄ SHORTCUTS ►[/]\n{help_text}",
-            id="dashboard-shortcuts"
-        )
+        yield Static(f"[bold #ff006e]◄ SHORTCUTS ►[/]\n{help_text}", id="dashboard-shortcuts")
 
 
 class ProblemsScreen(Vertical):
@@ -258,7 +266,8 @@ class PresetScreen(Vertical):
         yield Label("[bold #ff006e]PRESETS[/]")
         yield Label(NAV_HINT, id="presets-nav-hint")
         yield Static(
-            "[bold #00f5ff]Presets update saved state only.[/] Review Plugins/Themes, then press Apply.",
+            "[bold #00f5ff]Presets update saved state only.[/] "
+            "Review Plugins/Themes, then press Apply.",
             id="presets-help",
         )
         with Horizontal(id="presets-actions"):
@@ -272,6 +281,7 @@ class PresetScreen(Vertical):
         preset_id = event.button.id.removeprefix("btn-preset-")
         if hasattr(self.app, "action_apply_preset"):
             self.app.action_apply_preset(preset_id)
+
 
 class RecoveryScreen(Vertical):
     """Pantalla para ejecutar recuperación shell con backups."""
@@ -440,13 +450,17 @@ class PluginSelectScreen(Vertical):
 
         for p in self.all_plugins:
             if p.id not in seen_ids:
-                options.append(Selection(self._label_for(p.id, context), p.id, p.id in self.selected_plugins))
+                options.append(
+                    Selection(self._label_for(p.id, context), p.id, p.id in self.selected_plugins)
+                )
                 seen_ids.add(p.id)
 
         for p in self.bin_plugins:
             pid = p if isinstance(p, str) else p.id
             if pid not in seen_ids:
-                options.append(Selection(self._label_for(pid, context), pid, pid in self.selected_plugins))
+                options.append(
+                    Selection(self._label_for(pid, context), pid, pid in self.selected_plugins)
+                )
                 seen_ids.add(pid)
 
         yield SelectionList(*options, id="plugin-list")
@@ -458,7 +472,11 @@ class PluginSelectScreen(Vertical):
         if is_binary_tool(plugin_id):
             if not binary_supported(plugin_id, context.package_manager_type):
                 return "unsupported"
-            return "installed" if any(shutil.which(cmd) for cmd in binary_commands(plugin_id)) else "missing"
+            return (
+                "installed"
+                if any(shutil.which(cmd) for cmd in binary_commands(plugin_id))
+                else "missing"
+            )
         if plugin_id in EXTERNAL_URLS:
             path = context.omz_dir / "custom" / "plugins" / plugin_id
             return "installed" if path.exists() else "missing"
@@ -527,20 +545,23 @@ class ThemeSelectScreen(Horizontal):
             return
 
         try:
-            omz_dir = os.environ.get('ZSH', str(Path.home() / '.oh-my-zsh'))
-            omz_lib = f'{omz_dir}/lib'
+            omz_dir = os.environ.get("ZSH", str(Path.home() / ".oh-my-zsh"))
+            omz_lib = f"{omz_dir}/lib"
             cmd = (
-                f'[[ -f ~/.cargo/env ]] && source ~/.cargo/env 2>/dev/null; export ZSH="{omz_dir}" && '
+                "[[ -f ~/.cargo/env ]] && source ~/.cargo/env 2>/dev/null; "
+                f'export ZSH="{omz_dir}" && '
                 f'fpath=("{omz_dir}/functions" "{omz_dir}/completions" $fpath) && '
-                f'autoload -U colors && colors && '
-                f'autoload -Uz vcs_info && '
-                f'autoload -U compinit && '
-                f'for _f in {omz_lib}/git.zsh {omz_lib}/theme-and-appearance.zsh'
-                f' {omz_lib}/functions.zsh; do [[ -f $_f ]] && source $_f; done && '
-                f'source {theme.path} && '
+                f"autoload -U colors && colors && "
+                f"autoload -Uz vcs_info && "
+                f"autoload -U compinit && "
+                f"for _f in {omz_lib}/git.zsh {omz_lib}/theme-and-appearance.zsh"
+                f" {omz_lib}/functions.zsh; do [[ -f $_f ]] && source $_f; done && "
+                f"source {theme.path} && "
                 f'print -P "$PROMPT" && print -P "$RPROMPT"'
             )
-            result = subprocess.run([zsh_bin, "-c", cmd], capture_output=True, text=True, timeout=1.5)
+            result = subprocess.run(
+                [zsh_bin, "-c", cmd], capture_output=True, text=True, timeout=1.5
+            )
             if result.stdout.strip():
                 try:
                     preview_box.update(Text.from_ansi(result.stdout))
@@ -578,7 +599,9 @@ class HeaderSelectScreen(Vertical):
                 yield Label("Tipo:")
                 yield RadioSet(
                     RadioButton("None", id="h-none", value=(self.selected_header == "none")),
-                    RadioButton("Fastfetch", id="h-ff", value=(self.selected_header == "fastfetch")),
+                    RadioButton(
+                        "Fastfetch", id="h-ff", value=(self.selected_header == "fastfetch")
+                    ),
                     RadioButton("Figlet", id="h-fig", value=(self.selected_header == "figlet")),
                     RadioButton("Cowsay", id="h-cow", value=(self.selected_header == "cowsay")),
                     id="header-type-set",
@@ -640,13 +663,19 @@ class HeaderSelectScreen(Vertical):
 
         if h_type == "cowsay":
             import shutil as _shutil
+
             cow_bin = _shutil.which("cowsay")
             if not cow_bin:
-                preview_area.update(Text("cowsay no encontrado. Instala con: pkg install cowsay", style="red"))
+                preview_area.update(
+                    Text("cowsay no encontrado. Instala con: pkg install cowsay", style="red")
+                )
                 return
             try:
                 import subprocess as _sp
-                result = _sp.run([cow_bin, text or "Omega ZSH"], capture_output=True, text=True, timeout=2.0)
+
+                result = _sp.run(
+                    [cow_bin, text or "Omega ZSH"], capture_output=True, text=True, timeout=2.0
+                )
                 if result.returncode == 0:
                     preview_area.update(Text(result.stdout))
                 else:
@@ -659,11 +688,15 @@ class HeaderSelectScreen(Vertical):
             preview_area.update(Text("Rendering live preview...", style="yellow"))
             ff_bin = shutil.which("fastfetch")
             if not ff_bin:
-                preview_area.update(Text("Fastfetch not found. Please install it first.", style="red"))
+                preview_area.update(
+                    Text("Fastfetch not found. Please install it first.", style="red")
+                )
                 return
 
             try:
-                result = subprocess.run([ff_bin, "--pipe"], capture_output=True, text=True, timeout=2.0)
+                result = subprocess.run(
+                    [ff_bin, "--pipe"], capture_output=True, text=True, timeout=2.0
+                )
                 if result.returncode == 0:
                     try:
                         preview_area.update(Text.from_ansi(result.stdout))
@@ -673,6 +706,8 @@ class HeaderSelectScreen(Vertical):
                     err = result.stderr or "Check if fastfetch is working."
                     preview_area.update(Text(f"Command execution failed:\n{err}", style="dim red"))
             except subprocess.TimeoutExpired:
-                preview_area.update(Text("Preview timed out (Command took too long)", style="orange"))
+                preview_area.update(
+                    Text("Preview timed out (Command took too long)", style="orange")
+                )
             except Exception as e:
                 preview_area.update(Text(f"Preview Error: {e}", style="red"))

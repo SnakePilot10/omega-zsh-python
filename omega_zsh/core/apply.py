@@ -58,7 +58,9 @@ def build_config_context(context: Any, state: AppState) -> dict[str, Any]:
     }
 
 
-def link_omega_themes(assets_dir: Path, omz_dir: Path, manifest_path: Path | None = None) -> list[str]:
+def link_omega_themes(
+    assets_dir: Path, omz_dir: Path, manifest_path: Path | None = None
+) -> list[str]:
     omega_themes_dir = assets_dir / "themes"
     warnings: list[str] = []
     if not (omz_dir / "oh-my-zsh.sh").exists():
@@ -144,7 +146,9 @@ def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyR
         if unknown:
             warnings.append("IDs seleccionados desconocidos omitidos: " + ", ".join(unknown))
         if not (context.omz_dir / "oh-my-zsh.sh").exists():
-            warnings.append(f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas")
+            warnings.append(
+                f"Oh My Zsh no encontrado en {context.omz_dir}; se omitió el link de temas"
+            )
         if dry_run:
             return preview_config(context, state)
 
@@ -173,7 +177,9 @@ def apply_config(context: Any, state: AppState, dry_run: bool = False) -> ApplyR
             )
             _log_apply(context, result)
             return result
-        result = ApplyResult(True, "Configuración actualizada con éxito.", changed=[str(context.zshrc_path)])
+        result = ApplyResult(
+            True, "Configuración actualizada con éxito.", changed=[str(context.zshrc_path)]
+        )
         _log_apply(context, result)
         return result
     except Exception as exc:

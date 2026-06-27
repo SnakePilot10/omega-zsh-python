@@ -16,7 +16,13 @@ from rich.table import Table
 
 try:
     from omega_zsh.core.doctor import run_doctor, run_doctor_fix
-    from omega_zsh.core.system_info import get_active_items, get_system_stats, inspect_plugin as inspect_plugin_core
+    from omega_zsh.core.system_info import (
+        get_active_items,
+        get_system_stats,
+    )
+    from omega_zsh.core.system_info import (
+        inspect_plugin as inspect_plugin_core,
+    )
 except ImportError:
 
     def run_doctor():
@@ -118,7 +124,13 @@ def inspect_plugin(plugin_name: str) -> dict:
     """Obtiene la info del plugin/herramienta priorizando la base amigable."""
     info = inspect_plugin_core(plugin_name, OMZ, CUSTOM_PLUGINS, STANDARD_PLUGINS)
     if info is None:
-        return {"found": False, "is_binary": True, "description": "Sin descripción disponible.", "aliases": [], "functions": []}
+        return {
+            "found": False,
+            "is_binary": True,
+            "description": "Sin descripción disponible.",
+            "aliases": [],
+            "functions": [],
+        }
     result = {
         "found": info.found,
         "is_binary": info.is_binary,
@@ -198,8 +210,7 @@ def benchmark_shell() -> None:
 
     res_panel = Table.grid(expand=True)
     res_panel.add_row(
-        f"\n[bold white]LATENCIA DE ARRANQUE:[/]\n"
-        f"[bold {color} size=30]{avg_ms:.2f} ms[/]\n"
+        f"\n[bold white]LATENCIA DE ARRANQUE:[/]\n[bold {color} size=30]{avg_ms:.2f} ms[/]\n"
     )
     res_panel.add_row(f"[dim white]Calificación de Entropía:[/] [bold {color}]{rating}[/]\n")
 
@@ -280,7 +291,9 @@ def analyze_history() -> None:
     console.print("[bold #00f5ff]📊 Analizando patrones de uso...[/]")
     try:
         content = hist_file.read_text(errors="ignore")
-        cmds = re.findall(r"^: \d+:\d+;(.*?)(?:\s|$)", content, re.MULTILINE) or content.splitlines()
+        cmds = (
+            re.findall(r"^: \d+:\d+;(.*?)(?:\s|$)", content, re.MULTILINE) or content.splitlines()
+        )
         top_10 = Counter(cmds).most_common(10)
 
         table = Table(title="TUS COMANDOS MÁS USADOS", box=box.SIMPLE)
@@ -302,8 +315,8 @@ def analyze_history() -> None:
         if aliases_suggestion:
             console.print(
                 Panel(
-                    "[white]Comandos largos frecuentes. Copia esto en tu [bold]custom.zsh[/]:[/]\n\n"
-                    + "\n".join(aliases_suggestion),
+                    "[white]Comandos largos frecuentes. "
+                    "Copia esto en tu [bold]custom.zsh[/]:[/]\n\n" + "\n".join(aliases_suggestion),
                     title="💡 OPTIMIZACIÓN DE FLUJO",
                     border_style="#ff006e",
                 )

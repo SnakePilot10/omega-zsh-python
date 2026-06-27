@@ -51,7 +51,9 @@ def test_apply_config_orchestrates_theme_links_and_zshrc_write(tmp_path, monkeyp
     repo_templates = Path(__file__).parent.parent / "omega_zsh" / "assets" / "templates"
     # Copiar todas las plantillas
     for template in repo_templates.glob("*.j2"):
-        (templates / template.name).write_text(template.read_text(encoding="utf-8"), encoding="utf-8")
+        (templates / template.name).write_text(
+            template.read_text(encoding="utf-8"), encoding="utf-8"
+        )
     context = SystemContext(home=home, env={"ZSH": str(omz)})
     context.assets_dir = assets
     state = AppState(selected_plugins=["git"], selected_header="none")
