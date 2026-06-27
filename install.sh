@@ -11,7 +11,8 @@ if [ -z "$PYTHON_BIN" ]; then
 fi
 
 # --- Ejecutar Bootstrap Python ---
-"$PYTHON_BIN" -m omega_zsh.core.bootstrap "$@"
+cd "$PROJECT_DIR"
+PYTHONPATH="$PROJECT_DIR" "$PYTHON_BIN" -m omega_zsh.core.bootstrap "$@"
 
 # --- Finalizar ---
 echo "Instalación base completada."

@@ -65,6 +65,9 @@ def main():
         print(f"HOME={os.environ.get('HOME')}")
         sys.exit(0)
 
+    if args.apply_config or args.sync_themes:
+        parser.error("--apply-config and --sync-themes are temporarily unsupported in bootstrap.py")
+
     project_dir = Path(__file__).parent.parent.parent
     os_id = detect_os()
     

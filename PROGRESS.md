@@ -1556,8 +1556,30 @@
   - Pending final verification.
 - Risks:
   - Requires `python3` to exist on the system *before* bootstrapping.
+### 2026-06-26 - Item 43 Fix (Wrapper Hygiene)
+
+- TODO item: `43. Convert install.sh into a minimal wrapper around Python logic`
+- Status: completed
+- Files changed:
+  - `install.sh`
+  - `omega_zsh/core/bootstrap.py`
+  - `PROGRESS.md`
+- Behavior changed:
+  - `install.sh` now correctly `cd` into the project directory before executing `bootstrap.py`.
+  - `bootstrap.py` explicitly errors on unsupported `--apply-config` and `--sync-themes` flags.
+- Verification commands:
+  - `HOME=/tmp/test-home bash install.sh --apply-config` (verified it errors as expected).
+  - `graphify update`
+- Verification result:
+  - Passed: shell wrapper now correctly sets execution context.
+  - Passed: flags explicitly rejected by Python bootstrap.
+- Graphify update:
+  - Command: `graphify update`
+  - Result: passed. Rebuilt code graph with 747 nodes, 1637 edges, 38 communities.
+- Risks:
+  - None; improves reliability of wrapper execution.
 - Next:
-  - Run full verification, graphify update, commit, and push.
+  - Commit and push fix.
 ### 2026-06-26 - Item 44
 
 - TODO item: `44. Decide whether Figlet_Fonts/ is demo code or product code`
