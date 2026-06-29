@@ -200,7 +200,6 @@ The audited closeout used:
 
 - `/tmp/opencode/omega-zsh-test-venv/bin/python -m pytest -q`
 - `git diff --check`
-- `graphify update`
 
 ---
 
